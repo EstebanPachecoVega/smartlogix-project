@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>cl.smartlogix</groupId>
-	<artifactId>ms-envios</artifactId>
+	<artifactId>ms-inventario</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>

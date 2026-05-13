@@ -1,10 +1,10 @@
-package cl.smartlogix.envios;
+package cl.smartlogix.inventario;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class MsEnviosApplicationTests {
+class MsInventarioApplicationTests {
 
 	@Test
 	void contextLoads() {
