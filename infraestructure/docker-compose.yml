@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. BASES DE DATOS
+  # ==========================================
+  mysql-inventario:
+    image: mysql:8.0
+    container_name: smartlogix-db-inventario
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_INVENTARIO_NAME}
+    volumes:
+      - mysql_inventario_data:/var/lib/mysql
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-pedidos:
+    image: mysql:8.0
+    container_name: smartlogix-db-pedidos
+    restart: unless-stopped
+    ports:
+      - "3307:3306" # Mapeado al 3307 en tu PC
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_PEDIDOS_NAME}
+    volumes:
+      - mysql_pedidos_data:/var/lib/mysql
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-envios:
+    image: mysql:8.0
+    container_name: smartlogix-db-envios
+    restart: unless-stopped
+    ports:
+      - "3308:3306" # Mapeado al 3308 en tu PC
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_ENVIOS_NAME}
+    volumes:
+      - mysql_envios_data:/var/lib/mysql
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 2. BROKER DE MENSAJERÍA Y CACHÉ
+  # ==========================================
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: smartlogix-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: smartlogix-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ==========================================
+# REDES Y VOLÚMENES
+# ==========================================
+networks:
+  smartlogix-network:
+    driver: bridge
+
+volumes:
+  mysql_inventario_data:
+  mysql_pedidos_data:
+  mysql_envios_data:
