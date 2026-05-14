@@ -7,6 +7,7 @@ import cl.smartlogix.pedidos.dto.request.ReservarStockRequestDTO;
 import cl.smartlogix.pedidos.entity.EstadoPedido;
 import cl.smartlogix.pedidos.entity.Pedido;
 import cl.smartlogix.pedidos.exception.DomainException;
+import cl.smartlogix.pedidos.exception.ResourceNotFoundException;
 import cl.smartlogix.pedidos.publisher.PedidoEventPublisher;
 import cl.smartlogix.pedidos.repository.PedidoRepository;
 import cl.smartlogix.pedidos.service.PedidoService;
@@ -54,12 +55,18 @@ public class PedidoServiceImpl implements PedidoService {
 
             log.info("Pedido {} aprobado y evento publicado", pedido.getId());
 
-        } catch (Exception e) {
-            // 4. Fallo: compensación -> estado RECHAZADO
+        } catch (ResourceNotFoundException | DomainException e) {
+            // Excepciones controladas (404 o 422) provenientes del ErrorDecoder
             pedido.setEstado(EstadoPedido.RECHAZADO);
             pedidoRepository.save(pedido);
-            log.error("Falló la reserva de stock para pedido {}. Motivo: {}", pedido.getId(), e.getMessage());
-            throw new DomainException("No se pudo completar el pedido: " + e.getMessage());
+            log.error("Falló la reserva de stock (error controlado) para pedido {}. Motivo: {}", pedido.getId(), e.getMessage());
+            throw e;  // Relanzamos la misma excepción para que el manejador global devuelva el status correcto
+        } catch (Exception e) {
+            // Cualquier otro error (timeout, caída de inventario, etc.)
+            pedido.setEstado(EstadoPedido.RECHAZADO);
+            pedidoRepository.save(pedido);
+            log.error("Falló la reserva de stock (error inesperado) para pedido {}. Motivo: {}", pedido.getId(), e.getMessage());
+            throw new DomainException("Error inesperado en la comunicación con inventario: " + e.getMessage());
         }
 
         return pedido;
