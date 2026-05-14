@@ -1,6 +1,6 @@
 package cl.smartlogix.bff.service.impl;
 
-import cl.smartlogix.bff.client.PedidosWebClient;
+import cl.smartlogix.bff.client.PedidosClientService;
 import cl.smartlogix.bff.dto.request.CrearPedidoRequestDTO;
 import cl.smartlogix.bff.dto.response.PedidoResponseDTO;
 import cl.smartlogix.bff.service.PedidoBffService;
@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class PedidoBffServiceImpl implements PedidoBffService {
-    private final PedidosWebClient pedidosWebClient;
+    private final PedidosClientService pedidosWebClient;
 
     @Override
     public Mono<PedidoResponseDTO> crearPedido(CrearPedidoRequestDTO request) {

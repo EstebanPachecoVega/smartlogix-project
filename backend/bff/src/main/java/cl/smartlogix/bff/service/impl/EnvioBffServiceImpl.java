@@ -1,6 +1,6 @@
 package cl.smartlogix.bff.service.impl;
 
-import cl.smartlogix.bff.client.EnviosWebClient;
+import cl.smartlogix.bff.client.EnviosClientService;
 import cl.smartlogix.bff.dto.response.EnvioResponseDTO;
 import cl.smartlogix.bff.service.EnvioBffService;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class EnvioBffServiceImpl implements EnvioBffService {
-    private final EnviosWebClient enviosWebClient;
+    private final EnviosClientService enviosWebClient;
 
     @Override
     public Mono<EnvioResponseDTO> obtenerEnvio(Long id) {

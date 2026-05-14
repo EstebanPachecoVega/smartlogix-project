@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class EnviosWebClient {
+public class EnviosClientService {
     private final WebClient enviosWebClient;
 
     @CircuitBreaker(name = "envios", fallbackMethod = "fallbackObtenerEnvio")

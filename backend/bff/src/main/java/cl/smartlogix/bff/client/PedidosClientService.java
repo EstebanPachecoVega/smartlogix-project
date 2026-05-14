@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PedidosWebClient {
+public class PedidosClientService {
     private final WebClient pedidosWebClient;
 
     @CircuitBreaker(name = "pedidos", fallbackMethod = "fallbackCrearPedido")
