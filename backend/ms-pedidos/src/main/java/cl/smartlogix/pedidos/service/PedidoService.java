@@ -5,4 +5,5 @@ import cl.smartlogix.pedidos.entity.Pedido;
 
 public interface PedidoService {
     Pedido crearPedido(CrearPedidoRequestDTO request);
+    Pedido obtenerPedidoPorId(Long id);
 }

@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 
 public interface PedidoBffService {
     Mono<PedidoResponseDTO> crearPedido(CrearPedidoRequestDTO request);
-    Mono<PedidoResponseDTO> obtenerPedido(Long id);
+    Mono<PedidoResponseDTO> obtenerPedidoPorId(Long id);
 }

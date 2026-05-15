@@ -23,6 +23,6 @@ public class PedidoBffController {
 
     @GetMapping("/{id}")
     public Mono<PedidoResponseDTO> obtenerPedido(@PathVariable Long id) {
-        return pedidoBffService.obtenerPedido(id);
+        return pedidoBffService.obtenerPedidoPorId(id);
     }
 }

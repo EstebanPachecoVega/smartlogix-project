@@ -19,7 +19,7 @@ public class PedidoBffServiceImpl implements PedidoBffService {
     }
 
     @Override
-    public Mono<PedidoResponseDTO> obtenerPedido(Long id) {
+    public Mono<PedidoResponseDTO> obtenerPedidoPorId(Long id) {
         return pedidosWebClient.obtenerPedido(id);
     }
 }

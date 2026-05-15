@@ -23,4 +23,10 @@ public class PedidoController {
         Pedido pedido = pedidoService.crearPedido(request);
         return pedidoMapper.toResponseDTO(pedido);
     }
+
+    @GetMapping("/{id}")
+    public PedidoResponseDTO obtenerPedido(@PathVariable Long id) {
+        Pedido pedido = pedidoService.obtenerPedidoPorId(id);
+        return pedidoMapper.toResponseDTO(pedido);
+    }
 }

@@ -25,7 +25,13 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoEventPublisher eventPublisher;
 
     @Override
-    @Transactional
+    public Pedido obtenerPedidoPorId(Long id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + id));
+    }
+
+    @Override
+    @Transactional(noRollbackFor = {ResourceNotFoundException.class, DomainException.class})
     public Pedido crearPedido(CrearPedidoRequestDTO request) {
         // 1. Guardar pedido en estado PENDIENTE
         Pedido pedido = new Pedido();
@@ -59,13 +65,16 @@ public class PedidoServiceImpl implements PedidoService {
             // Excepciones controladas (404 o 422) provenientes del ErrorDecoder
             pedido.setEstado(EstadoPedido.RECHAZADO);
             pedidoRepository.save(pedido);
-            log.error("Falló la reserva de stock (error controlado) para pedido {}. Motivo: {}", pedido.getId(), e.getMessage());
-            throw e;  // Relanzamos la misma excepción para que el manejador global devuelva el status correcto
+            log.error("Falló la reserva de stock (error controlado) para pedido {}. Motivo: {}", pedido.getId(),
+                    e.getMessage());
+            throw e; // Relanzamos la misma excepción para que el manejador global devuelva el status
+                     // correcto
         } catch (Exception e) {
             // Cualquier otro error (timeout, caída de inventario, etc.)
             pedido.setEstado(EstadoPedido.RECHAZADO);
             pedidoRepository.save(pedido);
-            log.error("Falló la reserva de stock (error inesperado) para pedido {}. Motivo: {}", pedido.getId(), e.getMessage());
+            log.error("Falló la reserva de stock (error inesperado) para pedido {}. Motivo: {}", pedido.getId(),
+                    e.getMessage());
             throw new DomainException("Error inesperado en la comunicación con inventario: " + e.getMessage());
         }
 

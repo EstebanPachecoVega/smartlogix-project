@@ -21,24 +21,26 @@ public class WebClientConfig {
     private String enviosUrl;
 
     @Bean
-    public WebClient pedidosWebClient(WebClient.Builder builder) {
-        return builder
+    public WebClient pedidosWebClient() {
+        return WebClient.builder()
                 .baseUrl(pedidosUrl)
                 .clientConnector(new ReactorClientHttpConnector(
                         HttpClient.create(ConnectionProvider.create("pedidos", 100))
                                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
-                                .responseTimeout(Duration.ofSeconds(3))))
+                                .responseTimeout(Duration.ofSeconds(3))
+                ))
                 .build();
     }
 
     @Bean
-    public WebClient enviosWebClient(WebClient.Builder builder) {
-        return builder
+    public WebClient enviosWebClient() {
+        return WebClient.builder()
                 .baseUrl(enviosUrl)
                 .clientConnector(new ReactorClientHttpConnector(
                         HttpClient.create(ConnectionProvider.create("envios", 100))
                                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
-                                .responseTimeout(Duration.ofSeconds(3))))
+                                .responseTimeout(Duration.ofSeconds(3))
+                ))
                 .build();
     }
 }
