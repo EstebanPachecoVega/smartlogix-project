@@ -12,12 +12,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class EnviosClientService {
     private final WebClient enviosWebClient;
 
+    // Obtener un envío por ID
     @CircuitBreaker(name = "envios", fallbackMethod = "fallbackObtenerEnvio")
     public Mono<EnvioResponseDTO> obtenerEnvio(Long id) {
         return enviosWebClient
@@ -35,9 +38,32 @@ public class EnviosClientService {
                 .bodyToMono(EnvioResponseDTO.class);
     }
 
+    // Listar todos los envíos
+    @CircuitBreaker(name = "envios", fallbackMethod = "fallbackListarEnvios")
+    public Mono<List<EnvioResponseDTO>> listarEnvios() {
+        return enviosWebClient
+                .get()
+                .uri("/api/envios")
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response ->
+                        response.bodyToMono(String.class)
+                                .flatMap(body -> Mono.error(new RuntimeException("Error al listar envíos: " + body)))
+                )
+                .bodyToFlux(EnvioResponseDTO.class)
+                .collectList();
+    }
+
+    // Fallback para obtenerEnvio
     private Mono<EnvioResponseDTO> fallbackObtenerEnvio(Long id, Throwable t) {
         log.error("Circuit breaker abierto para obtenerEnvio {}. Motivo: {}", id, t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                 "El servicio de envíos no está disponible. Intente más tarde."));
+    }
+
+    // Fallback para listarEnvios
+    private Mono<List<EnvioResponseDTO>> fallbackListarEnvios(Throwable t) {
+        log.error("Circuit breaker abierto para listarEnvios. Motivo: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "El servicio de envíos no está disponible para listar. Intente más tarde."));
     }
 }
