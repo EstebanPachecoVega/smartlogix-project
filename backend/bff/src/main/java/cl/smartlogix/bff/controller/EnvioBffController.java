@@ -23,4 +23,9 @@ public class EnvioBffController {
     public Mono<EnvioResponseDTO> obtenerEnvio(@PathVariable Long id) {
         return envioBffService.obtenerEnvio(id);
     }
+
+    @GetMapping("/pedido/{pedidoId}")
+    public Mono<EnvioResponseDTO> obtenerEnvioPorPedidoId(@PathVariable Long pedidoId) {
+        return envioBffService.obtenerEnvioPorPedidoId(pedidoId);
+    }
 }

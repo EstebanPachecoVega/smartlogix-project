@@ -23,4 +23,9 @@ public class EnvioBffServiceImpl implements EnvioBffService {
     public Mono<EnvioResponseDTO> obtenerEnvio(Long id) {
         return enviosClient.obtenerEnvio(id);
     }
+
+    @Override
+    public Mono<EnvioResponseDTO> obtenerEnvioPorPedidoId(Long pedidoId) {
+        return enviosClient.obtenerEnvioPorPedidoId(pedidoId);
+    }
 }

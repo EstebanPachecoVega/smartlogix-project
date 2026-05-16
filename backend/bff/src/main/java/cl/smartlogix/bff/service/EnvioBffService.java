@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface EnvioBffService {
     Mono<List<EnvioResponseDTO>> listarEnvios();
+
     Mono<EnvioResponseDTO> obtenerEnvio(Long id);
+
+    Mono<EnvioResponseDTO> obtenerEnvioPorPedidoId(Long pedidoId);
 }
