@@ -7,6 +7,7 @@ export default function Navbar() {
         <Link href="/">Inicio</Link>
         <Link href="/pedidos/nuevo">Nuevo Pedido</Link>
         <Link href="/pedidos">Mis Pedidos</Link>
+        <Link href="/envios">Envíos</Link>
       </div>
     </nav>
   );
