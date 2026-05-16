@@ -5,6 +5,10 @@ import cl.smartlogix.envios.exception.ResourceNotFoundException;
 import cl.smartlogix.envios.mapper.EnvioMapper;
 import cl.smartlogix.envios.repository.EnvioRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class EnvioController {
     private final EnvioRepository envioRepository;
     private final EnvioMapper envioMapper;
+
+    @GetMapping
+    public List<EnvioResponseDTO> listarEnvios() {
+        return envioRepository.findAll()
+                .stream()
+                .map(envioMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
 
     @GetMapping("/{id}")
     public EnvioResponseDTO obtenerEnvio(@PathVariable Long id) {
