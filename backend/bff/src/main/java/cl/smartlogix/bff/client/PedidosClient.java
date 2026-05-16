@@ -20,7 +20,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PedidosWebClient {
+public class PedidosClient {
     @Qualifier("pedidosWebClient")
     private final WebClient pedidosWebClient;
 

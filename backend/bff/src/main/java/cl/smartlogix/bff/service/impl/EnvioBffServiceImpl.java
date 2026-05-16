@@ -1,6 +1,6 @@
 package cl.smartlogix.bff.service.impl;
 
-import cl.smartlogix.bff.client.EnviosWebClient;
+import cl.smartlogix.bff.client.EnviosClient;
 import cl.smartlogix.bff.dto.response.EnvioResponseDTO;
 import cl.smartlogix.bff.service.EnvioBffService;
 import lombok.RequiredArgsConstructor;
@@ -12,15 +12,15 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EnvioBffServiceImpl implements EnvioBffService {
-    private final EnviosWebClient enviosWebClient;
+    private final EnviosClient enviosClient;
 
     @Override
     public Mono<List<EnvioResponseDTO>> listarEnvios() {
-        return enviosWebClient.listarEnvios();
+        return enviosClient.listarEnvios();
     }
 
     @Override
     public Mono<EnvioResponseDTO> obtenerEnvio(Long id) {
-        return enviosWebClient.obtenerEnvio(id);
+        return enviosClient.obtenerEnvio(id);
     }
 }

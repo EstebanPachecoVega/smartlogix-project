@@ -18,7 +18,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class EnviosWebClient {
+public class EnviosClient {
     @Qualifier("enviosWebClient")
     private final WebClient enviosWebClient;
 

@@ -6,10 +6,11 @@ import PedidoCard from './PedidoCard';
 import Spinner from '../common/Spinner';
 
 export default function PedidoList() {
-  const { pedidos, loading, error, limpiarError } = usePedidoStore();
+  const { pedidos, loading, error, listarPedidos } = usePedidoStore();
 
-  // Opcional: cargar lista desde API si no se tiene aún
-  // useEffect(() => { ... }, [])
+  useEffect(() => {
+    listarPedidos();
+  }, [listarPedidos]);
 
   if (loading) return <Spinner />;
   if (error) return <div className="text-red-500">Error: {error}</div>;
