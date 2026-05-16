@@ -5,6 +5,7 @@ import cl.smartlogix.bff.exception.ResourceNotFoundException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,8 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class EnviosClientService {
+public class EnviosWebClient {
+    @Qualifier("enviosWebClient")
     private final WebClient enviosWebClient;
 
     // Obtener un envío por ID
@@ -37,7 +39,7 @@ public class EnviosClientService {
                 })
                 .bodyToMono(EnvioResponseDTO.class);
     }
-
+    
     // Listar todos los envíos
     @CircuitBreaker(name = "envios", fallbackMethod = "fallbackListarEnvios")
     public Mono<List<EnvioResponseDTO>> listarEnvios() {
@@ -53,14 +55,13 @@ public class EnviosClientService {
                 .collectList();
     }
 
-    // Fallback para obtenerEnvio
+    // Fallbacks
     private Mono<EnvioResponseDTO> fallbackObtenerEnvio(Long id, Throwable t) {
         log.error("Circuit breaker abierto para obtenerEnvio {}. Motivo: {}", id, t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                 "El servicio de envíos no está disponible. Intente más tarde."));
     }
 
-    // Fallback para listarEnvios
     private Mono<List<EnvioResponseDTO>> fallbackListarEnvios(Throwable t) {
         log.error("Circuit breaker abierto para listarEnvios. Motivo: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,

@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,7 +33,12 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     @Override
-    @Transactional(noRollbackFor = {ResourceNotFoundException.class, DomainException.class})
+    public List<Pedido> listarPedidos() {
+        return pedidoRepository.findAll();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = { ResourceNotFoundException.class, DomainException.class })
     public Pedido crearPedido(CrearPedidoRequestDTO request) {
         // 1. Guardar pedido en estado PENDIENTE
         Pedido pedido = new Pedido();

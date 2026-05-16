@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/pedidos")
 @RequiredArgsConstructor
@@ -22,6 +25,14 @@ public class PedidoController {
     public PedidoResponseDTO crearPedido(@Valid @RequestBody CrearPedidoRequestDTO request) {
         Pedido pedido = pedidoService.crearPedido(request);
         return pedidoMapper.toResponseDTO(pedido);
+    }
+
+    @GetMapping
+    public List<PedidoResponseDTO> listarPedidos() {
+        return pedidoService.listarPedidos()
+                .stream()
+                .map(pedidoMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")

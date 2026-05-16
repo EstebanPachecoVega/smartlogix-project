@@ -7,6 +7,7 @@ import cl.smartlogix.bff.exception.ResourceNotFoundException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -14,12 +15,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PedidosClientService {
+public class PedidosWebClient {
+    @Qualifier("pedidosWebClient")
     private final WebClient pedidosWebClient;
 
+    // Crear un nuevo pedido
     @CircuitBreaker(name = "pedidos", fallbackMethod = "fallbackCrearPedido")
     public Mono<PedidoResponseDTO> crearPedido(CrearPedidoRequestDTO request) {
         return pedidosWebClient
@@ -31,6 +36,7 @@ public class PedidosClientService {
                 .bodyToMono(PedidoResponseDTO.class);
     }
 
+    // Obtener un pedido por ID
     @CircuitBreaker(name = "pedidos", fallbackMethod = "fallbackObtenerPedido")
     public Mono<PedidoResponseDTO> obtenerPedido(Long id) {
         return pedidosWebClient
@@ -41,13 +47,25 @@ public class PedidosClientService {
                 .bodyToMono(PedidoResponseDTO.class);
     }
 
-    // Manejador común de errores HTTP
+    // Listar todos los pedidos
+    @CircuitBreaker(name = "pedidos", fallbackMethod = "fallbackListarPedidos")
+    public Mono<List<PedidoResponseDTO>> listarPedidos() {
+        return pedidosWebClient
+                .get()
+                .uri("/api/pedidos")
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToFlux(PedidoResponseDTO.class)
+                .collectList();
+    }
+
+    // Manejo de errores comunes
     private Mono<? extends Throwable> handleError(org.springframework.web.reactive.function.client.ClientResponse response) {
         HttpStatusCode status = response.statusCode();
         return response.bodyToMono(String.class)
                 .flatMap(body -> {
                     if (status == HttpStatus.NOT_FOUND) {
-                        return Mono.error(new ResourceNotFoundException("Recurso no encontrado: " + body));
+                        return Mono.error(new ResourceNotFoundException("Pedido no encontrado: " + body));
                     } else if (status == HttpStatus.UNPROCESSABLE_ENTITY) {
                         return Mono.error(new DomainException("Regla de negocio violada: " + body));
                     } else {
@@ -67,5 +85,11 @@ public class PedidosClientService {
         log.error("Circuit breaker abierto para obtenerPedido {}. Motivo: {}", id, t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                 "El servicio de pedidos no está disponible. Intente más tarde."));
+    }
+
+    private Mono<List<PedidoResponseDTO>> fallbackListarPedidos(Throwable t) {
+        log.error("Circuit breaker abierto para listarPedidos. Motivo: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "El servicio de pedidos no está disponible para listar. Intente más tarde."));
     }
 }
