@@ -1,6 +1,9 @@
-import { apiGet } from './api';
-import { EnvioResponse } from '@/types';
+import api from './api';
+import type { EnvioResponse } from '@/types';
 
 export const enviosService = {
-  obtener: (id: number) => apiGet<EnvioResponse>(`/bff/envios/${id}`),
+  async obtenerEnvio(id: number): Promise<EnvioResponse> {
+    const response = await api.get<EnvioResponse>(`/bff/envios/${id}`);
+    return response.data;
+  },
 };

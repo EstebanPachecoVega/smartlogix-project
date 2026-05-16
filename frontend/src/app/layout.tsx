@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
-import './globals.css';
-import Navbar from '@/components/Navbar';
-import Toast from '@/components/Toast';
+import { Inter } from 'next/font/google';
+import '@/styles/globals.css';
+import Navbar from '@/components/common/Navbar';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'SmartLogix',
@@ -15,10 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="bg-gray-100">
+      <body className={inter.className}>
         <Navbar />
         <main className="container mx-auto p-4">{children}</main>
-        <Toast />
       </body>
     </html>
   );

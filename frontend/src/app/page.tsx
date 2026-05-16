@@ -1,22 +1,18 @@
-'use client';
 import Link from 'next/link';
-import { useUIStore } from '@/stores/uiStore';
 
-export default function HomePage() {
-  const { loading } = useUIStore();
+export default function Home() {
   return (
     <div className="text-center">
-      <h1 className="text-3xl font-bold mb-4">Bienvenido a SmartLogix</h1>
-      <p className="mb-4">Gestiona pedidos y envíos de forma inteligente.</p>
-      <div className="space-x-4">
-        <Link href="/pedidos/nuevo" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Nuevo Pedido
+      <h1 className="text-3xl font-bold">Bienvenido a SmartLogix</h1>
+      <p className="mt-2">Sistema inteligente de gestión logística</p>
+      <div className="mt-4 space-x-4">
+        <Link href="/pedidos/nuevo" className="bg-blue-500 text-white px-4 py-2 rounded">
+          Crear Pedido
         </Link>
-        <Link href="/pedidos" className="bg-gray-600 text-white px-4 py-2 rounded">
+        <Link href="/pedidos" className="bg-gray-500 text-white px-4 py-2 rounded">
           Ver Pedidos
         </Link>
       </div>
-      {loading && <p className="mt-4">Cargando...</p>}
     </div>
   );
 }

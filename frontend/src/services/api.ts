@@ -1,23 +1,30 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import axios from 'axios';
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw errorData;
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Interceptor para añadir token JWT (más adelante)
+api.interceptors.request.use((config) => {
+  // const token = localStorage.getItem('token');
+  // if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Interceptor para manejar errores de ProblemDetail
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.data) {
+      const problemDetail = error.response.data;
+      // Lanza un error con el mensaje detail o el genérico
+      throw new Error(problemDetail.detail || problemDetail.title || 'Error en la petición');
+    }
+    throw error;
   }
-  return response.json();
-}
+);
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
-  return handleResponse<T>(res);
-}
-
-export async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  return handleResponse<T>(res);
-}
+export default api;
