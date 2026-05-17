@@ -110,7 +110,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public List<ProductoResponseDTO> getProductosPorCategoria(Long categoriaId) {
         log.debug("Obteniendo productos de la categoría y sus subcategorías directas para el ID: {}", categoriaId);
-        return productoRepository.findByCategoriaIdOrCategoriaPadreId(categoriaId, categoriaId)
+        return productoRepository.buscarPorCategoriaOPadre(categoriaId, categoriaId)
                 .stream()
                 .map(productoMapper::toResponseDTO)
                 .collect(Collectors.toList());

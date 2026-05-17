@@ -2,6 +2,7 @@ package cl.smartlogix.inventario.repository;
 
 import cl.smartlogix.inventario.entity.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,11 +17,13 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
         boolean existsBySku(String sku);
 
-        List<Producto> findByNombreContainingIgnoreCase(String nombre);
+        @Modifying
+        @Query("UPDATE Producto p SET p.cantidad = p.cantidad - :cantidad WHERE p.id = :productoId AND p.cantidad >= :cantidad")
+        int restarStockAtomico(@Param("productoId") Long productoId, @Param("cantidad") Integer cantidad);
 
-        List<Producto> findByCategoriaIdOrCategoriaPadreId(Long categoriaId, Long padreId);
+        @Query("SELECT p FROM Producto p WHERE p.categoria.id = :categoriaId OR p.categoria.padre.id = :padreId")
+        List<Producto> buscarPorCategoriaOPadre(@Param("categoriaId") Long categoriaId, @Param("padreId") Long padreId);
 
-        // 🔍 Filtrador avanzado dinámico
         @Query("SELECT p FROM Producto p WHERE " +
                         "(:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
                         "(:categoriaId IS NULL OR p.categoria.id = :categoriaId) AND " +

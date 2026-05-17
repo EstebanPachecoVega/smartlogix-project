@@ -1,6 +1,8 @@
 package cl.smartlogix.inventario.exception;
 
 import jakarta.validation.ConstraintViolationException;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -30,6 +32,15 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         pd.setTitle("Regla de negocio violada");
         pd.setType(URI.create("https://smartlogix.cl/errors/business-rule"));
+        pd.setProperty("timestamp", System.currentTimeMillis());
+        return pd;
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ProblemDetail handleDuplicate(DuplicateResourceException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        pd.setTitle("Recurso ya existe");
+        pd.setType(URI.create("https://smartlogix.cl/errors/duplicate-resource"));
         pd.setProperty("timestamp", System.currentTimeMillis());
         return pd;
     }
@@ -64,6 +75,17 @@ public class GlobalExceptionHandler {
         pd.setTitle("Error interno del servidor");
         pd.setDetail("Ha ocurrido un error inesperado. Por favor, intente más tarde.");
         pd.setType(URI.create("https://smartlogix.cl/errors/internal-server-error"));
+        pd.setProperty("timestamp", System.currentTimeMillis());
+        return pd;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        pd.setTitle("Conflicto de datos en la Base de Datos");
+        pd.setDetail(
+                "No se pudo completar la operación. Es posible que esté intentando registrar un valor que ya existe (ej: nombre o slug duplicado) o violando una restricción de la base de datos.");
+        pd.setType(URI.create("https://smartlogix.cl/errors/data-conflict"));
         pd.setProperty("timestamp", System.currentTimeMillis());
         return pd;
     }
