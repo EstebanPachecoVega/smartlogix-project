@@ -2,10 +2,12 @@ package cl.smartlogix.inventario.service.impl;
 
 import cl.smartlogix.inventario.dto.request.ProductoRequestDTO;
 import cl.smartlogix.inventario.dto.response.ProductoResponseDTO;
+import cl.smartlogix.inventario.entity.Categoria;
 import cl.smartlogix.inventario.entity.Producto;
 import cl.smartlogix.inventario.exception.DuplicateResourceException;
 import cl.smartlogix.inventario.exception.ResourceNotFoundException;
 import cl.smartlogix.inventario.mapper.ProductoMapper;
+import cl.smartlogix.inventario.repository.CategoriaRepository;
 import cl.smartlogix.inventario.repository.ProductoRepository;
 import cl.smartlogix.inventario.service.ProductoService;
 import lombok.RequiredArgsConstructor;
@@ -24,43 +26,44 @@ public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
     private final ProductoMapper productoMapper;
+    private final CategoriaRepository categoriaRepository;
 
     // Crear un nuevo producto con validación de SKU único
     @Override
     @Transactional
     public ProductoResponseDTO createProducto(ProductoRequestDTO request) {
-        log.debug("Creando producto: {}", request.getNombre());
+        log.debug("Procesando creación del producto: {}", request.getNombre());
         if (request.getSku() != null && productoRepository.existsBySku(request.getSku())) {
-            throw new DuplicateResourceException("Ya existe un producto con el mismo SKU: " + request.getSku());
+            throw new DuplicateResourceException("El SKU '" + request.getSku() + "' ya está registrado");
         }
-        try {
-            Producto producto = productoMapper.toEntity(request);
-            Producto saved = productoRepository.save(producto);
-            return productoMapper.toResponseDTO(saved);
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateResourceException("Ya existe un producto con el mismo nombre o slug");
-        }
+        Producto producto = productoMapper.toEntity(request);
+        Categoria categoriaReal = categoriaRepository.findById(request.getCategoriaId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Categoría no encontrada con ID: " + request.getCategoriaId()));
+        producto.setCategoria(categoriaReal);
+        Producto productoGuardado = productoRepository.save(producto);
+        log.info("Producto creado exitosamente con ID: {}", productoGuardado.getId());
+        return productoMapper.toResponseDTO(productoGuardado);
     }
 
-    // Actualizar un producto por ID con validación de SKU único
+    // Actualizar un producto existente con validación de SKU único y manejo de
+    // excepciones
     @Override
     @Transactional
     public ProductoResponseDTO updateProducto(Long id, ProductoRequestDTO request) {
-        log.debug("Actualizando producto id: {}", id);
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
-        if (request.getSku() != null && !request.getSku().equals(producto.getSku())) {
-            if (productoRepository.existsBySku(request.getSku())) {
-                throw new DuplicateResourceException("No puedes usar ese SKU porque ya pertenece a otro producto");
-            }
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+
+        if (!producto.getSku().equals(request.getSku()) && productoRepository.existsBySku(request.getSku())) {
+            throw new DuplicateResourceException("El SKU ya está registrado en otro producto");
         }
         productoMapper.updateEntity(producto, request);
-        try {
-            Producto updated = productoRepository.save(producto);
-            return productoMapper.toResponseDTO(updated);
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateResourceException("Conflicto: nombre o slug ya existe");
-        }
+        Categoria categoriaReal = categoriaRepository.findById(request.getCategoriaId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Categoría no encontrada con ID: " + request.getCategoriaId()));
+        producto.setCategoria(categoriaReal);
+        Producto productoGuardado = productoRepository.save(producto);
+        return productoMapper.toResponseDTO(productoGuardado);
     }
 
     // Eliminar un producto por ID con manejo de excepciónes

@@ -50,7 +50,6 @@ public class Producto {
 
     @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "json")
     private List<String> imagenes = new ArrayList<>();
 
     @Column(name = "destacado")
