@@ -24,7 +24,10 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
         @Query("SELECT p FROM Producto p WHERE p.categoria.id = :categoriaId OR p.categoria.padre.id = :padreId")
         List<Producto> buscarPorCategoriaOPadre(@Param("categoriaId") Long categoriaId, @Param("padreId") Long padreId);
 
-        @Query("SELECT p FROM Producto p WHERE " +
+        @Query("SELECT p FROM Producto p JOIN FETCH p.categoria")
+        List<Producto> findAll();
+
+        @Query("SELECT p FROM Producto p JOIN FETCH p.categoria WHERE " +
                         "(:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
                         "(:categoriaId IS NULL OR p.categoria.id = :categoriaId) AND " +
                         "(:conStock IS NULL OR " +
