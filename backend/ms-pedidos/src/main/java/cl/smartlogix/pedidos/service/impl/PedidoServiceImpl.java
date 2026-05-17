@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,6 +35,115 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoEventPublisher eventPublisher;
 
     @Override
+    @Transactional
+    public Pedido crearPedido(CrearPedidoRequestDTO request) {
+        log.info("Iniciando creación de pedido para el usuario: {}", request.getUsuarioId());
+
+        // 1. Instanciar el objeto Pedido manteniendo el correlativo único y agregando la metadata logística
+        Pedido pedido = Pedido.builder()
+                .numeroOrden("ORD-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-"
+                        + UUID.randomUUID().toString().substring(0, 4).toUpperCase())
+                .fechaPedido(LocalDateTime.now())
+                .estado(EstadoPedido.PENDIENTE)
+                .usuarioId(request.getUsuarioId())
+                .destinatario(request.getDestinatario())
+                .calle(request.getCalle())
+                .numero(request.getNumero())
+                .comuna(request.getComuna())
+                .ciudad(request.getCiudad())
+                .codigoPostal(request.getCodigoPostal())
+                .metodoEnvio(request.getMetodoEnvio())
+                .pesoKg(request.getPesoKg())
+                .dimensiones(request.getDimensiones())
+                .totalCompra(0)
+                .build();
+
+        int totalAcumulado = 0;
+        List<DetallePedido> productosConStockReservado = new ArrayList<>();
+
+        try {
+            // 2. Mapear y calcular subtotales de la lista de ítems entrantes
+            for (CrearPedidoRequestDTO.DetalleRequestDTO itemDto : request.getItems()) {
+                int subtotal = itemDto.getPrecioUnitario() * itemDto.getCantidad();
+                totalAcumulado += subtotal;
+
+                DetallePedido detalle = DetallePedido.builder()
+                        .productoId(itemDto.getProductoId())
+                        .sku(itemDto.getSku())
+                        .nombreProducto(itemDto.getNombreProducto())
+                        .precioUnitario(itemDto.getPrecioUnitario())
+                        .cantidad(itemDto.getCantidad())
+                        .subtotal(subtotal)
+                        .build();
+
+                pedido.agregarDetalle(detalle);
+            }
+
+            pedido.setTotalCompra(totalAcumulado);
+
+            // 3. Guardar el estado inicial (PENDIENTE) en la base de datos local
+            pedido = pedidoRepository.save(pedido);
+            log.info("Pedido guardado localmente en estado PENDIENTE con orden: {}", pedido.getNumeroOrden());
+
+            // 4. Ejecutar el pipeline de reservas distribuidas sincrónicas mediante Feign
+            for (DetallePedido detalle : pedido.getDetalles()) {
+                log.debug("Solicitando reserva de stock para Producto ID: {}, Cantidad: {}", detalle.getProductoId(),
+                        detalle.getCantidad());
+
+                ReservarStockRequestDTO reservaDto = new ReservarStockRequestDTO(detalle.getProductoId(),
+                        detalle.getCantidad());
+
+                // Llamada Feign hacia ms-inventario
+                inventarioClient.reservarStock(reservaDto);
+
+                // Si la llamada fue exitosa, se añade a la lista de "guardias" por si ocurre un fallo posterior
+                productosConStockReservado.add(detalle);
+            }
+
+            // 5. DISPARADOR DE ÉXITO INTEGRADO: Si todas las reservas fueron exitosas, se aprueba el pedido y se publica el evento enriquecido
+            pedido.setEstado(EstadoPedido.APROBADO);
+            pedidoRepository.save(pedido);
+            log.info("✅ Pedido {} APROBADO exitosamente. Transacción local consolidada.", pedido.getNumeroOrden());
+
+            // Construir el evento enriquecido con los datos exactos que espera el ms-envios
+            PedidoAprobadoEventDTO eventoAprobado = PedidoAprobadoEventDTO.builder()
+                    .pedidoId(pedido.getId())
+                    .numeroOrden(pedido.getNumeroOrden())
+                    .usuarioId(pedido.getUsuarioId())
+                    .destinatario(pedido.getDestinatario())
+                    .calle(pedido.getCalle())
+                    .numero(pedido.getNumero())
+                    .comuna(pedido.getComuna())
+                    .ciudad(pedido.getCiudad())
+                    .codigoPostal(pedido.getCodigoPostal())
+                    .metodoEnvio(pedido.getMetodoEnvio())
+                    .pesoKg(pedido.getPesoKg())
+                    .dimensiones(pedido.getDimensiones())
+                    .build();
+
+            // Despachar evento asíncrono a RabbitMQ
+            eventPublisher.publicarPedidoAprobado(eventoAprobado);
+
+        } catch (Exception e) {
+            // 6. BLOQUE DE RESILIENCIA E INTACTO (SAGA / Compensaciones)
+            pedido.setEstado(EstadoPedido.RECHAZADO);
+            pedidoRepository.save(pedido);
+            log.error("Fallo detectado en el flujo del pedido {}. Motivo: {}", pedido.getNumeroOrden(), e.getMessage());
+
+            // Ejecutar compensaciones de stock para cada producto que se reservó exitosamente antes del fallo
+            ejecutarCompensacionesStock(pedido, productosConStockReservado);
+
+            if (e instanceof DomainException || e instanceof ResourceNotFoundException) {
+                throw (RuntimeException) e;
+            }
+            throw new DomainException(
+                    "No se pudo procesar el pedido debido a un error en el sistema central: " + e.getMessage());
+        }
+
+        return pedido;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Pedido obtenerPedidoPorId(Long id) {
         return pedidoRepository.findById(id)
@@ -46,7 +154,8 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional(readOnly = true)
     public Pedido obtenerPedidoPorNumeroOrden(String numeroOrden) {
         return pedidoRepository.findByNumeroOrden(numeroOrden)
-                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con Orden Nº: " + numeroOrden));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Pedido no encontrado con número de orden: " + numeroOrden));
     }
 
     @Override
@@ -55,93 +164,7 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoRepository.findAll();
     }
 
-    @Override
-    @Transactional(noRollbackFor = { ResourceNotFoundException.class, DomainException.class })
-    public Pedido crearPedido(CrearPedidoRequestDTO request) {
-        
-        // 1. Crear número de orden personalizado (ORD-AAAAMMDD-XXXX)
-        String numeroOrden = "ORD-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + 
-                             "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
-
-        Pedido pedido = Pedido.builder()
-                .numeroOrden(numeroOrden)
-                .fechaPedido(LocalDateTime.now())
-                .estado(EstadoPedido.PENDIENTE)
-                .totalCompra(0)
-                .build();
-
-        int totalCompraAcumulado = 0;
-
-        // 2. Poblar los detalles calculando en Integer
-        for (CrearPedidoRequestDTO.DetalleRequestDTO item : request.getItems()) {
-            int subtotalItem = item.getPrecioUnitario() * item.getCantidad();
-            totalCompraAcumulado += subtotalItem;
-
-            DetallePedido detalle = DetallePedido.builder()
-                    .productoId(item.getProductoId())
-                    .sku(item.getSku())
-                    .nombreProducto(item.getNombreProducto())
-                    .precioUnitario(item.getPrecioUnitario())
-                    .cantidad(item.getCantidad())
-                    .subtotal(subtotalItem)
-                    .build();
-
-            pedido.agregarDetalle(detalle);
-        }
-
-        pedido.setTotalCompra(totalCompraAcumulado);
-        pedido = pedidoRepository.save(pedido);
-        log.info("Pedido {} registrado temporalmente en PENDIENTE. Total: ${}", pedido.getNumeroOrden(), totalCompraAcumulado);
-
-        List<DetallePedido> productosConStockReservado = new ArrayList<>();
-
-        try {
-            // 3. Orquestación SAGA: Llamar síncronamente al ms-inventario producto por producto
-            for (DetallePedido detalle : pedido.getDetalles()) {
-                ReservarStockRequestDTO stockRequest = new ReservarStockRequestDTO(detalle.getProductoId(), detalle.getCantidad());
-                
-                // Petición HTTP síncrona vía Feign
-                inventarioClient.reservarStock(stockRequest); 
-                
-                productosConStockReservado.add(detalle);
-                log.info("Stock reservado OK para producto ID: {} (Cant: {})", detalle.getProductoId(), detalle.getCantidad());
-            }
-
-            // 4. Éxito SAGA: Cambiar estado a APROBADO
-            pedido.setEstado(EstadoPedido.APROBADO);
-            pedido = pedidoRepository.save(pedido);
-
-            // Emitir evento a ms-envios
-            List<PedidoAprobadoEventDTO.ItemEventDTO> eventItems = pedido.getDetalles().stream()
-                .map(d -> new PedidoAprobadoEventDTO.ItemEventDTO(d.getProductoId(), d.getCantidad()))
-                .collect(Collectors.toList());
-
-            PedidoAprobadoEventDTO aprobadoEvent = PedidoAprobadoEventDTO.builder()
-                    .pedidoId(pedido.getId())
-                    .numeroOrden(pedido.getNumeroOrden())
-                    .items(eventItems)
-                    .build();
-
-            eventPublisher.publicarPedidoAprobado(aprobadoEvent);
-            log.info("SAGA Finalizada con Éxito. Pedido {} APROBADO.", pedido.getNumeroOrden());
-
-        } catch (Exception e) {
-            // 5. Fallo SAGA: Cambiar estado a RECHAZADO y enviar eventos de compensación (Rollback)
-            pedido.setEstado(EstadoPedido.RECHAZADO);
-            pedidoRepository.save(pedido);
-            log.error("Fallo detectado en el flujo del pedido {}. Motivo: {}", pedido.getNumeroOrden(), e.getMessage());
-
-            ejecutarCompensacionesStock(pedido, productosConStockReservado);
-
-            if (e instanceof DomainException || e instanceof ResourceNotFoundException) {
-                throw (RuntimeException) e;
-            }
-            throw new DomainException("No se pudo procesar el pedido debido a un error en el sistema central: " + e.getMessage());
-        }
-
-        return pedido;
-    }
-
+    /* Método privado para ejecutar compensaciones de stock en caso de fallo en el proceso de creación del pedido */
     private void ejecutarCompensacionesStock(Pedido pedido, List<DetallePedido> productosAReversar) {
         for (DetallePedido detalle : productosAReversar) {
             try {
@@ -154,7 +177,8 @@ public class PedidoServiceImpl implements PedidoService {
 
                 eventPublisher.publicarPedidoRechazado(compensacion);
             } catch (Exception ex) {
-                log.error("💥 ERROR CRÍTICO: No se pudo enviar evento de compensación a RabbitMQ para Producto ID: {}. Causa: {}", 
+                log.error(
+                        "💥 ERROR CRÍTICO: No se pudo enviar evento de compensación a RabbitMQ para Producto ID: {}. Causa: {}",
                         detalle.getProductoId(), ex.getMessage());
             }
         }

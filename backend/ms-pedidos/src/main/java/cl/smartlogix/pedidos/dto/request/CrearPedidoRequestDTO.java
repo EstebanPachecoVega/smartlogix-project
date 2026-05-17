@@ -17,6 +17,34 @@ import java.util.List;
 @AllArgsConstructor
 public class CrearPedidoRequestDTO {
 
+    // --- CAMPOS LOGÍSTICOS OBLIGATORIOS ---
+    @NotNull(message = "El ID del usuario es obligatorio.")
+    private Long usuarioId;
+
+    @NotBlank(message = "El destinatario es obligatorio.")
+    private String destinatario;
+
+    @NotBlank(message = "La calle es obligatoria.")
+    private String calle;
+
+    @NotBlank(message = "El número es obligatorio.")
+    private String numero;
+
+    @NotBlank(message = "La comuna es obligatoria.")
+    private String comuna;
+
+    @NotBlank(message = "La ciudad es obligatoria.")
+    private String ciudad;
+
+    private String codigoPostal;
+
+    @NotBlank(message = "El método de envío es obligatorio.")
+    private String metodoEnvio;
+
+    private Double pesoKg;
+    private String dimensiones;
+    // ---------------------------------------------
+
     @NotEmpty(message = "El pedido debe contener al menos un producto.")
     @Valid
     private List<DetalleRequestDTO> items;
@@ -26,7 +54,6 @@ public class CrearPedidoRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DetalleRequestDTO {
-        
         @NotNull(message = "El ID del producto es obligatorio.")
         private Long productoId;
 

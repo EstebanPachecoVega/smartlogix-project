@@ -34,6 +34,24 @@ public class Pedido {
     @Column(name = "total_compra", nullable = false)
     private Integer totalCompra;
 
+    // --- DATOS DE AUDITORÍA Y LOGÍSTICA ---
+    @Column(name = "usuario_id", nullable = false)
+    private Long usuarioId;
+    
+    private String destinatario;
+    private String calle;
+    private String numero;
+    private String comuna;
+    private String ciudad;
+    @Column(name = "codigo_postal")
+    private String codigoPostal;
+    @Column(name = "metodo_envio")
+    private String metodoEnvio;
+    @Column(name = "peso_kg")
+    private Double pesoKg;
+    private String dimensiones;
+    // ---------------------------------------------
+
     @Builder.Default
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();

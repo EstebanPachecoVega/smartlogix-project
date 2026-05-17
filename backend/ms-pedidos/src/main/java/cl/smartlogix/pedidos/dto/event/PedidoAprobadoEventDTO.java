@@ -2,7 +2,6 @@ package cl.smartlogix.pedidos.dto.event;
 
 import lombok.*;
 import java.io.Serializable;
-import java.util.List;
 
 @Getter
 @Setter
@@ -10,17 +9,20 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PedidoAprobadoEventDTO implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Long pedidoId;
     private String numeroOrden;
-    private List<ItemEventDTO> items;
-
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ItemEventDTO implements Serializable {
-        private Long productoId;
-        private Integer cantidad;
-    }
+    
+    // --- DATOS PARA EL MS-ENVIOS ---
+    private Long usuarioId;
+    private String destinatario;
+    private String calle;
+    private String numero;
+    private String comuna;
+    private String ciudad;
+    private String codigoPostal;
+    private String metodoEnvio;
+    private Double pesoKg;
+    private String dimensiones;
 }
