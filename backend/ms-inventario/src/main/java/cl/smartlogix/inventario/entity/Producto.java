@@ -12,7 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "productos")
+@Table(name = "productos", indexes = {
+    @Index(name = "idx_sku", columnList = "sku"),
+    @Index(name = "idx_slug", columnList = "slug"),
+    @Index(name = "idx_categoria_id", columnList = "categoria_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -43,8 +47,9 @@ public class Producto {
     @Column(nullable = false)
     private Integer precio;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Integer cantidad;
+    private Integer cantidad = 0;
 
     private String imagenPrincipal;
 
@@ -57,17 +62,18 @@ public class Producto {
     private Boolean destacado = false;
 
     @Column(name = "novedad")
-    private Boolean novedad = false;
+    @Builder.Default
+    private Boolean novedad = true;
 
     @Column(name = "activo")
     @Builder.Default
     private Boolean activo = true;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
 }

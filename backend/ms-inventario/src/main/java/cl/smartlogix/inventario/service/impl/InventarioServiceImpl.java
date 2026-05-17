@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class InventarioServiceImpl implements InventarioService {
     private final ProductoRepository productoRepository;
 
-    // Reserva de stock con manejo de condiciones de carrera utilizando una consulta
-    // de actualización atómica
+    // Reserva de stock con validación de cantidad y manejo de excepciones para
+    // condiciones de carrera
     @Override
     @Transactional
     public void reservarStock(Long productoId, Integer cantidad) {
@@ -40,18 +40,19 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional
     public void liberarStock(Long productoId, Integer cantidad) {
-        log.debug("Intentando liberar/devolver stock para producto {} cantidad {}", productoId, cantidad);
-        Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se pudo revertir el stock. Producto con ID " + productoId + " no encontrado"));
-        if (cantidad <= 0) {
-            throw new DomainException("La cantidad a liberar debe ser mayor a cero. Solicitado: " + cantidad);
+        log.debug("Iniciando liberación de stock por compensación. Producto: {}, Cantidad a devolver: {}", productoId,
+                cantidad);
+        if (cantidad == null || cantidad <= 0) {
+            throw new DomainException("La cantidad a liberar debe ser mayor a cero");
         }
-        // Devolvemos las unidades al stock actual
-        int nuevoStock = producto.getCantidad() + cantidad;
-        producto.setCantidad(nuevoStock);
-        productoRepository.save(producto);
-        log.info("Stock liberado/devuelto correctamente para producto {}. Nuevo stock disponible: {}", productoId,
-                nuevoStock);
+        int filasActualizadas = productoRepository.adicionarStockAtomico(productoId, cantidad);
+        if (filasActualizadas == 0) {
+            if (!productoRepository.existsById(productoId)) {
+                throw new ResourceNotFoundException(
+                        "No se pudo liberar stock. Producto con ID " + productoId + " no existe");
+            }
+            throw new DomainException("Error interno al intentar adicionar stock de forma atómica");
+        }
+        log.info("Stock restaurado correctamente. Producto ID: {}, {} unidades devueltas al inventario", productoId, cantidad);
     }
 }

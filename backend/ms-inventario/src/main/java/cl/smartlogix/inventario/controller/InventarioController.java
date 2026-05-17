@@ -4,6 +4,7 @@ import cl.smartlogix.inventario.dto.request.ReservarStockRequestDTO;
 import cl.smartlogix.inventario.dto.response.StockResponseDTO;
 import cl.smartlogix.inventario.entity.Producto;
 import cl.smartlogix.inventario.exception.ResourceNotFoundException;
+import cl.smartlogix.inventario.mapper.ProductoMapper;
 import cl.smartlogix.inventario.repository.ProductoRepository;
 import cl.smartlogix.inventario.service.InventarioService;
 import jakarta.validation.Valid;
@@ -20,13 +21,12 @@ public class InventarioController {
 
     private final InventarioService inventarioService;
     private final ProductoRepository productoRepository;
+    private final ProductoMapper productoMapper;
 
     // Endpoint para reservar stock de un producto
     @PostMapping("/reservar")
     @ResponseStatus(HttpStatus.OK)
     public void reservarStock(@Valid @RequestBody ReservarStockRequestDTO request) {
-        log.info("REST Request - Reservar {} unidades del producto ID: {}", request.getCantidad(),
-                request.getProductoId());
         inventarioService.reservarStock(request.getProductoId(), request.getCantidad());
     }
 
@@ -34,18 +34,15 @@ public class InventarioController {
     @GetMapping("/stock/{productoId}")
     public StockResponseDTO obtenerStockDisponible(@PathVariable Long productoId) {
         log.debug("REST Request - Consultar stock disponible para producto ID: {}", productoId);
-        return productoRepository.findById(productoId)
-                .map(producto -> new StockResponseDTO(producto.getId(), producto.getCantidad()))
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Producto no encontrado para verificar stock con ID: " + productoId));
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
+        return productoMapper.toStockResponseDTO(producto);
     }
 
     // Endpoint para liberar o devolver stock de un producto
-    @PostMapping("/liberar")
+    @PostMapping("/liberar") // 🚀 Exponemos el endpoint de compensación (Rollback)
     @ResponseStatus(HttpStatus.OK)
     public void liberarStock(@Valid @RequestBody ReservarStockRequestDTO request) {
-        log.info("REST Request - Liberar / Devolver {} unidades al producto ID: {}", request.getCantidad(),
-                request.getProductoId());
         inventarioService.liberarStock(request.getProductoId(), request.getCantidad());
     }
 }
