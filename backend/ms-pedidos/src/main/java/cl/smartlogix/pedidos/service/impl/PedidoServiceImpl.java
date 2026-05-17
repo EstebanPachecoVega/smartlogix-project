@@ -2,6 +2,7 @@ package cl.smartlogix.pedidos.service.impl;
 
 import cl.smartlogix.pedidos.client.InventarioClient;
 import cl.smartlogix.pedidos.dto.event.PedidoAprobadoEventDTO;
+import cl.smartlogix.pedidos.dto.event.PedidoRechazadoEventDTO;
 import cl.smartlogix.pedidos.dto.request.CrearPedidoRequestDTO;
 import cl.smartlogix.pedidos.dto.request.ReservarStockRequestDTO;
 import cl.smartlogix.pedidos.entity.EstadoPedido;
@@ -48,12 +49,16 @@ public class PedidoServiceImpl implements PedidoService {
         pedido = pedidoRepository.save(pedido);
         log.info("Pedido {} creado en estado PENDIENTE", pedido.getId());
 
-        // 2. Llamar a Inventario para reservar stock
+        boolean isStockReservado = false;
+
         try {
+            // 2. Llamar a Inventario para reservar stock
             ReservarStockRequestDTO stockRequest = new ReservarStockRequestDTO();
             stockRequest.setProductoId(request.getProductoId());
             stockRequest.setCantidad(request.getCantidad());
+
             inventarioClient.reservarStock(stockRequest);
+            isStockReservado = true; // 🔥 Si el cliente Feign no falló, el stock ya bajó en el MS Inventario
             log.info("Stock reservado exitosamente para pedido {}", pedido.getId());
 
             // 3. Éxito: actualizar estado a APROBADO y publicar evento
@@ -74,17 +79,37 @@ public class PedidoServiceImpl implements PedidoService {
             pedidoRepository.save(pedido);
             log.error("Falló la reserva de stock (error controlado) para pedido {}. Motivo: {}", pedido.getId(),
                     e.getMessage());
-            throw e; // Relanzamos la misma excepción para que el manejador global devuelva el status
-                     // correcto
+            if (isStockReservado) {
+                enviarEventoCompensacion(pedido);
+            }
+            throw e;
+
         } catch (Exception e) {
-            // Cualquier otro error (timeout, caída de inventario, etc.)
             pedido.setEstado(EstadoPedido.RECHAZADO);
             pedidoRepository.save(pedido);
-            log.error("Falló la reserva de stock (error inesperado) para pedido {}. Motivo: {}", pedido.getId(),
+            log.error("Falló el flujo del pedido (error inesperado) para pedido {}. Motivo: {}", pedido.getId(),
                     e.getMessage());
-            throw new DomainException("Error inesperado en la comunicación con inventario: " + e.getMessage());
+            if (isStockReservado) {
+                enviarEventoCompensacion(pedido);
+            }
+            throw new DomainException("Error en el procesamiento del pedido: " + e.getMessage());
         }
 
         return pedido;
+    }
+
+    // Método auxiliar para estructurar el mensaje de rollback
+    private void enviarEventoCompensacion(Pedido pedido) {
+        try {
+            PedidoRechazadoEventDTO compensacionEvent = new PedidoRechazadoEventDTO(
+                    pedido.getId(),
+                    pedido.getProductoId(),
+                    pedido.getCantidad());
+            eventPublisher.publicarPedidoRechazado(compensacionEvent);
+        } catch (Exception amqpEx) {
+            log.error(
+                    "💥 CRÍTICO: No se pudo enviar el evento de compensación a RabbitMQ para el pedido ID: {}. ¡Riesgo de inconsistencia de stock! Causa: {}",
+                    pedido.getId(), amqpEx.getMessage());
+        }
     }
 }

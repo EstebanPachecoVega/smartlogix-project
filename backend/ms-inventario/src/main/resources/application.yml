@@ -3,7 +3,7 @@ spring:
     name: ms-inventario
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:smartlogix_inventario}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:db_inventario}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:rootpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -24,9 +24,6 @@ spring:
     port: ${RABBIT_PORT:5672}
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASSWORD:guest}
-    listener:
-      simple:
-        auto-startup: ${RABBIT_AUTO_STARTUP:true}
 
 server:
   port: ${SERVER_PORT:8081}
