@@ -3,30 +3,33 @@ spring:
     name: ms-inventario
 
   datasource:
-    url: jdbc:mysql://localhost:3306/db_inventario?useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: rootpassword
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:smartlogix_inventario}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:rootpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: true
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
-        use_sql_comments: true
-        physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        naming:
+          physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    listener:
+      simple:
+        auto-startup: ${RABBIT_AUTO_STARTUP:true}
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 springdoc:
   api-docs:
@@ -36,4 +39,5 @@ springdoc:
 
 logging:
   level:
+    root: INFO
     cl.smartlogix: DEBUG

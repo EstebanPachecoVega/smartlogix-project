@@ -17,9 +17,15 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
         boolean existsBySku(String sku);
 
+        boolean existsByCategoriaIdIn(List<Long> categoriaIds);
+
         @Modifying
         @Query("UPDATE Producto p SET p.cantidad = p.cantidad - :cantidad WHERE p.id = :productoId AND p.cantidad >= :cantidad")
         int restarStockAtomico(@Param("productoId") Long productoId, @Param("cantidad") Integer cantidad);
+
+        @Modifying
+        @Query("UPDATE Producto p SET p.cantidad = p.cantidad + :cantidad WHERE p.id = :id")
+        int adicionarStockAtomico(@Param("id") Long id, @Param("cantidad") Integer cantidad);
 
         @Query("SELECT p FROM Producto p WHERE p.categoria.id = :categoriaId OR p.categoria.padre.id = :padreId")
         List<Producto> buscarPorCategoriaOPadre(@Param("categoriaId") Long categoriaId, @Param("padreId") Long padreId);

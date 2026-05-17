@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,52 +52,50 @@ public class CategoriaServiceImpl implements CategoriaService {
         return categoriaMapper.toResponseDTO(saved);
     }
 
-    // Validación de integridad y consistencia antes de actualizar una categoría
+    // Actualizar una categoría existente con validaciones de unicidad, existencia y
+    // ciclos jerárquicos
     @Override
     @Transactional
     public CategoriaResponseDTO updateCategoria(Long id, CategoriaRequestDTO request) {
-        log.debug("Procesando actualización de categoría ID: {}", id);
-
+        log.debug("Actualizando categoría ID: {}", id);
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
-
-        // Validación de consistencia jerárquica
-        if (id.equals(request.getPadreId())) {
-            throw new DomainException(
-                    "Error de consistencia: Una categoría no puede ser asignada como su propia categoría padre.");
+        if (!categoria.getNombre().equals(request.getNombre())
+                && categoriaRepository.existsByNombreAndIdNot(request.getNombre(), id)) {
+            throw new DuplicateResourceException("El nombre de la categoría ya existe");
         }
-
-        if (categoriaRepository.existsByNombreAndIdNot(request.getNombre(), id)) {
-            throw new DuplicateResourceException(
-                    "El nombre '" + request.getNombre() + "' ya está siendo usado por otra categoría.");
+        if (!categoria.getSlug().equals(request.getSlug())
+                && categoriaRepository.existsBySlugAndIdNot(request.getSlug(), id)) {
+            throw new DuplicateResourceException("El slug de la categoría ya existe");
         }
-        if (categoriaRepository.existsBySlugAndIdNot(request.getSlug(), id)) {
-            throw new DuplicateResourceException(
-                    "El slug '" + request.getSlug() + "' ya está siendo usado por otra categoría.");
+        Categoria nuevoPadre = null;
+        if (request.getPadreId() != null) {
+            nuevoPadre = categoriaRepository.findById(request.getPadreId())
+                    .orElseThrow(() -> new ResourceNotFoundException("La categoría padre indicada no existe"));
+            validarCicloJerarquico(id, nuevoPadre);
         }
-
-        if (request.getPadreId() != null && !categoriaRepository.existsById(request.getPadreId())) {
-            throw new ResourceNotFoundException("La categoría padre con ID " + request.getPadreId() + " no existe.");
-        }
-
         categoriaMapper.updateEntity(categoria, request);
-        Categoria updated = categoriaRepository.save(categoria);
-        return categoriaMapper.toResponseDTO(updated);
+        categoria.setPadre(nuevoPadre);
+        Categoria categoriaGuardada = categoriaRepository.save(categoria);
+        return categoriaMapper.toResponseDTO(categoriaGuardada);
     }
 
-    // Validación de integridad referencial antes de eliminar una categoría
+    // Validar y eliminar una categoría solo si no tiene productos asociados en toda
+    // su rama de subcategorías
     @Override
     @Transactional
     public void deleteCategoria(Long id) {
-        log.debug("Procesando eliminación de categoría ID: {}", id);
+        log.debug("Evaluando eliminación de categoría ID: {}", id);
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
-        if (!productoRepository.buscarPorCategoriaOPadre(id, id).isEmpty()) {
+        List<Long> idsRamaCompleta = obtenerIdsRamaCompleta(categoria);
+        boolean existenProductos = productoRepository.existsByCategoriaIdIn(idsRamaCompleta);
+        if (existenProductos) {
             throw new DomainException(
-                    "No se puede eliminar la categoría porque tiene productos activos asociados en ella o en sus subcategorías directas.");
+                    "No se puede eliminar la categoría porque contiene productos (directamente o en sus subcategorías).");
         }
         categoriaRepository.delete(categoria);
-        log.info("Categoría ID {} eliminada exitosamente del sistema", id);
+        log.info("Categoría ID: {} eliminada exitosamente junto con subcategorías vacías", id);
     }
 
     // Consulta por ID con manejo de excepciones para casos no encontrados
@@ -117,7 +116,8 @@ public class CategoriaServiceImpl implements CategoriaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con el slug: " + slug));
     }
 
-    // Consulta de todas las categorías con mapeo a DTOs para una respuesta estructurada
+    // Consulta de todas las categorías con mapeo a DTOs para una respuesta
+    // estructurada
     @Override
     @Transactional(readOnly = true)
     public List<CategoriaResponseDTO> getAllCategorias() {
@@ -126,12 +126,45 @@ public class CategoriaServiceImpl implements CategoriaService {
                 .collect(Collectors.toList());
     }
 
-    // Consulta de categorías principales (sin padre) con mapeo a DTOs para una respuesta estructurada
+    // Consulta de categorías principales (sin padre) con mapeo a DTOs para una
+    // respuesta estructurada
     @Override
     @Transactional(readOnly = true)
     public List<CategoriaResponseDTO> getCategoriasPrincipales() {
         return categoriaRepository.findByPadreIsNull().stream()
                 .map(categoriaMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    // Validación de ciclos jerárquicos para evitar inconsistencias en la estructura
+    // de categorías y garantizar la integridad de los datos
+    private void validarCicloJerarquico(Long idCategoriaActual, Categoria nuevoPadre) {
+        if (nuevoPadre == null)
+            return;
+        if (idCategoriaActual.equals(nuevoPadre.getId())) {
+            throw new DomainException("Una categoría no puede ser padre de sí misma");
+        }
+        Categoria ancestro = nuevoPadre.getPadre();
+        while (ancestro != null) {
+            if (idCategoriaActual.equals(ancestro.getId())) {
+                throw new DomainException(
+                        "Error jerárquico: No puedes asignar como padre a una categoría que ya es descendiente de esta (Ciclo detectado)");
+            }
+            ancestro = ancestro.getPadre();
+        }
+    }
+
+    // Método auxiliar para obtener todos los IDs de una categoría y sus
+    // subcategorías de forma recursiva
+    private List<Long> obtenerIdsRamaCompleta(Categoria categoria) {
+        List<Long> ids = new ArrayList<>();
+        ids.add(categoria.getId());
+
+        if (categoria.getSubcategorias() != null) {
+            for (Categoria sub : categoria.getSubcategorias()) {
+                ids.addAll(obtenerIdsRamaCompleta(sub));
+            }
+        }
+        return ids;
     }
 }

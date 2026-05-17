@@ -1,0 +1,67 @@
+package cl.smartlogix.inventario.config;
+
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitMQConfig {
+
+    // --- INFRAESTRUCTURA PRINCIPAL ---
+    public static final String QUEUE_LIBERAR_STOCK = "inventario.liberar.stock.queue";
+    public static final String EXCHANGE_PEDIDOS = "pedidos.exchange";
+    public static final String ROUTING_KEY_RECHAZADO = "pedido.rechazado";
+
+    // --- INFRAESTRUCTURA DLQ (Red de Seguridad) ---
+    public static final String QUEUE_LIBERAR_STOCK_DLQ = "inventario.liberar.stock.dlq";
+    public static final String EXCHANGE_DLX = "pedidos.dlx"; // Dead Letter Exchange
+    public static final String ROUTING_KEY_DLQ = "pedido.rechazado.dlq";
+
+    // 1. Declaramos la cola PRINCIPAL, pero ahora le configuramos sus parámetros de fallo
+    @Bean
+    public Queue liberarStockQueue() {
+        return QueueBuilder.durable(QUEUE_LIBERAR_STOCK)
+                .withArgument("x-dead-letter-exchange", EXCHANGE_DLX)
+                .withArgument("x-dead-letter-routing-key", ROUTING_KEY_DLQ)
+                .build();
+    }
+
+    // 2. Exchange Principal
+    @Bean
+    public TopicExchange pedidosExchange() {
+        return new TopicExchange(EXCHANGE_PEDIDOS);
+    }
+
+    // 3. Binding Principal
+    @Bean
+    public Binding bindingLiberarStock(Queue liberarStockQueue, TopicExchange pedidosExchange) {
+        return BindingBuilder.bind(liberarStockQueue).to(pedidosExchange).with(ROUTING_KEY_RECHAZADO);
+    }
+
+    // -----------------------------------------------------
+    // CONFIGURACIÓN DE LA DEAD LETTER QUEUE (DLQ)
+    // -----------------------------------------------------
+    
+    @Bean
+    public TopicExchange deadLetterExchange() {
+        return new TopicExchange(EXCHANGE_DLX);
+    }
+
+    @Bean
+    public Queue deadLetterQueue() {
+        return QueueBuilder.durable(QUEUE_LIBERAR_STOCK_DLQ).build();
+    }
+
+    @Bean
+    public Binding deadLetterBinding(Queue deadLetterQueue, TopicExchange deadLetterExchange) {
+        return BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with(ROUTING_KEY_DLQ);
+    }
+
+    // 4. Conversor a JSON
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+}
