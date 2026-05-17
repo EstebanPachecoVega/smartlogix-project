@@ -23,12 +23,13 @@ public class InventarioServiceImpl implements InventarioService {
         Producto producto = productoRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto con ID " + productoId + " no encontrado"));
         
-        if (producto.getStock() < cantidad) {
-            throw new DomainException("Stock insuficiente. Disponible: " + producto.getStock() + ", solicitado: " + cantidad);
+        // Verificar si hay suficiente stock disponible
+        if (producto.getCantidad() < cantidad) {
+            throw new DomainException("Stock insuficiente. Disponible: " + producto.getCantidad() + ", solicitado: " + cantidad);
         }
         
-        producto.setStock(producto.getStock() - cantidad);
+        producto.setCantidad(producto.getCantidad() - cantidad);
         productoRepository.save(producto);
-        log.info("Stock reservado correctamente para producto {}. Nuevo stock: {}", productoId, producto.getStock());
+        log.info("Stock reservado correctamente para producto {}. Nuevo stock: {}", productoId, producto.getCantidad());
     }
 }
