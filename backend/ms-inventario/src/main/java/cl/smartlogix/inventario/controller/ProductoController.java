@@ -72,7 +72,7 @@ public class ProductoController {
 
     // Obtener productos por categoría (incluyendo subcategorías directas)
     @GetMapping("/categoria/{categoriaId}")
-    public List<ProductoResponseDTO> getProductosPorCategoria(@PathVariable Long categoriaId) {
-        return productoService.getProductosPorCategoria(categoriaId);
+    public List<ProductoResponseDTO> getProductosByCategoria(@PathVariable Long categoriaId) {
+        return productoService.getProductosByCategoria(categoriaId);
     }
 }

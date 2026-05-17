@@ -71,6 +71,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneric(Exception ex) {
+        ex.printStackTrace();
+        
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         pd.setTitle("Error interno del servidor");
         pd.setDetail("Ha ocurrido un error inesperado. Por favor, intente más tarde.");

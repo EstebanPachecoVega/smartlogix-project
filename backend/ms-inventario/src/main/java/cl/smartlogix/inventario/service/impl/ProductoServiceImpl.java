@@ -79,9 +79,11 @@ public class ProductoServiceImpl implements ProductoService {
 
     // Obtener un producto por ID con manejo de excepciones
     @Override
+    @Transactional(readOnly = true)
     public ProductoResponseDTO getProductoById(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
+
         return productoMapper.toResponseDTO(producto);
     }
 
@@ -95,6 +97,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     // Método para buscar por slug
     @Override
+    @Transactional(readOnly = true)
     public ProductoResponseDTO getProductoBySlug(String slug) {
         Producto producto = productoRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con slug: " + slug));
@@ -103,20 +106,20 @@ public class ProductoServiceImpl implements ProductoService {
 
     // Método para buscar por SKU
     @Override
+    @Transactional(readOnly = true)
     public ProductoResponseDTO getProductoBySku(String sku) {
         Producto producto = productoRepository.findBySku(sku)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con SKU: " + sku));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con sku: " + sku));
         return productoMapper.toResponseDTO(producto);
     }
 
     // Obtener productos por categoría (incluyendo subcategorías directas)
     @Override
-    public List<ProductoResponseDTO> getProductosPorCategoria(Long categoriaId) {
-        log.debug("Obteniendo productos de la categoría y sus subcategorías directas para el ID: {}", categoriaId);
-        return productoRepository.buscarPorCategoriaOPadre(categoriaId, categoriaId)
-                .stream()
-                .map(productoMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public List<ProductoResponseDTO> getProductosByCategoria(Long categoriaId) {
+        List<Producto> productos = productoRepository.findByCategoriaId(categoriaId);
+        // Si usas un list mapping en MapStruct:
+        return productoMapper.toResponseDTOList(productos);
     }
 
     // Filtrar productos por múltiples criterios de forma avanzada y consistente

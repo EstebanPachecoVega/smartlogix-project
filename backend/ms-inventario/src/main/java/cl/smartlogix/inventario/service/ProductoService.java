@@ -20,7 +20,7 @@ public interface ProductoService {
 
     ProductoResponseDTO getProductoBySku(String sku);
 
-    List<ProductoResponseDTO> getProductosPorCategoria(Long categoriaId);
+    List<ProductoResponseDTO> getProductosByCategoria(Long categoriaId);
 
     List<ProductoResponseDTO> getProductosFiltrados(
             String nombre,

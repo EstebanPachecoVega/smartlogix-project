@@ -1,6 +1,8 @@
 package cl.smartlogix.inventario.repository;
 
 import cl.smartlogix.inventario.entity.Producto;
+
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,9 +13,17 @@ import java.util.Optional;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
+        @EntityGraph(attributePaths = { "categoria" })
+        Optional<Producto> findById(Long id);
+
+        @EntityGraph(attributePaths = { "categoria" })
+        Optional<Producto> findBySlug(String slug);
+
+        @EntityGraph(attributePaths = { "categoria" })
         Optional<Producto> findBySku(String sku);
 
-        Optional<Producto> findBySlug(String slug);
+        @EntityGraph(attributePaths = { "categoria" })
+        List<Producto> findByCategoriaId(Long categoriaId);
 
         boolean existsBySku(String sku);
 

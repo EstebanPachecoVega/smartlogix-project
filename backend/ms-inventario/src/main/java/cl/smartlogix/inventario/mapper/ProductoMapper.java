@@ -7,6 +7,8 @@ import cl.smartlogix.inventario.entity.Categoria;
 import cl.smartlogix.inventario.entity.Producto;
 import org.mapstruct.*;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface ProductoMapper {
 
@@ -16,6 +18,8 @@ public interface ProductoMapper {
     @Mapping(source = "categoria.id", target = "categoriaId")
     @Mapping(source = "categoria.nombre", target = "categoriaNombre")
     ProductoResponseDTO toResponseDTO(Producto producto);
+
+    List<ProductoResponseDTO> toResponseDTOList(List<Producto> productos);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(source = "categoriaId", target = "categoria", qualifiedByName = "idToCategoria")
