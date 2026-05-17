@@ -19,11 +19,11 @@ public class PedidoEventPublisher {
 
     public void publicarPedidoAprobado(PedidoAprobadoEventDTO event) {
         rabbitTemplate.convertAndSend(PEDIDO_EXCHANGE, ROUTING_KEY_APROBADO, event);
-        log.info("Evento PedidoAprobado publicado: {}", event);
+        log.info("Evento PedidoAprobado publicado para la Orden: {}", event.getNumeroOrden());
     }
 
     public void publicarPedidoRechazado(PedidoRechazadoEventDTO event) {
         rabbitTemplate.convertAndSend(PEDIDO_EXCHANGE, ROUTING_KEY_RECHAZADO, event);
-        log.warn("⚠️ Evento PedidoRechazado (Compensación de Stock) enviado a RabbitMQ: {}", event);
+        log.warn("⚠️ Evento de Compensación PedidoRechazado enviado a RabbitMQ para Producto: {}", event.getProductoId());
     }
 }

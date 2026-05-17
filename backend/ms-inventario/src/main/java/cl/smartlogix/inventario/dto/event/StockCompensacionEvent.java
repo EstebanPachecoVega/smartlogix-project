@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StockCompensacionEvent {
     private Long pedidoId;
+    private String numeroOrden;
     private Long productoId;
     private Integer cantidad;
 }

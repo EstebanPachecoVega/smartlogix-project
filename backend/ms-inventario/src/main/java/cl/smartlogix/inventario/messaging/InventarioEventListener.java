@@ -5,7 +5,7 @@ import cl.smartlogix.inventario.dto.event.StockCompensacionEvent;
 import cl.smartlogix.inventario.service.InventarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpRejectAndDontRequeueException; // 🚀 Importante
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
@@ -16,20 +16,20 @@ public class InventarioEventListener {
 
     private final InventarioService inventarioService;
 
+    // Este método escucha los eventos de compensación de stock que llegan a la cola
+    // configurada en RabbitMQConfig
     @RabbitListener(queues = RabbitMQConfig.QUEUE_LIBERAR_STOCK)
     public void procesarCompensacionStock(StockCompensacionEvent event) {
-        log.info("📥 [EVENTO RECIBIDO] Compensar stock del Pedido ID: {}", event.getPedidoId());
-        
+        log.info("📥 [EVENTO RECIBIDO] Compensar stock de la Orden: {}", event.getNumeroOrden());
         try {
             inventarioService.liberarStock(event.getProductoId(), event.getCantidad());
-            log.info("✅ [EVENTO PROCESADO] Stock restaurado exitosamente para Pedido ID: {}", event.getPedidoId());
-            
+            log.info("✅ [EVENTO PROCESADO] Se restauraron {} unidades del Producto ID: {} (Orden: {})",
+                    event.getCantidad(), event.getProductoId(), event.getNumeroOrden());
         } catch (Exception e) {
-            log.error("❌ [ERROR FATAL] Falló la compensación de stock para el Pedido ID: {}. Causa: {}", event.getPedidoId(), e.getMessage());
-            
-            // 🚀 ESTO ES LA MAGIA: Rechazamos el mensaje sin reencolarlo en la cola principal.
-            // Como configuramos la DLQ en la cola, RabbitMQ lo atrapará y lo mandará directo al buzón de mensajes muertos.
-            throw new AmqpRejectAndDontRequeueException("Enviando evento a la Dead Letter Queue", e);
+            log.error("❌ [ERROR FATAL] Falló la compensación de stock para la Orden: {}. Causa: {}",
+                    event.getNumeroOrden(), e.getMessage());
+
+            throw new AmqpRejectAndDontRequeueException(e.getMessage());
         }
     }
 }

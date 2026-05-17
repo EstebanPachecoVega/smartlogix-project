@@ -1,17 +1,26 @@
 package cl.smartlogix.pedidos.dto.event;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import java.io.Serializable;
+import java.util.List;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PedidoAprobadoEventDTO implements Serializable {
     private Long pedidoId;
-    private Long productoId;
-    private Integer cantidad;
+    private String numeroOrden;
+    private List<ItemEventDTO> items;
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ItemEventDTO implements Serializable {
+        private Long productoId;
+        private Integer cantidad;
+    }
 }

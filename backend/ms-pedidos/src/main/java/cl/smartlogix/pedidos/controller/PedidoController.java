@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +16,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/pedidos")
 @RequiredArgsConstructor
 public class PedidoController {
+
     private final PedidoService pedidoService;
     private final PedidoMapper pedidoMapper;
 
@@ -36,8 +36,14 @@ public class PedidoController {
     }
 
     @GetMapping("/{id}")
-    public PedidoResponseDTO obtenerPedido(@PathVariable Long id) {
+    public PedidoResponseDTO obtenerPedidoPorId(@PathVariable Long id) {
         Pedido pedido = pedidoService.obtenerPedidoPorId(id);
+        return pedidoMapper.toResponseDTO(pedido);
+    }
+
+    @GetMapping("/orden/{numeroOrden}")
+    public PedidoResponseDTO obtenerPedidoPorNumeroOrden(@PathVariable String numeroOrden) {
+        Pedido pedido = pedidoService.obtenerPedidoPorNumeroOrden(numeroOrden);
         return pedidoMapper.toResponseDTO(pedido);
     }
 }

@@ -9,5 +9,7 @@ public interface PedidoService {
 
     Pedido obtenerPedidoPorId(Long id);
 
+    Pedido obtenerPedidoPorNumeroOrden(String numeroOrden);
+
     List<Pedido> listarPedidos();
 }
