@@ -3,25 +3,30 @@ spring:
     name: ms-envios
 
   datasource:
-    url: jdbc:mysql://localhost:3308/db_envios?useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: rootpassword
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:db_envios}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:rootpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: true
     open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        naming:
+          physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
 
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 springdoc:
   api-docs:
@@ -31,4 +36,5 @@ springdoc:
 
 logging:
   level:
+    root: INFO
     cl.smartlogix: DEBUG
