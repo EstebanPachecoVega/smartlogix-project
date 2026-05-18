@@ -40,7 +40,7 @@ public class InventarioController {
     }
 
     // Endpoint para liberar o devolver stock de un producto
-    @PostMapping("/liberar") // 🚀 Exponemos el endpoint de compensación (Rollback)
+    @PostMapping("/liberar")
     @ResponseStatus(HttpStatus.OK)
     public void liberarStock(@Valid @RequestBody ReservarStockRequestDTO request) {
         inventarioService.liberarStock(request.getProductoId(), request.getCantidad());

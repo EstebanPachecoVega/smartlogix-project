@@ -52,7 +52,7 @@ public class EnvioServiceImpl implements EnvioService {
                                         + envio.getEstadoEnvio().getTexto() + "' a '" + nuevoEstado.getTexto() + "'");
                 }
 
-                log.info("Transición aprobada para Envío ID {}: {} ➡️ {}", id, envio.getEstadoEnvio(), nuevoEstado);
+                log.info("Transición aprobada para Envío ID {}: {} a {}", id, envio.getEstadoEnvio(), nuevoEstado);
 
                 // Persistir cambio
                 envio.setEstadoEnvio(nuevoEstado);
