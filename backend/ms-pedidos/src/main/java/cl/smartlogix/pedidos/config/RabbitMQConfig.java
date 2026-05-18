@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
     public static final String PEDIDO_EXCHANGE = "pedido.exchange";
     public static final String ENVIOS_QUEUE = "envios.queue";
-    
+
     public static final String ROUTING_KEY_APROBADO = "pedido.aprobado";
     public static final String ROUTING_KEY_RECHAZADO = "pedido.rechazado";
 
@@ -20,15 +20,14 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue enviosQueue() {
-        return new Queue(ENVIOS_QUEUE, true);
-    }
-
-    @Bean
     public Binding binding() {
-        return BindingBuilder.bind(enviosQueue())
-                .to(pedidoExchange())
-                .with(ROUTING_KEY_APROBADO);
+        return new Binding(
+                ENVIOS_QUEUE,
+                Binding.DestinationType.QUEUE,
+                PEDIDO_EXCHANGE,
+                ROUTING_KEY_APROBADO,
+                null
+        );
     }
 
     @Bean

@@ -54,8 +54,9 @@ public class Envio {
     @Column(name = "fecha_estimada_entrega")
     private LocalDate fechaEstimadaEntrega;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado_envio", nullable = false, length = 30)
-    private String estadoEnvio;
+    private EstadoEnvio estadoEnvio;
 
     @Column(name = "peso_kg")
     private Double pesoKg;
@@ -66,12 +67,15 @@ public class Envio {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    /** Método para asegurar que cada envío tenga una fecha de creación y un estado inicial definido. **/
+    /**
+     * Método para asegurar que cada envío tenga una fecha de creación y un estado
+     * inicial definido.
+     **/
     @PrePersist
     protected void onCreate() {
         this.fechaCreacion = LocalDateTime.now();
         if (this.estadoEnvio == null) {
-            this.estadoEnvio = "CREADO";
+            this.estadoEnvio = EstadoEnvio.PENDIENTE;
         }
     }
 }

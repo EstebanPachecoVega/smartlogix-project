@@ -1,50 +1,51 @@
 package cl.smartlogix.envios.controller;
 
 import cl.smartlogix.envios.dto.response.EnvioResponseDTO;
-import cl.smartlogix.envios.entity.Envio;
-import cl.smartlogix.envios.exception.ResourceNotFoundException;
-import cl.smartlogix.envios.mapper.EnvioMapper;
-import cl.smartlogix.envios.repository.EnvioRepository;
+import cl.smartlogix.envios.entity.EstadoEnvio;
+import cl.smartlogix.envios.service.EnvioService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/envios")
 @RequiredArgsConstructor
 public class EnvioController {
 
-    private final EnvioRepository envioRepository;
-    private final EnvioMapper envioMapper;
+    private final EnvioService envioService;
 
     @GetMapping
-    public List<EnvioResponseDTO> listarEnvios() {
-        return envioRepository.findAll()
-                .stream()
-                .map(envioMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<List<EnvioResponseDTO>> listarEnvios() {
+        return ResponseEntity.ok(envioService.listarTodos());
+    }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<EnvioResponseDTO> actualizarEstadoEnvio(
+            @PathVariable Long id,
+            @RequestParam EstadoEnvio nuevoEstado) {
+        EnvioResponseDTO envioActualizado = envioService.actualizarEstado(id, nuevoEstado);
+        return ResponseEntity.ok(envioActualizado);
     }
 
     @GetMapping("/{id}")
-    public EnvioResponseDTO obtenerEnvio(@PathVariable Long id) {
-        Envio envio = envioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Envío no encontrado con ID: " + id));
-        return envioMapper.toResponseDTO(envio);
+    public ResponseEntity<EnvioResponseDTO> obtenerEnvio(@PathVariable Long id) {
+        return ResponseEntity.ok(envioService.obtenerPorId(id));
     }
 
     @GetMapping("/pedido/{pedidoId}")
-    public EnvioResponseDTO obtenerEnvioPorPedidoId(@PathVariable Long pedidoId) {
-        Envio envio = envioRepository.findByPedidoId(pedidoId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe un proceso de envío para el pedido ID: " + pedidoId));
-        return envioMapper.toResponseDTO(envio);
+    public ResponseEntity<EnvioResponseDTO> obtenerEnvioPorPedidoId(@PathVariable Long pedidoId) {
+        return ResponseEntity.ok(envioService.obtenerPorPedidoId(pedidoId));
     }
 
-    // 🚀 Endpoint robusto e indispensable para tracking logístico
     @GetMapping("/tracking/{numeroTracking}")
-    public EnvioResponseDTO obtenerEnvioPorTracking(@PathVariable String numeroTracking) {
-        Envio envio = envioRepository.findByNumeroTracking(numeroTracking)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró ningún despacho asociado al tracking: " + numeroTracking));
-        return envioMapper.toResponseDTO(envio);
+    public ResponseEntity<EnvioResponseDTO> obtenerEnvioPorTracking(@PathVariable String numeroTracking) {
+        return ResponseEntity.ok(envioService.obtenerPorTracking(numeroTracking));
+    }
+    
+    @GetMapping("/problemas")
+    public ResponseEntity<List<EnvioResponseDTO>> listarEnviosConProblemas() {
+        return ResponseEntity.ok(envioService.listarEnviosConProblemas());
     }
 }

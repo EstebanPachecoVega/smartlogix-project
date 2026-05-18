@@ -14,7 +14,7 @@ public class PedidoAprobadoEventDTO implements Serializable {
     private Long pedidoId;
     private String numeroOrden;
     
-    // --- DATOS PARA EL MS-ENVIOS ---
+    // --- DATOS REALES DE DESPACHO ---
     private Long usuarioId;
     private String destinatario;
     private String calle;

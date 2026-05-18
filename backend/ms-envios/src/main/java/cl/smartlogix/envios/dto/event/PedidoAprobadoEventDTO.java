@@ -1,19 +1,20 @@
 package cl.smartlogix.envios.dto.event;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import java.io.Serializable;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PedidoAprobadoEventDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long pedidoId;
+    private String numeroOrden;
+    
+    // --- DATOS REALES DE DESPACHO ---
     private Long usuarioId;
     private String destinatario;
     private String calle;

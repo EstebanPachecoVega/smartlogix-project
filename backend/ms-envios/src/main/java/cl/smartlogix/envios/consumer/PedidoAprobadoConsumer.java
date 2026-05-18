@@ -3,6 +3,7 @@ package cl.smartlogix.envios.consumer;
 import cl.smartlogix.envios.config.RabbitMQConfig;
 import cl.smartlogix.envios.dto.event.PedidoAprobadoEventDTO;
 import cl.smartlogix.envios.entity.Envio;
+import cl.smartlogix.envios.entity.EstadoEnvio;
 import cl.smartlogix.envios.repository.EnvioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,6 @@ public class PedidoAprobadoConsumer {
         log.info("📥 [EVENTO RECIBIDO] Generando despacho para Pedido ID: {}", event.getPedidoId());
         
         try {
-            // 🚀 Construcción limpia y segura con Builder
             Envio envio = Envio.builder()
                     .pedidoId(event.getPedidoId())
                     .usuarioId(event.getUsuarioId())
@@ -39,7 +39,7 @@ public class PedidoAprobadoConsumer {
                     .metodoEnvio(event.getMetodoEnvio())
                     .pesoKg(event.getPesoKg())
                     .dimensiones(event.getDimensiones())
-                    .estadoEnvio("PREPARACION")
+                    .estadoEnvio(EstadoEnvio.PENDIENTE)
                     .empresaLogistica("LOGIX_CARRIER_INTEGRATION")
                     .numeroTracking("TRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                     .fechaEstimadaEntrega(LocalDate.now().plusDays(3))
@@ -51,7 +51,6 @@ public class PedidoAprobadoConsumer {
             
         } catch (Exception e) {
             log.error("❌ [ERROR CRÍTICO] Fallo al registrar envío para Pedido ID: {}. Causa: {}", event.getPedidoId(), e.getMessage());
-            // 🚀 Dispara el mensaje a la DLQ para no perder el pedido del cliente
             throw new AmqpRejectAndDontRequeueException(e.getMessage()); 
         }
     }
