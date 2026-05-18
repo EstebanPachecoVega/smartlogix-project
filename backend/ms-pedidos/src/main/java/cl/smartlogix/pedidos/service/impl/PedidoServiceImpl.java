@@ -3,8 +3,7 @@ package cl.smartlogix.pedidos.service.impl;
 import cl.smartlogix.pedidos.client.InventarioClient;
 import cl.smartlogix.pedidos.dto.event.PedidoAprobadoEventDTO;
 import cl.smartlogix.pedidos.dto.event.PedidoRechazadoEventDTO;
-import cl.smartlogix.pedidos.dto.request.CrearPedidoRequestDTO;
-import cl.smartlogix.pedidos.dto.request.ReservarStockRequestDTO;
+import cl.smartlogix.pedidos.dto.request.*;
 import cl.smartlogix.pedidos.entity.DetallePedido;
 import cl.smartlogix.pedidos.entity.EstadoPedido;
 import cl.smartlogix.pedidos.entity.Pedido;
@@ -37,10 +36,8 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public Pedido crearPedido(CrearPedidoRequestDTO request) {
-        log.info("Iniciando creación de pedido para el usuario: {}", request.getUsuarioId());
+        log.info("Creando pedido para usuario: {}", request.getUsuarioId());
 
-        // 1. Instanciar el objeto Pedido manteniendo el correlativo único y agregando
-        // la metadata logística
         Pedido pedido = Pedido.builder()
                 .numeroOrden("ORD-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-"
                         + UUID.randomUUID().toString().substring(0, 4).toUpperCase())
@@ -59,57 +56,55 @@ public class PedidoServiceImpl implements PedidoService {
                 .totalCompra(0)
                 .build();
 
-        int totalAcumulado = 0;
-        List<DetallePedido> productosConStockReservado = new ArrayList<>();
+        int total = 0;
+        for (CrearPedidoRequestDTO.DetalleRequestDTO itemDto : request.getItems()) {
+            int subtotal = itemDto.getPrecioUnitario() * itemDto.getCantidad();
+            total += subtotal;
+            DetallePedido detalle = DetallePedido.builder()
+                    .productoId(itemDto.getProductoId())
+                    .sku(itemDto.getSku())
+                    .nombreProducto(itemDto.getNombreProducto())
+                    .precioUnitario(itemDto.getPrecioUnitario())
+                    .cantidad(itemDto.getCantidad())
+                    .subtotal(subtotal)
+                    .build();
+            pedido.agregarDetalle(detalle);
+        }
+        pedido.setTotalCompra(total);
+        pedido = pedidoRepository.save(pedido);
+        log.info("Pedido guardado en estado PENDIENTE con ID: {}", pedido.getId());
+
+        String reservaId = pedido.getId().toString();
+        List<DetallePedido> productosReservados = new ArrayList<>();
 
         try {
-            // 2. Mapear y calcular subtotales de la lista de ítems entrantes
-            for (CrearPedidoRequestDTO.DetalleRequestDTO itemDto : request.getItems()) {
-                int subtotal = itemDto.getPrecioUnitario() * itemDto.getCantidad();
-                totalAcumulado += subtotal;
-
-                DetallePedido detalle = DetallePedido.builder()
-                        .productoId(itemDto.getProductoId())
-                        .sku(itemDto.getSku())
-                        .nombreProducto(itemDto.getNombreProducto())
-                        .precioUnitario(itemDto.getPrecioUnitario())
-                        .cantidad(itemDto.getCantidad())
-                        .subtotal(subtotal)
-                        .build();
-
-                pedido.agregarDetalle(detalle);
-            }
-
-            pedido.setTotalCompra(totalAcumulado);
-
-            // 3. Guardar el estado inicial (PENDIENTE) en la base de datos local
-            pedido = pedidoRepository.save(pedido);
-            log.info("Pedido guardado localmente en estado PENDIENTE con orden: {}", pedido.getNumeroOrden());
-
-            // 4. Ejecutar el pipeline de reservas distribuidas sincrónicas mediante Feign
+            // 1. Reservar stock (solo Redis)
             for (DetallePedido detalle : pedido.getDetalles()) {
-                log.debug("Solicitando reserva de stock para Producto ID: {}, Cantidad: {}", detalle.getProductoId(),
-                        detalle.getCantidad());
-
-                ReservarStockRequestDTO reservaDto = new ReservarStockRequestDTO(detalle.getProductoId(),
-                        detalle.getCantidad());
-
-                // Llamada Feign hacia ms-inventario
-                inventarioClient.reservarStock(reservaDto);
-
-                // Si la llamada fue exitosa, se añade a la lista de "guardias" por si ocurre un
-                // fallo posterior
-                productosConStockReservado.add(detalle);
+                ReservarStockRequestDTO reservaReq = new ReservarStockRequestDTO(
+                        detalle.getProductoId(),
+                        detalle.getCantidad(),
+                        reservaId);
+                InventarioClient.ReservaResponseDTO respuesta = inventarioClient.reservarStock(reservaReq);
+                if (!respuesta.getReservaId().equals(reservaId)) {
+                    throw new DomainException("Error en la reserva: el ID devuelto no coincide");
+                }
+                productosReservados.add(detalle);
             }
 
-            // 5. DISPARADOR DE ÉXITO INTEGRADO: Si todas las reservas fueron exitosas, se
-            // aprueba el pedido y se publica el evento enriquecido
+            // 2. Confirmar reserva (descuento en BD)
+            List<ConfirmarReservaRequestDTO.ItemConfirmacionDTO> itemsConfirm = pedido.getDetalles().stream()
+                    .map(d -> new ConfirmarReservaRequestDTO.ItemConfirmacionDTO(d.getProductoId(), d.getCantidad()))
+                    .collect(Collectors.toList());
+            ConfirmarReservaRequestDTO confirmReq = new ConfirmarReservaRequestDTO(reservaId, itemsConfirm);
+            inventarioClient.confirmarReserva(confirmReq);
+
+            // 3. Si todo ok, aprobar pedido
             pedido.setEstado(EstadoPedido.APROBADO);
             pedidoRepository.save(pedido);
-            log.info("Pedido {} APROBADO exitosamente. Transacción local consolidada.", pedido.getNumeroOrden());
+            log.info("Pedido {} APROBADO", pedido.getNumeroOrden());
 
-            // Construir el evento enriquecido con los datos exactos que espera el ms-envios
-            PedidoAprobadoEventDTO eventoAprobado = PedidoAprobadoEventDTO.builder()
+            // 4. Publicar evento para ms-envios
+            PedidoAprobadoEventDTO evento = PedidoAprobadoEventDTO.builder()
                     .pedidoId(pedido.getId())
                     .numeroOrden(pedido.getNumeroOrden())
                     .usuarioId(pedido.getUsuarioId())
@@ -123,30 +118,31 @@ public class PedidoServiceImpl implements PedidoService {
                     .pesoKg(pedido.getPesoKg())
                     .dimensiones(pedido.getDimensiones())
                     .build();
-
-            // Despachar evento asíncrono a RabbitMQ
-            eventPublisher.publicarPedidoAprobado(eventoAprobado);
+            eventPublisher.publicarPedidoAprobado(evento);
 
         } catch (Exception e) {
-            // 6. BLOQUE DE RESILIENCIA E INTACTO (SAGA / Compensaciones)
             pedido.setEstado(EstadoPedido.RECHAZADO);
             pedidoRepository.save(pedido);
-            log.error("Fallo detectado en el flujo del pedido {}. Motivo: {}", pedido.getNumeroOrden(), e.getMessage());
-
-            // Ejecutar compensaciones de stock para cada producto que se reservó
-            // exitosamente antes del fallo
-            ejecutarCompensacionesStock(pedido, productosConStockReservado);
-
-            if (e instanceof DomainException || e instanceof ResourceNotFoundException) {
-                throw (RuntimeException) e;
+            log.error("Fallo en pedido {}, motivo: {}", pedido.getNumeroOrden(), e.getMessage());
+            // Compensar: enviar eventos de rechazo con reservaId
+            for (DetallePedido detalle : productosReservados) {
+                PedidoRechazadoEventDTO compensacion = PedidoRechazadoEventDTO.builder()
+                        .pedidoId(pedido.getId())
+                        .numeroOrden(pedido.getNumeroOrden())
+                        .productoId(detalle.getProductoId())
+                        .cantidad(detalle.getCantidad())
+                        .reservaId(reservaId)
+                        .build();
+                eventPublisher.publicarPedidoRechazado(compensacion);
             }
-            throw new DomainException(
-                    "No se pudo procesar el pedido debido a un error en el sistema central: " + e.getMessage());
+            if (e instanceof DomainException || e instanceof ResourceNotFoundException)
+                throw (RuntimeException) e;
+            throw new DomainException("No se pudo procesar el pedido: " + e.getMessage());
         }
-
         return pedido;
     }
 
+    // resto de métodos (obtenerPedidoPorId, etc.) se mantienen igual
     @Override
     @Transactional(readOnly = true)
     public Pedido obtenerPedidoPorId(Long id) {
@@ -168,48 +164,18 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoRepository.findAll();
     }
 
-    /*
-     * Método privado para ejecutar compensaciones de stock en caso de fallo en el
-     * proceso de creación del pedido
-     */
-    private void ejecutarCompensacionesStock(Pedido pedido, List<DetallePedido> productosAReversar) {
-        for (DetallePedido detalle : productosAReversar) {
-            try {
-                PedidoRechazadoEventDTO compensacion = PedidoRechazadoEventDTO.builder()
-                        .pedidoId(pedido.getId())
-                        .numeroOrden(pedido.getNumeroOrden())
-                        .productoId(detalle.getProductoId())
-                        .cantidad(detalle.getCantidad())
-                        .build();
-
-                eventPublisher.publicarPedidoRechazado(compensacion);
-            } catch (Exception ex) {
-                log.error(
-                        "ERROR CRÍTICO: No se pudo enviar evento de compensación a RabbitMQ para Producto ID: {}. Causa: {}",
-                        detalle.getProductoId(), ex.getMessage());
-            }
-        }
-    }
-
     @Override
     @Transactional
     public void actualizarEstadoPorEnvio(Long pedidoId, String estadoEnvio) {
         log.info("Sincronizando Pedido ID: {} con novedad de logística: [{}]", pedidoId, estadoEnvio);
-
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + pedidoId));
-
         EstadoPedido estadoAnterior = pedido.getEstado();
-
         switch (estadoEnvio) {
-
-            // 1. Estados iniciales en bodega (El pedido se mantiene en APROBADO)
             case "PENDIENTE":
             case "PREPARANDO":
                 pedido.setEstado(EstadoPedido.APROBADO);
                 break;
-
-            // 2. Estados de movimiento y logística viva (El pedido pasa a EN_CAMINO)
             case "ENVIADO":
             case "EN_TRANSITO":
             case "EN_REPARTO":
@@ -217,33 +183,20 @@ public class PedidoServiceImpl implements PedidoService {
             case "INTENTO_FALLIDO":
                 pedido.setEstado(EstadoPedido.EN_CAMINO);
                 break;
-
-            // 3. Estado de éxito final (El pedido pasa a ENTREGADO)
             case "ENTREGADO":
                 pedido.setEstado(EstadoPedido.ENTREGADO);
                 break;
-
-            // 4. Estados terminales de fallo (El pedido pasa a RECHAZADO para activar
-            // devoluciones o notas de crédito)
             case "DEVUELTO":
             case "CANCELADO":
                 pedido.setEstado(EstadoPedido.RECHAZADO);
                 break;
-
             default:
-                log.warn("Se recibió un estado de envío desconocido ('{}'). No se alteró el pedido.", estadoEnvio);
+                log.warn("Estado de envío desconocido: '{}'", estadoEnvio);
                 return;
         }
-
-        // Solo guardamos si el estado realmente cambió para evitar escrituras
-        // innecesarias en BD
         if (estadoAnterior != pedido.getEstado()) {
             pedidoRepository.save(pedido);
-            log.info("SAGA TRANSICIÓN: Pedido N° {} cambió de {} a {}",
-                    pedido.getNumeroOrden(), estadoAnterior, pedido.getEstado());
-        } else {
-            log.info("El estado del pedido se mantiene en {} (No requiere actualización visual)",
-                    pedido.getEstado());
+            log.info("Pedido {} cambió de {} a {}", pedido.getNumeroOrden(), estadoAnterior, pedido.getEstado());
         }
     }
 }

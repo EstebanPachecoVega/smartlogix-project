@@ -7,10 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockCompensacionEvent {
-    private Long pedidoId;
-    private String numeroOrden;
-    private Long productoId;
-    private Integer cantidad;
+public class ReservaExpiradaEvent {
     private String reservaId;
 }

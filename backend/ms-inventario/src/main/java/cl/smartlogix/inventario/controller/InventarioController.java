@@ -1,5 +1,8 @@
 package cl.smartlogix.inventario.controller;
 
+import cl.smartlogix.inventario.dto.request.CancelarReservaRequestDTO;
+import cl.smartlogix.inventario.dto.request.ConfirmarReservaRequestDTO;
+import cl.smartlogix.inventario.dto.request.PedidoStockRequestDTO;
 import cl.smartlogix.inventario.dto.request.ReservarStockRequestDTO;
 import cl.smartlogix.inventario.dto.response.StockResponseDTO;
 import cl.smartlogix.inventario.entity.Producto;
@@ -13,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/inventario")
 @RequiredArgsConstructor
@@ -23,26 +29,39 @@ public class InventarioController {
     private final ProductoRepository productoRepository;
     private final ProductoMapper productoMapper;
 
-    // Endpoint para reservar stock de un producto
     @PostMapping("/reservar")
-    @ResponseStatus(HttpStatus.OK)
-    public void reservarStock(@Valid @RequestBody ReservarStockRequestDTO request) {
-        inventarioService.reservarStock(request.getProductoId(), request.getCantidad());
+    public ReservaResponseDTO reservarStock(@Valid @RequestBody PedidoStockRequestDTO request) {
+        String reservaId = inventarioService.reservarStockLote(request.getItems(), request.getReservaId());
+        return new ReservaResponseDTO(reservaId);
     }
 
-    // Endpoint para consultar el stock disponible de un producto
+    @PostMapping("/confirmar")
+    @ResponseStatus(HttpStatus.OK)
+    public void confirmarReserva(@Valid @RequestBody ConfirmarReservaRequestDTO request) {
+        // Convertir items al formato que espera el servicio
+        List<ReservarStockRequestDTO> items = request.getItems().stream()
+                .map(i -> new ReservarStockRequestDTO(i.getProductoId(), i.getCantidad()))
+                .collect(Collectors.toList());
+        inventarioService.confirmarReserva(request.getReservaId(), items);
+    }
+
+    @PostMapping("/cancelar")
+    @ResponseStatus(HttpStatus.OK)
+    public void cancelarReserva(@Valid @RequestBody CancelarReservaRequestDTO request) {
+        List<ReservarStockRequestDTO> items = request.getItems().stream()
+                .map(i -> new ReservarStockRequestDTO(i.getProductoId(), i.getCantidad()))
+                .collect(Collectors.toList());
+        inventarioService.cancelarReserva(request.getReservaId(), items);
+    }
+
     @GetMapping("/stock/{productoId}")
     public StockResponseDTO obtenerStockDisponible(@PathVariable Long productoId) {
-        log.debug("REST Request - Consultar stock disponible para producto ID: {}", productoId);
         Producto producto = productoRepository.findById(productoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
         return productoMapper.toStockResponseDTO(producto);
     }
 
-    // Endpoint para liberar o devolver stock de un producto
-    @PostMapping("/liberar")
-    @ResponseStatus(HttpStatus.OK)
-    public void liberarStock(@Valid @RequestBody ReservarStockRequestDTO request) {
-        inventarioService.liberarStock(request.getProductoId(), request.getCantidad());
+    // DTO interno para respuesta de reserva
+    record ReservaResponseDTO(String reservaId) {
     }
 }

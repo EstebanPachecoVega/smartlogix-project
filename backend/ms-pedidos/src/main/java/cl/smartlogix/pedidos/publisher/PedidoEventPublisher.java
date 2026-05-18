@@ -24,6 +24,6 @@ public class PedidoEventPublisher {
 
     public void publicarPedidoRechazado(PedidoRechazadoEventDTO event) {
         rabbitTemplate.convertAndSend(PEDIDO_EXCHANGE, ROUTING_KEY_RECHAZADO, event);
-        log.warn("⚠️ Evento de Compensación PedidoRechazado enviado a RabbitMQ para Producto: {}", event.getProductoId());
+        log.warn("Evento de Compensación PedidoRechazado enviado a RabbitMQ para Producto: {}", event.getProductoId());
     }
 }

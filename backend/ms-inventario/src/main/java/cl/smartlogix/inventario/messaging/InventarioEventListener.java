@@ -16,19 +16,14 @@ public class InventarioEventListener {
 
     private final InventarioService inventarioService;
 
-    // Este método escucha los eventos de compensación de stock que llegan a la cola
-    // configurada en RabbitMQConfig
     @RabbitListener(queues = RabbitMQConfig.QUEUE_LIBERAR_STOCK)
     public void procesarCompensacionStock(StockCompensacionEvent event) {
-        log.info("📥 [EVENTO RECIBIDO] Compensar stock de la Orden: {}", event.getNumeroOrden());
+        log.info("Evento compensación: liberar stock de orden {}", event.getNumeroOrden());
         try {
-            inventarioService.liberarStock(event.getProductoId(), event.getCantidad());
-            log.info("✅ [EVENTO PROCESADO] Se restauraron {} unidades del Producto ID: {} (Orden: {})",
-                    event.getCantidad(), event.getProductoId(), event.getNumeroOrden());
+            inventarioService.liberarStock(event.getProductoId(), event.getCantidad(), event.getReservaId());
+            log.info("Stock liberado para producto {} (reservaId {})", event.getProductoId(), event.getReservaId());
         } catch (Exception e) {
-            log.error("❌ [ERROR FATAL] Falló la compensación de stock para la Orden: {}. Causa: {}",
-                    event.getNumeroOrden(), e.getMessage());
-
+            log.error("Falló liberación de stock para orden {}", event.getNumeroOrden(), e);
             throw new AmqpRejectAndDontRequeueException(e.getMessage());
         }
     }

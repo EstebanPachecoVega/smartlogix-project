@@ -12,11 +12,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReservarStockRequestDTO {
-
-    @NotNull(message = "El ID del producto es requerido para la reserva.")
+    @NotNull(message = "El ID del producto es obligatorio")
     private Long productoId;
 
-    @NotNull(message = "La cantidad es requerida.")
-    @Min(value = 1, message = "La cantidad a reservar debe ser mínimo 1.")
+    @NotNull(message = "La cantidad es obligatoria")
+    @Min(value = 1, message = "La cantidad debe ser al menos 1")
     private Integer cantidad;
+
+    private String reservaId;
 }

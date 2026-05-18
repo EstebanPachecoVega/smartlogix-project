@@ -13,4 +13,5 @@ public class PedidoRechazadoEventDTO implements Serializable {
     private String numeroOrden;
     private Long productoId;
     private Integer cantidad;
+    private String reservaId;
 }

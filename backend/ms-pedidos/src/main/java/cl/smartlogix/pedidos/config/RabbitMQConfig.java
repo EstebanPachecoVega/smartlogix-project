@@ -20,6 +20,12 @@ public class RabbitMQConfig {
     public static final String PEDIDOS_ACTUALIZACIONES_QUEUE = "pedidos.actualizaciones.queue";
     public static final String ROUTING_KEY_ENVIO_ACTUALIZADO = "envio.actualizado";
 
+    // --- NUEVA INFRAESTRUCTURA PARA RESERVA EXPIRADA ---
+    public static final String EXCHANGE_RESERVA_EXPIRADA = "reserva.exchange";
+    public static final String QUEUE_RESERVA_EXPIRADA = "pedidos.reserva.expirada.queue";
+    public static final String ROUTING_KEY_RESERVA_EXPIRADA = "reserva.expirada";
+
+    // Exchanges y colas ya existentes...
     @Bean
     public TopicExchange pedidoExchange() {
         return new TopicExchange(PEDIDO_EXCHANGE);
@@ -27,15 +33,9 @@ public class RabbitMQConfig {
 
     @Bean
     public Binding binding() {
-        return new Binding(
-                ENVIOS_QUEUE,
-                Binding.DestinationType.QUEUE,
-                PEDIDO_EXCHANGE,
-                ROUTING_KEY_APROBADO,
-                null);
+        return new Binding(ENVIOS_QUEUE, Binding.DestinationType.QUEUE, PEDIDO_EXCHANGE, ROUTING_KEY_APROBADO, null);
     }
 
-    // Binding para capturar las novedades de ms-envios y actualizar el estado del pedido
     @Bean
     public TopicExchange envioExchange() {
         return new TopicExchange(ENVIO_EXCHANGE);
@@ -51,6 +51,24 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(pedidosActualizacionesQueue)
                 .to(envioExchange)
                 .with(ROUTING_KEY_ENVIO_ACTUALIZADO);
+    }
+
+    // Nueva cola para reserva expirada
+    @Bean
+    public Queue reservaExpiradaQueue() {
+        return QueueBuilder.durable(QUEUE_RESERVA_EXPIRADA).build();
+    }
+
+    @Bean
+    public TopicExchange reservaExpiradaExchange() {
+        return new TopicExchange(EXCHANGE_RESERVA_EXPIRADA);
+    }
+
+    @Bean
+    public Binding bindingReservaExpirada(Queue reservaExpiradaQueue, TopicExchange reservaExpiradaExchange) {
+        return BindingBuilder.bind(reservaExpiradaQueue)
+                .to(reservaExpiradaExchange)
+                .with(ROUTING_KEY_RESERVA_EXPIRADA);
     }
 
     @Bean
