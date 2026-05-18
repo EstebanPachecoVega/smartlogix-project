@@ -16,6 +16,10 @@ public class RabbitMQConfig {
     public static final String EXCHANGE_PEDIDOS = "pedido.exchange";
     public static final String ROUTING_KEY_APROBADO = "pedido.aprobado";
 
+    // --- INFRAESTRUCTURA DE EMISIÓN (SALIDAS DE ENVÍOS) ---
+    public static final String EXCHANGE_ENVIOS = "envio.exchange";
+    public static final String ROUTING_KEY_ACTUALIZADO = "envio.actualizado";
+
     // --- INFRAESTRUCTURA DLQ (Buzón de Desastres) ---
     public static final String QUEUE_ENVIOS_DLQ = "envios.dlq";
     public static final String EXCHANGE_DLX = "envios.dlx";
@@ -38,6 +42,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingEnvios(Queue enviosQueue, TopicExchange pedidosExchange) {
         return BindingBuilder.bind(enviosQueue).to(pedidosExchange).with(ROUTING_KEY_APROBADO);
+    }
+
+    @Bean
+    public TopicExchange enviosExchange() {
+        return new TopicExchange(EXCHANGE_ENVIOS);
     }
 
     // 2. Componentes de la DLQ

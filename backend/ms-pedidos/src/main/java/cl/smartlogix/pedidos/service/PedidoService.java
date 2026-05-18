@@ -12,4 +12,6 @@ public interface PedidoService {
     Pedido obtenerPedidoPorNumeroOrden(String numeroOrden);
 
     List<Pedido> listarPedidos();
+
+    void actualizarEstadoPorEnvio(Long pedidoId, String estadoEnvio);
 }

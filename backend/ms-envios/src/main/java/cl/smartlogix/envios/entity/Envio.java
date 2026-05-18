@@ -67,10 +67,10 @@ public class Envio {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    /**
+    /*
      * Método para asegurar que cada envío tenga una fecha de creación y un estado
-     * inicial definido.
-     **/
+     * inicial válido.
+     */
     @PrePersist
     protected void onCreate() {
         this.fechaCreacion = LocalDateTime.now();

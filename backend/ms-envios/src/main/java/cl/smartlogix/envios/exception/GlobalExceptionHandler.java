@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,14 +30,23 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
+    public ProblemDetail handleValidationExceptions(RuntimeException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        pd.setTitle("Transición de Estado Inválida");
+        pd.setType(URI.create("https://smartlogix.cl/errors/invalid-state"));
+        pd.setProperty("timestamp", LocalDateTime.now());
+        return pd;
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         pd.setTitle("Error de validación");
         pd.setDetail("Los campos enviados no son válidos");
         Map<String, Object> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
+        ex.getBindingResult().getFieldErrors()
+                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
         pd.setProperty("errors", errors);
         return pd;
     }
