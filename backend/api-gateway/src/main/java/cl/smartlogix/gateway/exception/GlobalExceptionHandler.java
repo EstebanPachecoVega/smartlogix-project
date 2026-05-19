@@ -1,43 +1,56 @@
 package cl.smartlogix.gateway.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
-@RestControllerAdvice
-public class GlobalExceptionHandler {
+@Component
+@Order(-2)
+public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public Mono<ProblemDetail> handleNotFound(ResourceNotFoundException ex, ServerWebExchange exchange) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        pd.setTitle("Recurso no encontrado");
-        pd.setType(URI.create("https://smartlogix.cl/errors/not-found"));
-        pd.setInstance(URI.create(exchange.getRequest().getURI().getPath()));
-        return Mono.just(pd);
-    }
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    @ExceptionHandler(DomainException.class)
-    public Mono<ProblemDetail> handleDomain(DomainException ex, ServerWebExchange exchange) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
-        pd.setTitle("Regla de negocio violada");
-        pd.setType(URI.create("https://smartlogix.cl/errors/business-rule"));
-        pd.setInstance(URI.create(exchange.getRequest().getURI().getPath()));
-        return Mono.just(pd);
-    }
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        ProblemDetail pd;
+        HttpStatus status;
 
-    @ExceptionHandler(Exception.class)
-    public Mono<ProblemDetail> handleGeneric(Exception ex, ServerWebExchange exchange) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ha ocurrido un error interno en el gateway");
-        pd.setTitle("Error interno del gateway");
-        pd.setType(URI.create("https://smartlogix.cl/errors/gateway-error"));
+        if (ex instanceof ResourceNotFoundException) {
+            status = HttpStatus.NOT_FOUND;
+            pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+            pd.setTitle("Recurso no encontrado");
+            pd.setType(URI.create("https://smartlogix.cl/errors/not-found"));
+        } else if (ex instanceof DomainException) {
+            status = HttpStatus.UNPROCESSABLE_ENTITY;
+            pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+            pd.setTitle("Regla de negocio violada");
+            pd.setType(URI.create("https://smartlogix.cl/errors/business-rule"));
+        } else {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            pd = ProblemDetail.forStatusAndDetail(status, "Error interno del gateway");
+            pd.setTitle("Error interno");
+            pd.setType(URI.create("https://smartlogix.cl/errors/gateway-error"));
+        }
+
         pd.setInstance(URI.create(exchange.getRequest().getURI().getPath()));
-        return Mono.just(pd);
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+
+        try {
+            byte[] bytes = mapper.writeValueAsBytes(pd);
+            DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        } catch (Exception e) {
+            return exchange.getResponse().setComplete();
+        }
     }
 }
