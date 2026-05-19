@@ -106,7 +106,7 @@ services:
   # 3. MICROSERVICIOS
   # ==========================================
   ms-inventario:
-    build: ./backend/ms-inventario
+    build: ../backend/ms-inventario
     container_name: ms-inventario
     restart: unless-stopped
     ports:
@@ -136,7 +136,7 @@ services:
       - smartlogix-network
 
   ms-pedidos:
-    build: ./backend/ms-pedidos
+    build: ../backend/ms-pedidos
     container_name: ms-pedidos
     restart: unless-stopped
     ports:
@@ -165,7 +165,7 @@ services:
       - smartlogix-network
 
   ms-envios:
-    build: ./backend/ms-envios
+    build: ../backend/ms-envios
     container_name: ms-envios
     restart: unless-stopped
     ports:
@@ -194,7 +194,7 @@ services:
   # 4. API GATEWAY - depende de redis y microservicios, pero NO del BFF
   # ==========================================
   api-gateway:
-    build: ./backend/api-gateway
+    build: ../backend/api-gateway
     container_name: api-gateway
     restart: unless-stopped
     ports:
@@ -220,7 +220,7 @@ services:
   # 5. BFF (Backend For Frontend) - depende del API Gateway y espera que esté sano
   # ==========================================
   bff:
-    build: ./backend/bff
+    build: ../backend/bff
     container_name: bff
     restart: unless-stopped
     ports:
