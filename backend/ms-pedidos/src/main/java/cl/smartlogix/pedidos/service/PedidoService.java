@@ -5,7 +5,7 @@ import cl.smartlogix.pedidos.entity.Pedido;
 import java.util.List;
 
 public interface PedidoService {
-    Pedido crearPedido(CrearPedidoRequestDTO request);
+    Pedido crearPedido(CrearPedidoRequestDTO request, String idempotencyKey);
 
     Pedido obtenerPedidoPorId(Long id);
 

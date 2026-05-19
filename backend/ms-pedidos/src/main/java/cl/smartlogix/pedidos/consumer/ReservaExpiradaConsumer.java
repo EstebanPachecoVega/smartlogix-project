@@ -9,6 +9,8 @@ import cl.smartlogix.pedidos.exception.ResourceNotFoundException;
 import cl.smartlogix.pedidos.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,46 +30,39 @@ public class ReservaExpiradaConsumer {
 
     @RabbitListener(queues = QUEUE_RESERVA_EXPIRADA)
     @Transactional
-    public void handleReservaExpirada(ReservaExpiradaEvent event) {
-        String reservaId = event.getReservaId();
-        log.info("📥 Evento de reserva expirada recibido para reservaId: {}", reservaId);
-
-        // Convertir reservaId a Long (es el ID del pedido)
-        Long pedidoId;
-        try {
-            pedidoId = Long.parseLong(reservaId);
-        } catch (NumberFormatException e) {
-            log.error("reservaId '{}' no es un número válido de pedido", reservaId);
-            return;
+    public void handleReservaExpirada(ReservaExpiradaEvent event, Message message) {
+        String correlationId = (String) message.getMessageProperties().getHeader("X-Correlation-Id");
+        if (correlationId != null) {
+            MDC.put("correlationId", correlationId);
         }
-
-        Pedido pedido = pedidoRepository.findById(pedidoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + pedidoId));
-
-        // Solo procesar si el pedido está en estado PENDIENTE (reserva expiró sin confirmar)
-        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
-            log.info("El pedido {} ya no está PENDIENTE (estado={}), se ignora expiración", pedidoId, pedido.getEstado());
-            return;
-        }
-
-        // Cambiar estado a RECHAZADO
-        pedido.setEstado(EstadoPedido.RECHAZADO);
-        pedidoRepository.save(pedido);
-        log.info("Pedido {} marcado como RECHAZADO por expiración de reserva", pedido.getNumeroOrden());
-
-        // Llamar a inventario para cancelar la reserva (liberar stock en Redis y BD si necesario)
-        List<CancelarReservaRequestDTO.ItemCancelacionDTO> items = pedido.getDetalles().stream()
-                .map(d -> new CancelarReservaRequestDTO.ItemCancelacionDTO(d.getProductoId(), d.getCantidad()))
-                .collect(Collectors.toList());
-        CancelarReservaRequestDTO cancelRequest = new CancelarReservaRequestDTO(reservaId, items);
-
         try {
+            String reservaId = event.getReservaId();
+            log.info("📥 Evento de reserva expirada recibido para reservaId: {}", reservaId);
+
+            Long pedidoId = Long.parseLong(reservaId);
+            Pedido pedido = pedidoRepository.findById(pedidoId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + pedidoId));
+
+            if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+                log.info("El pedido {} ya no está PENDIENTE (estado={}), se ignora expiración", pedidoId, pedido.getEstado());
+                return;
+            }
+
+            pedido.setEstado(EstadoPedido.RECHAZADO);
+            pedidoRepository.save(pedido);
+            log.info("Pedido {} marcado como RECHAZADO por expiración de reserva", pedido.getNumeroOrden());
+
+            List<CancelarReservaRequestDTO.ItemCancelacionDTO> items = pedido.getDetalles().stream()
+                    .map(d -> new CancelarReservaRequestDTO.ItemCancelacionDTO(d.getProductoId(), d.getCantidad()))
+                    .collect(Collectors.toList());
+            CancelarReservaRequestDTO cancelRequest = new CancelarReservaRequestDTO(reservaId, items);
+
             inventarioClient.cancelarReserva(cancelRequest);
             log.info("Reserva cancelada en inventario para pedido {}", pedidoId);
         } catch (Exception e) {
-            log.error("Error al cancelar reserva en inventario para pedido {}: {}", pedidoId, e.getMessage());
-            // No re-lanzamos excepción para evitar que el mensaje se reintente, porque el pedido ya está RECHAZADO.
-            // Se podría enviar a DLQ o loguear para monitoreo.
+            log.error("Error al procesar expiración de reserva: {}", e.getMessage());
+        } finally {
+            MDC.remove("correlationId");
         }
     }
 }

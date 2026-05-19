@@ -12,6 +12,7 @@ import cl.smartlogix.pedidos.exception.DomainException;
 import cl.smartlogix.pedidos.exception.ResourceNotFoundException;
 import cl.smartlogix.pedidos.publisher.PedidoEventPublisher;
 import cl.smartlogix.pedidos.repository.PedidoRepository;
+import cl.smartlogix.pedidos.service.IdempotencyService;
 import cl.smartlogix.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,13 +33,18 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoRepository pedidoRepository;
     private final InventarioClient inventarioClient;
     private final PedidoEventPublisher eventPublisher;
+    private final IdempotencyService idempotencyService;
 
     @Override
     @Transactional
-    public Pedido crearPedido(CrearPedidoRequestDTO request) {
+    public Pedido crearPedido(CrearPedidoRequestDTO request, String idempotencyKey) {
+        if (idempotencyKey != null && idempotencyService.isProcessed(idempotencyKey)) {
+            log.info("Petición duplicada con idempotencyKey: {}. Rechazada.", idempotencyKey);
+            throw new DomainException("La petición ya fue procesada anteriormente (idempotencia)");
+        }
+
         log.info("Creando pedido para usuario: {}", request.getUsuarioId());
 
-        // 1. Construir pedido
         Pedido pedido = Pedido.builder()
                 .numeroOrden("ORD-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-"
                         + UUID.randomUUID().toString().substring(0, 4).toUpperCase())
@@ -73,7 +79,6 @@ public class PedidoServiceImpl implements PedidoService {
         }
         pedido.setTotalCompra(totalAcumulado);
 
-        // 2. Guardar pedido (estado PENDIENTE)
         pedido = pedidoRepository.save(pedido);
         log.info("Pedido guardado en estado PENDIENTE con ID: {}, Número: {}", pedido.getId(), pedido.getNumeroOrden());
 
@@ -82,7 +87,6 @@ public class PedidoServiceImpl implements PedidoService {
                 .map(d -> new ReservarStockRequestDTO(d.getProductoId(), d.getCantidad(), reservaId))
                 .collect(Collectors.toList());
 
-        // 3. Reservar stock (una sola llamada atómica)
         try {
             PedidoStockRequestDTO reservaRequest = new PedidoStockRequestDTO(itemsReserva, reservaId);
             PedidoStockResponseDTO reservaResponse = inventarioClient.reservarStock(reservaRequest);
@@ -91,15 +95,12 @@ public class PedidoServiceImpl implements PedidoService {
             }
             log.info("Reserva exitosa para pedido {}", reservaId);
         } catch (Exception e) {
-            // Falló la reserva → no hay nada que compensar (reserva atómica falló por
-            // completo)
             pedido.setEstado(EstadoPedido.RECHAZADO);
             pedidoRepository.save(pedido);
             log.error("Fallo en reserva de stock para pedido {}: {}", pedido.getNumeroOrden(), e.getMessage());
             throw new DomainException("No se pudo reservar stock: " + e.getMessage());
         }
 
-        // 4. Confirmar reserva (descuento definitivo)
         try {
             List<ConfirmarReservaRequestDTO.ItemConfirmacionDTO> itemsConfirm = pedido.getDetalles().stream()
                     .map(d -> new ConfirmarReservaRequestDTO.ItemConfirmacionDTO(d.getProductoId(), d.getCantidad()))
@@ -108,7 +109,6 @@ public class PedidoServiceImpl implements PedidoService {
             inventarioClient.confirmarReserva(confirmRequest);
             log.info("Reserva confirmada para pedido {}", reservaId);
         } catch (Exception e) {
-            // Falló la confirmación → hay que liberar el stock que ya se reservó
             pedido.setEstado(EstadoPedido.RECHAZADO);
             pedidoRepository.save(pedido);
             log.error("Fallo en confirmación de reserva para pedido {}: {}", pedido.getNumeroOrden(), e.getMessage());
@@ -125,7 +125,6 @@ public class PedidoServiceImpl implements PedidoService {
             throw new DomainException("No se pudo confirmar la reserva: " + e.getMessage());
         }
 
-        // 5. Aprobar pedido y publicar evento
         pedido.setEstado(EstadoPedido.APROBADO);
         pedidoRepository.save(pedido);
         log.info("Pedido {} APROBADO", pedido.getNumeroOrden());
@@ -146,6 +145,10 @@ public class PedidoServiceImpl implements PedidoService {
                 .build();
         eventPublisher.publicarPedidoAprobado(eventoAprobado);
 
+        if (idempotencyKey != null) {
+            idempotencyService.markProcessed(idempotencyKey);
+        }
+
         return pedido;
     }
 
@@ -160,8 +163,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional(readOnly = true)
     public Pedido obtenerPedidoPorNumeroOrden(String numeroOrden) {
         return pedidoRepository.findByNumeroOrden(numeroOrden)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pedido no encontrado con número de orden: " + numeroOrden));
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con número: " + numeroOrden));
     }
 
     @Override

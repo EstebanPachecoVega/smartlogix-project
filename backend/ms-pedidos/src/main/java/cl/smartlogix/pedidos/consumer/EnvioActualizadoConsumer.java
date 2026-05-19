@@ -5,6 +5,8 @@ import cl.smartlogix.pedidos.dto.event.EnvioActualizadoEventDTO;
 import cl.smartlogix.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
@@ -16,14 +18,17 @@ public class EnvioActualizadoConsumer {
     private final PedidoService pedidoService;
 
     @RabbitListener(queues = RabbitMQConfig.PEDIDOS_ACTUALIZACIONES_QUEUE)
-    public void handleEnvioActualizado(EnvioActualizadoEventDTO event) {
-        log.info("📥 [EVENTO LOGÍSTICO] Detectado cambio en envío para Pedido ID: {} -> Estado: {}", 
-                event.getPedidoId(), event.getEstadoEnvio());
+    public void handleEnvioActualizado(EnvioActualizadoEventDTO event, Message message) {
+        String correlationId = (String) message.getMessageProperties().getHeader("X-Correlation-Id");
+        if (correlationId != null) {
+            MDC.put("correlationId", correlationId);
+        }
         try {
+            log.info("📥 [EVENTO LOGÍSTICO] Detectado cambio en envío para Pedido ID: {} -> Estado: {}", 
+                    event.getPedidoId(), event.getEstadoEnvio());
             pedidoService.actualizarEstadoPorEnvio(event.getPedidoId(), event.getEstadoEnvio());
-        } catch (Exception e) {
-            log.error("❌ Error al sincronizar el estado del Pedido ID: {}. Causa: {}", 
-                    event.getPedidoId(), e.getMessage());
+        } finally {
+            MDC.remove("correlationId");
         }
     }
 }
