@@ -11,5 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PedidoResponseDTO {
     private Long id;
+    private String numeroOrden;
     private String estado;
+    private Integer totalCompra;
 }

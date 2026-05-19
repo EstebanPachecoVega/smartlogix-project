@@ -1,14 +1,14 @@
 spring:
   application:
     name: bff
+  main:
+    web-application-type: reactive
 
 server:
   port: 8084
 
-pedidos:
-  url: http://localhost:8082
-envios:
-  url: http://localhost:8083
+gateway:
+  url: ${GATEWAY_URL:http://api-gateway:8080}
 
 springdoc:
   api-docs:
@@ -19,22 +19,13 @@ springdoc:
 logging:
   level:
     cl.smartlogix.bff: DEBUG
+  pattern:
+    console: "{\"timestamp\":\"%d{ISO8601}\",\"level\":\"%p\",\"correlationId\":\"%X{correlationId}\",\"message\":\"%m\",\"logger\":\"%c\"}%n"
 
 resilience4j:
   circuitbreaker:
     instances:
-      pedidos:
+      gateway:
         sliding-window-size: 10
         failure-rate-threshold: 50
         wait-duration-in-open-state: 5s
-        permitted-number-of-calls-in-half-open-state: 3
-      envios:
-        sliding-window-size: 10
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 5s
-  timelimiter:
-    instances:
-      pedidos:
-        timeout-duration: 3s
-      envios:
-        timeout-duration: 3s
