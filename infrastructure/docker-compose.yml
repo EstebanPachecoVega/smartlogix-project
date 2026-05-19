@@ -1,0 +1,250 @@
+version: '3.8'
+
+# version eliminada (obsoleta)
+
+services:
+  # ==========================================
+  # 1. BASES DE DATOS (sin cambios)
+  # ==========================================
+  mysql-inventario:
+    image: mysql:8.0
+    container_name: smartlogix-db-inventario
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_INVENTARIO_NAME}
+    volumes:
+      - mysql_inventario_data:/var/lib/mysql
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-pedidos:
+    image: mysql:8.0
+    container_name: smartlogix-db-pedidos
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_PEDIDOS_NAME}
+    volumes:
+      - mysql_pedidos_data:/var/lib/mysql
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-envios:
+    image: mysql:8.0
+    container_name: smartlogix-db-envios
+    restart: unless-stopped
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_ENVIOS_NAME}
+    volumes:
+      - mysql_envios_data:/var/lib/mysql
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 2. BROKER DE MENSAJERÍA Y CACHÉ
+  # ==========================================
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: smartlogix-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: smartlogix-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - smartlogix-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 3. MICROSERVICIOS
+  # ==========================================
+  ms-inventario:
+    build: ./backend/ms-inventario
+    container_name: ms-inventario
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: mysql-inventario
+      DB_PORT: 3306
+      DB_NAME: ${DB_INVENTARIO_NAME}
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBIT_PORT: 5672
+      RABBIT_USER: ${RABBITMQ_USER}
+      RABBIT_PASSWORD: ${RABBITMQ_PASS}
+      SERVER_PORT: 8081
+      JPA_DDL_AUTO: update
+    depends_on:
+      mysql-inventario:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartlogix-network
+
+  ms-pedidos:
+    build: ./backend/ms-pedidos
+    container_name: ms-pedidos
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: mysql-pedidos
+      DB_PORT: 3306
+      DB_NAME: ${DB_PEDIDOS_NAME}
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBIT_PORT: 5672
+      RABBIT_USER: ${RABBITMQ_USER}
+      RABBIT_PASSWORD: ${RABBITMQ_PASS}
+      INVENTARIO_URL: http://ms-inventario:8081
+      SERVER_PORT: 8082
+      JPA_DDL_AUTO: update
+    depends_on:
+      mysql-pedidos:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      ms-inventario:
+        condition: service_started   
+    networks:
+      - smartlogix-network
+
+  ms-envios:
+    build: ./backend/ms-envios
+    container_name: ms-envios
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      DB_HOST: mysql-envios
+      DB_PORT: 3306
+      DB_NAME: ${DB_ENVIOS_NAME}
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBIT_PORT: 5672
+      RABBIT_USER: ${RABBITMQ_USER}
+      RABBIT_PASSWORD: ${RABBITMQ_PASS}
+      SERVER_PORT: 8083
+      JPA_DDL_AUTO: update
+    depends_on:
+      mysql-envios:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartlogix-network
+
+  # ==========================================
+  # 4. API GATEWAY - depende de redis y microservicios, pero NO del BFF
+  # ==========================================
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # Si usas Keycloak, ajusta la URL. Si no, puedes deshabilitar JWT temporalmente
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${JWT_JWK_SET_URI:-http://localhost:8180/realms/smartlogix/protocol/openid-connect/certs}
+    depends_on:
+      redis:
+        condition: service_healthy
+      ms-inventario:
+        condition: service_started
+      ms-pedidos:
+        condition: service_started
+      ms-envios:
+        condition: service_started
+    networks:
+      - smartlogix-network
+
+  # ==========================================
+  # 5. BFF (Backend For Frontend) - depende del API Gateway y espera que esté sano
+  # ==========================================
+  bff:
+    build: ./backend/bff
+    container_name: bff
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      PEDIDOS_URL: http://api-gateway:8080
+      ENVIOS_URL: http://api-gateway:8080
+      SERVER_PORT: 8084
+    depends_on:
+      api-gateway:
+        condition: service_started   # o service_healthy si el gateway expone healthcheck
+    networks:
+      - smartlogix-network
+
+# ==========================================
+# REDES Y VOLÚMENES
+# ==========================================
+networks:
+  smartlogix-network:
+    driver: bridge
+
+volumes:
+  mysql_inventario_data:
+  mysql_pedidos_data:
+  mysql_envios_data:
+  rabbitmq_data:
+  redis_data:
