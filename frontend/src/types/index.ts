@@ -1,24 +1,68 @@
-export interface CrearPedidoRequest {
-  productoId: number;
+export interface Producto {
+  id: number;
+  sku: string;
+  nombre: string;
+  slug: string;
+  descripcion: string;
+  categoriaId: number;
+  categoriaNombre: string;
+  precio: number;
   cantidad: number;
+  imagenPrincipal: string;
+  imagenes: string[];
+  destacado: boolean;
+  novedad: boolean;
+  activo: boolean;
+}
+
+export interface ItemCarrito {
+  producto: Producto;
+  cantidad: number;
+}
+
+export interface PedidoRequest {
+  usuarioId: number;
+  destinatario: string;
+  calle: string;
+  numero: string;
+  comuna: string;
+  ciudad: string;
+  codigoPostal?: string;
+  metodoEnvio: string;
+  pesoKg?: number;
+  dimensiones?: string;
+  items: {
+    productoId: number;
+    sku: string;
+    nombreProducto: string;
+    precioUnitario: number;
+    cantidad: number;
+  }[];
 }
 
 export interface PedidoResponse {
   id: number;
-  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+  numeroOrden: string;
+  estado: string;
+  totalCompra: number;
 }
 
-export interface EnvioResponse {
+export interface Envio {
   id: number;
   pedidoId: number;
-  estado: 'CREADO' | 'EN_CURSO' | 'ENTREGADO';
-}
-
-export interface ErrorResponse {
-  type: string;
-  title: string;
-  status: number;
-  detail: string;
-  instance: string;
-  errors?: Record<string, string>;
+  usuarioId: number;
+  destinatario: string;
+  calle: string;
+  numero: string;
+  comuna: string;
+  ciudad: string;
+  codigoPostal: string;
+  metodoEnvio: string;
+  empresaLogistica: string;
+  numeroTracking: string;
+  fechaEstimadaEntrega: string;
+  estadoEnvio: string;
+  pesoKg: number;
+  dimensiones: string;
+  fechaCreacion: string;
 }
