@@ -11,21 +11,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    // --- INFRAESTRUCTURA PRINCIPAL ---
     public static final String QUEUE_ENVIOS = "envios.queue";
     public static final String EXCHANGE_PEDIDOS = "pedido.exchange";
     public static final String ROUTING_KEY_APROBADO = "pedido.aprobado";
 
-    // --- INFRAESTRUCTURA DE EMISIÓN (SALIDAS DE ENVÍOS) ---
     public static final String EXCHANGE_ENVIOS = "envio.exchange";
     public static final String ROUTING_KEY_ACTUALIZADO = "envio.actualizado";
 
-    // --- INFRAESTRUCTURA DLQ (Buzón de Desastres) ---
     public static final String QUEUE_ENVIOS_DLQ = "envios.dlq";
     public static final String EXCHANGE_DLX = "envios.dlx";
     public static final String ROUTING_KEY_DLQ = "envios.rechazado.dlq";
 
-    // 1. Cola Principal conectada a la DLQ
     @Bean
     public Queue enviosQueue() {
         return QueueBuilder.durable(QUEUE_ENVIOS)
@@ -49,7 +45,6 @@ public class RabbitMQConfig {
         return new TopicExchange(EXCHANGE_ENVIOS);
     }
 
-    // 2. Componentes de la DLQ
     @Bean
     public TopicExchange deadLetterExchange() {
         return new TopicExchange(EXCHANGE_DLX);
@@ -65,7 +60,6 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with(ROUTING_KEY_DLQ);
     }
 
-    // 3. Conversor Inmune al origen de la clase
     @Bean
     public MessageConverter messageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();

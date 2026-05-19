@@ -7,7 +7,6 @@ spring:
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:rootpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:10}
       minimum-idle: ${DB_POOL_MIN:2}
@@ -35,6 +34,9 @@ spring:
         retry:
           enabled: true
           initial-interval: 2000ms
+          max-attempts: 3
+          multiplier: 2
+        default-requeue-rejected: false
 
 server:
   port: ${SERVER_PORT:8083}
@@ -48,4 +50,6 @@ springdoc:
 logging:
   level:
     root: INFO
-    cl.smartlogix: ${LOGGING_LEVEL_SMARTLOGIX:INFO}
+    cl.smartlogix: ${LOGGING_LEVEL_SMARTLOGIX:DEBUG}
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
