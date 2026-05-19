@@ -25,9 +25,8 @@ public class InventarioServiceImpl implements InventarioService {
 
     private final ProductoRepository productoRepository;
     private final RedisStockService redisStockService;
-    private static final int RESERVA_TTL_MINUTOS = 10; // tiempo de reserva en Redis
+    private static final int RESERVA_TTL_MINUTOS = 10;
 
-    // Sincronización masiva al iniciar la aplicación
     @EventListener(ApplicationReadyEvent.class)
     @Transactional(readOnly = true)
     public void sincronizarStockInicial() {
@@ -39,8 +38,7 @@ public class InventarioServiceImpl implements InventarioService {
         log.info("Sincronización completada. {} productos cargados en Redis.", productos.size());
     }
 
-    // Reconciliación programada cada hora (opcional pero recomendada)
-    @Scheduled(cron = "0 0 * * * *") // cada hora
+    @Scheduled(cron = "0 0 * * * *")
     @Transactional(readOnly = true)
     public void reconciliarStock() {
         log.debug("Ejecutando reconciliación periódica de stock entre MySQL y Redis");
@@ -57,8 +55,8 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional
     public String reservarStockLote(List<ReservarStockRequestDTO> items, String reservaIdInput) {
-        String reservaId = (reservaIdInput != null && !reservaIdInput.isBlank()) 
-                ? reservaIdInput 
+        String reservaId = (reservaIdInput != null && !reservaIdInput.isBlank())
+                ? reservaIdInput
                 : UUID.randomUUID().toString();
         log.debug("Reservando lote con reservaId: {}", reservaId);
 
@@ -68,7 +66,7 @@ public class InventarioServiceImpl implements InventarioService {
                 throw new DomainException("Producto " + item.getProductoId() + " no sincronizado en Redis");
             }
             if (!reservado) {
-                // rollback parcial: cancelar los que ya se reservaron
+                // rollback parcial
                 items.stream()
                         .limit(items.indexOf(item))
                         .forEach(i -> redisStockService.cancelarReserva(reservaId, i.getProductoId()));
@@ -83,14 +81,19 @@ public class InventarioServiceImpl implements InventarioService {
     @Transactional
     public void confirmarReserva(String reservaId, List<ReservarStockRequestDTO> items) {
         log.debug("Confirmando reserva {}", reservaId);
+        // PRIMERO: descontar en MySQL con SELECT FOR UPDATE (usamos método atómico del repositorio)
+        for (ReservarStockRequestDTO item : items) {
+            int filas = productoRepository.restarStockAtomico(item.getProductoId(), item.getCantidad());
+            if (filas == 0) {
+                throw new DomainException("No se pudo descontar stock en BD para producto " + item.getProductoId() +
+                        " (puede que el stock haya cambiado)");
+            }
+        }
+        // SEGUNDO: eliminar la reserva en Redis (solo si el descuento en BD fue exitoso)
         for (ReservarStockRequestDTO item : items) {
             Integer cantidadReservada = redisStockService.confirmarReserva(reservaId, item.getProductoId());
             if (cantidadReservada == null) {
-                throw new DomainException("Reserva " + reservaId + " para producto " + item.getProductoId() + " no existe o expiró");
-            }
-            int filas = productoRepository.restarStockAtomico(item.getProductoId(), cantidadReservada);
-            if (filas == 0) {
-                throw new DomainException("No se pudo descontar stock en BD para producto " + item.getProductoId());
+                log.warn("Reserva {} para producto {} no existía en Redis (posible expiración)", reservaId, item.getProductoId());
             }
         }
         log.info("Reserva {} confirmada y stock descontado en BD", reservaId);
@@ -116,16 +119,13 @@ public class InventarioServiceImpl implements InventarioService {
         if (cantidad == null || cantidad <= 0) {
             throw new DomainException("La cantidad a liberar debe ser mayor a cero");
         }
-        // Primero cancelar la reserva en Redis si existe
         if (reservaId != null && !reservaId.isBlank()) {
             redisStockService.cancelarReserva(reservaId, productoId);
         }
-        // Luego sumar en BD (compensación)
         int filas = productoRepository.adicionarStockAtomico(productoId, cantidad);
         if (filas == 0 && !productoRepository.existsById(productoId)) {
             throw new ResourceNotFoundException("Producto no existe");
         }
-        // Sincronizar Redis con el nuevo stock de BD
         productoRepository.findById(productoId).ifPresent(p -> redisStockService.inicializarStock(productoId, p.getCantidad()));
         log.info("Stock restaurado para producto {}: +{} unidades", productoId, cantidad);
     }

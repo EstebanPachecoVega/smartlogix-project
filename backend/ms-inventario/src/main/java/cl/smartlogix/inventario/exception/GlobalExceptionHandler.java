@@ -1,7 +1,7 @@
 package cl.smartlogix.inventario.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -19,38 +19,42 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
+    public ProblemDetail handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         pd.setTitle("Recurso no encontrado");
         pd.setType(URI.create("https://smartlogix.cl/errors/not-found"));
+        pd.setInstance(URI.create(request.getRequestURI()));
         pd.setProperty("timestamp", System.currentTimeMillis());
         return pd;
     }
 
     @ExceptionHandler(DomainException.class)
-    public ProblemDetail handleDomain(DomainException ex) {
+    public ProblemDetail handleDomain(DomainException ex, HttpServletRequest request) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         pd.setTitle("Regla de negocio violada");
         pd.setType(URI.create("https://smartlogix.cl/errors/business-rule"));
+        pd.setInstance(URI.create(request.getRequestURI()));
         pd.setProperty("timestamp", System.currentTimeMillis());
         return pd;
     }
 
     @ExceptionHandler(DuplicateResourceException.class)
-    public ProblemDetail handleDuplicate(DuplicateResourceException ex) {
+    public ProblemDetail handleDuplicate(DuplicateResourceException ex, HttpServletRequest request) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         pd.setTitle("Recurso ya existe");
         pd.setType(URI.create("https://smartlogix.cl/errors/duplicate-resource"));
+        pd.setInstance(URI.create(request.getRequestURI()));
         pd.setProperty("timestamp", System.currentTimeMillis());
         return pd;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         pd.setTitle("Error de validación");
         pd.setDetail("Los campos enviados no son válidos");
         pd.setType(URI.create("https://smartlogix.cl/errors/validation"));
+        pd.setInstance(URI.create(request.getRequestURI()));
         Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.put(error.getField(), error.getDefaultMessage());
@@ -61,33 +65,36 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
-    public ProblemDetail handleHandlerMethodValidation(HandlerMethodValidationException ex) {
+    public ProblemDetail handleHandlerMethodValidation(HandlerMethodValidationException ex,
+            HttpServletRequest request) {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         pd.setTitle("Error de validación en parámetros");
         pd.setDetail("Uno o más parámetros no son válidos");
         pd.setType(URI.create("https://smartlogix.cl/errors/validation"));
+        pd.setInstance(URI.create(request.getRequestURI()));
         return pd;
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleGeneric(Exception ex) {
+    public ProblemDetail handleGeneric(Exception ex, HttpServletRequest request) {
         ex.printStackTrace();
-        
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         pd.setTitle("Error interno del servidor");
         pd.setDetail("Ha ocurrido un error inesperado. Por favor, intente más tarde.");
         pd.setType(URI.create("https://smartlogix.cl/errors/internal-server-error"));
+        pd.setInstance(URI.create(request.getRequestURI()));
         pd.setProperty("timestamp", System.currentTimeMillis());
         return pd;
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
         pd.setTitle("Conflicto de datos en la Base de Datos");
         pd.setDetail(
                 "No se pudo completar la operación. Es posible que esté intentando registrar un valor que ya existe (ej: nombre o slug duplicado) o violando una restricción de la base de datos.");
         pd.setType(URI.create("https://smartlogix.cl/errors/data-conflict"));
+        pd.setInstance(URI.create(request.getRequestURI()));
         pd.setProperty("timestamp", System.currentTimeMillis());
         return pd;
     }
