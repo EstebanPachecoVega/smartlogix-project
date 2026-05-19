@@ -1,17 +1,31 @@
-import Link from 'next/link';
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import { productosApi } from '@/lib/api';
+import { Producto } from '@/types';
+import ProductCard from '@/components/cliente/ProductCard';
+import Spinner from '@/components/shared/Spinner';
+
+export default function CatalogoPage() {
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    productosApi.listar()
+      .then(setProductos)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Spinner />;
+
   return (
-    <div className="text-center">
-      <h1 className="text-3xl font-bold">Bienvenido a SmartLogix</h1>
-      <p className="mt-2">Sistema inteligente de gestión logística</p>
-      <div className="mt-4 space-x-4">
-        <Link href="/pedidos/nuevo" className="bg-blue-500 text-white px-4 py-2 rounded">
-          Crear Pedido
-        </Link>
-        <Link href="/pedidos" className="bg-gray-500 text-white px-4 py-2 rounded">
-          Ver Pedidos
-        </Link>
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Catálogo</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {productos.map((prod) => (
+          <ProductCard key={prod.id} producto={prod} />
+        ))}
       </div>
     </div>
   );
