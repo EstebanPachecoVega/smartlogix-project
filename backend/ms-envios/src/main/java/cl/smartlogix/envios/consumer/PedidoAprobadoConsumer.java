@@ -7,10 +7,13 @@ import cl.smartlogix.envios.entity.EstadoEnvio;
 import cl.smartlogix.envios.repository.EnvioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -23,10 +26,20 @@ public class PedidoAprobadoConsumer {
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_ENVIOS)
     @Transactional
-    public void handlePedidoAprobado(PedidoAprobadoEventDTO event) {
-        log.info("📥 [EVENTO RECIBIDO] Generando despacho para Pedido ID: {}", event.getPedidoId());
-        
+    public void handlePedidoAprobado(PedidoAprobadoEventDTO event, Message message) {
+        String correlationId = (String) message.getMessageProperties().getHeader("X-Correlation-Id");
+        if (correlationId != null) {
+            MDC.put("correlationId", correlationId);
+        }
         try {
+            log.info("📥 [EVENTO RECIBIDO] Generando despacho para Pedido ID: {}", event.getPedidoId());
+
+            // Idempotencia: si ya existe un envío para este pedido, ignorar
+            if (envioRepository.findByPedidoId(event.getPedidoId()).isPresent()) {
+                log.warn("Ya existe un envío para el pedido {}. Evento duplicado ignorado.", event.getPedidoId());
+                return;
+            }
+
             Envio envio = Envio.builder()
                     .pedidoId(event.getPedidoId())
                     .usuarioId(event.getUsuarioId())
@@ -46,12 +59,13 @@ public class PedidoAprobadoConsumer {
                     .build();
 
             envioRepository.save(envio);
-            
             log.info("🚚 [ENVÍO REGISTRADO] ID Físico: {}, Tracking: {}", envio.getId(), envio.getNumeroTracking());
-            
         } catch (Exception e) {
-            log.error("❌ [ERROR CRÍTICO] Fallo al registrar envío para Pedido ID: {}. Causa: {}", event.getPedidoId(), e.getMessage());
-            throw new AmqpRejectAndDontRequeueException(e.getMessage()); 
+            log.error("❌ [ERROR CRÍTICO] Fallo al registrar envío para Pedido ID: {}. Causa: {}", event.getPedidoId(),
+                    e.getMessage());
+            throw new AmqpRejectAndDontRequeueException(e.getMessage());
+        } finally {
+            MDC.remove("correlationId");
         }
     }
 }
