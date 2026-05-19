@@ -3,7 +3,6 @@ package cl.smartlogix.bff.client;
 import cl.smartlogix.bff.exception.DomainException;
 import cl.smartlogix.bff.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -28,8 +27,8 @@ public class ErrorHandlingFilter {
                                     return Mono.error(new ResourceNotFoundException(
                                             detail != null ? detail : "Recurso no encontrado"));
                                 } else if (status == HttpStatus.UNPROCESSABLE_ENTITY) {
-                                    return Mono.error(
-                                            new DomainException(detail != null ? detail : "Regla de negocio violada"));
+                                    return Mono.error(new DomainException(
+                                            detail != null ? detail : "Regla de negocio violada"));
                                 } else {
                                     return Mono.error(new RuntimeException("Error " + status + ": " + detail));
                                 }

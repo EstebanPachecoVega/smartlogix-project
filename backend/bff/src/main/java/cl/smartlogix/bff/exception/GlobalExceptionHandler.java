@@ -1,51 +1,56 @@
 package cl.smartlogix.bff.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
-@RestControllerAdvice
-public class GlobalExceptionHandler {
+@Component
+@Order(-2)
+public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        pd.setTitle("Recurso no encontrado");
-        pd.setType(URI.create("https://smartlogix.cl/errors/not-found"));
-        return pd;
-    }
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    @ExceptionHandler(DomainException.class)
-    public ProblemDetail handleDomain(DomainException ex) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
-        pd.setTitle("Regla de negocio violada");
-        pd.setType(URI.create("https://smartlogix.cl/errors/business-rule"));
-        return pd;
-    }
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        ProblemDetail pd;
+        HttpStatus status;
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        pd.setTitle("Error de validación");
-        pd.setDetail("Los campos enviados no son válidos");
-        Map<String, Object> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
-        pd.setProperty("errors", errors);
-        return pd;
-    }
+        if (ex instanceof ResourceNotFoundException) {
+            status = HttpStatus.NOT_FOUND;
+            pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+            pd.setTitle("Recurso no encontrado");
+            pd.setType(URI.create("https://smartlogix.cl/errors/not-found"));
+        } else if (ex instanceof DomainException) {
+            status = HttpStatus.UNPROCESSABLE_ENTITY;
+            pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+            pd.setTitle("Regla de negocio violada");
+            pd.setType(URI.create("https://smartlogix.cl/errors/business-rule"));
+        } else {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            pd = ProblemDetail.forStatusAndDetail(status, "Error interno en el BFF");
+            pd.setTitle("Error interno");
+            pd.setType(URI.create("https://smartlogix.cl/errors/bff-error"));
+        }
 
-    @ExceptionHandler(Exception.class)
-    public ProblemDetail handleGeneric(Exception ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        pd.setTitle("Error interno");
-        pd.setDetail("Ha ocurrido un error inesperado");
-        return pd;
+        pd.setInstance(URI.create(exchange.getRequest().getURI().getPath()));
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+
+        try {
+            byte[] bytes = mapper.writeValueAsBytes(pd);
+            DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        } catch (Exception e) {
+            return exchange.getResponse().setComplete();
+        }
     }
 }
