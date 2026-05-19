@@ -20,9 +20,10 @@ public class CorrelationIdFilter implements GlobalFilter, Ordered {
         if (correlationId == null) {
             correlationId = UUID.randomUUID().toString();
         }
-        MDC.put("correlationId", correlationId);
+        final String finalCorrelationId = correlationId;
+        MDC.put("correlationId", finalCorrelationId);
         ServerWebExchange mutatedExchange = exchange.mutate()
-                .request(r -> r.header(CORRELATION_ID_HEADER, correlationId))
+                .request(r -> r.header(CORRELATION_ID_HEADER, finalCorrelationId))
                 .build();
         return chain.filter(mutatedExchange)
                 .doFinally(signalType -> MDC.remove("correlationId"));
