@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import feign.codec.ErrorDecoder;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,10 +22,9 @@ public class FeignErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-        System.out.println("FeignErrorDecoder ejecutándose para: " + methodKey + ", status: " + response.status());
+        String correlationId = MDC.get("correlationId");
         try {
             String body = new String(response.body().asInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            System.out.println("Cuerpo de error: " + body);
             var problemDetail = mapper.readValue(body, org.springframework.http.ProblemDetail.class);
             String detail = problemDetail.getDetail();
             int status = problemDetail.getStatus();
@@ -37,7 +37,6 @@ public class FeignErrorDecoder implements ErrorDecoder {
                 return new ResponseStatusException(HttpStatus.valueOf(status), detail);
             }
         } catch (IOException e) {
-            e.printStackTrace();
             return defaultDecoder.decode(methodKey, response);
         }
     }

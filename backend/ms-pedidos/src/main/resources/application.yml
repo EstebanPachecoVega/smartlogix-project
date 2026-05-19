@@ -7,7 +7,7 @@ spring:
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:rootpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
+
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:update}
@@ -19,11 +19,30 @@ spring:
         naming:
           physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 15
+          max-idle: 10
+          min-idle: 2
+
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBIT_PORT:5672}
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASSWORD:guest}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          max-attempts: 3
+          multiplier: 2
+        default-requeue-rejected: false
 
 server:
   port: ${SERVER_PORT:8082}
@@ -41,3 +60,18 @@ logging:
   level:
     root: INFO
     cl.smartlogix: DEBUG
+  pattern:
+    console: "{\"timestamp\":\"%d{ISO8601}\",\"level\":\"%p\",\"correlationId\":\"%X{correlationId}\",\"message\":\"%m\",\"logger\":\"%c\"}%n"
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventario:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+
+pedido:
+  idempotencia:
+    ttl-minutes: 30

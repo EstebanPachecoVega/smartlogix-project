@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,8 +23,10 @@ public class PedidoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PedidoResponseDTO crearPedido(@Valid @RequestBody CrearPedidoRequestDTO request) {
-        Pedido pedido = pedidoService.crearPedido(request);
+    public PedidoResponseDTO crearPedido(
+            @Valid @RequestBody CrearPedidoRequestDTO request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        Pedido pedido = pedidoService.crearPedido(request, idempotencyKey);
         return pedidoMapper.toResponseDTO(pedido);
     }
 

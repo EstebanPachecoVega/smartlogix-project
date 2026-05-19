@@ -9,31 +9,32 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    // --- INFRAESTRUCTURA DE EMISIÓN (PEDIDOS -> ENVÍOS) ---
     public static final String PEDIDO_EXCHANGE = "pedido.exchange";
     public static final String ENVIOS_QUEUE = "envios.queue";
     public static final String ROUTING_KEY_APROBADO = "pedido.aprobado";
     public static final String ROUTING_KEY_RECHAZADO = "pedido.rechazado";
 
-    // --- INFRAESTRUCTURA DE RECEPCIÓN (ENVÍOS -> PEDIDOS) ---
     public static final String ENVIO_EXCHANGE = "envio.exchange";
     public static final String PEDIDOS_ACTUALIZACIONES_QUEUE = "pedidos.actualizaciones.queue";
     public static final String ROUTING_KEY_ENVIO_ACTUALIZADO = "envio.actualizado";
 
-    // --- NUEVA INFRAESTRUCTURA PARA RESERVA EXPIRADA ---
     public static final String EXCHANGE_RESERVA_EXPIRADA = "reserva.exchange";
     public static final String QUEUE_RESERVA_EXPIRADA = "pedidos.reserva.expirada.queue";
     public static final String ROUTING_KEY_RESERVA_EXPIRADA = "reserva.expirada";
 
-    // Exchanges y colas ya existentes...
     @Bean
     public TopicExchange pedidoExchange() {
         return new TopicExchange(PEDIDO_EXCHANGE);
     }
 
     @Bean
+    public Queue enviosQueue() {
+        return QueueBuilder.durable(ENVIOS_QUEUE).build();
+    }
+
+    @Bean
     public Binding binding() {
-        return new Binding(ENVIOS_QUEUE, Binding.DestinationType.QUEUE, PEDIDO_EXCHANGE, ROUTING_KEY_APROBADO, null);
+        return BindingBuilder.bind(enviosQueue()).to(pedidoExchange()).with(ROUTING_KEY_APROBADO);
     }
 
     @Bean
@@ -53,7 +54,6 @@ public class RabbitMQConfig {
                 .with(ROUTING_KEY_ENVIO_ACTUALIZADO);
     }
 
-    // Nueva cola para reserva expirada
     @Bean
     public Queue reservaExpiradaQueue() {
         return QueueBuilder.durable(QUEUE_RESERVA_EXPIRADA).build();
