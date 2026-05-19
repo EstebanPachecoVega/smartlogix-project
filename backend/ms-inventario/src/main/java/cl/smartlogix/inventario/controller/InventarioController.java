@@ -31,7 +31,8 @@ public class InventarioController {
 
     @PostMapping("/reservar")
     public ReservaResponseDTO reservarStock(@Valid @RequestBody PedidoStockRequestDTO request) {
-        String reservaId = inventarioService.reservarStockLote(request.getItems(), request.getReservaId());
+        List<ReservarStockRequestDTO> items = request.getItems();
+        String reservaId = inventarioService.reservarStockLote(items, request.getReservaId());
         return new ReservaResponseDTO(reservaId);
     }
 
