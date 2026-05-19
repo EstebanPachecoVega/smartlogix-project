@@ -12,5 +12,8 @@ import lombok.Setter;
 public class EnvioResponseDTO {
     private Long id;
     private Long pedidoId;
-    private String estado;
+    private String numeroTracking;
+    private String estadoEnvio;
+    private String destinatario;
+    private String fechaCreacion;
 }

@@ -1,6 +1,5 @@
 package cl.smartlogix.bff.config;
 
-import cl.smartlogix.bff.client.ErrorHandlingFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,9 +13,6 @@ public class WebClientConfig {
 
     @Bean
     public WebClient gatewayWebClient(WebClient.Builder builder) {
-        return builder
-                .baseUrl(gatewayUrl)
-                .filter(ErrorHandlingFilter.handleErrors())
-                .build();
+        return builder.baseUrl(gatewayUrl).build();
     }
 }

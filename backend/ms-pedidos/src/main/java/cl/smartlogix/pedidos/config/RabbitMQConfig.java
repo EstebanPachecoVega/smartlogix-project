@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String PEDIDO_EXCHANGE = "pedido.exchange";
-    public static final String ENVIOS_QUEUE = "envios.queue";
     public static final String ROUTING_KEY_APROBADO = "pedido.aprobado";
     public static final String ROUTING_KEY_RECHAZADO = "pedido.rechazado";
 
@@ -22,6 +21,10 @@ public class RabbitMQConfig {
     public static final String QUEUE_RESERVA_EXPIRADA = "pedidos.reserva.expirada.queue";
     public static final String ROUTING_KEY_RESERVA_EXPIRADA = "reserva.expirada";
 
+    public static final String ENVIOS_QUEUE = "envios.queue";
+    public static final String EXCHANGE_DLX = "envios.dlx";
+    public static final String ROUTING_KEY_DLQ = "envios.rechazado.dlq";
+
     @Bean
     public TopicExchange pedidoExchange() {
         return new TopicExchange(PEDIDO_EXCHANGE);
@@ -29,7 +32,10 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue enviosQueue() {
-        return QueueBuilder.durable(ENVIOS_QUEUE).build();
+        return QueueBuilder.durable(ENVIOS_QUEUE)
+                .withArgument("x-dead-letter-exchange", "envios.dlx")
+                .withArgument("x-dead-letter-routing-key", "envios.rechazado.dlq")
+                .build();
     }
 
     @Bean

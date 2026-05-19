@@ -10,49 +10,27 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/bff/pedidos")
 @RequiredArgsConstructor
 public class PedidoBffController {
-
     private final GatewayClient gatewayClient;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<PedidoResponseDTO> crearPedido(
-            @Valid @RequestBody CrearPedidoRequestDTO request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-        String jwt = "dev-token"; // Token por defecto para desarrollo
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            jwt = authorization.substring(7);
-        }
-        String correlationId = MDC.get("correlationId");
-        return gatewayClient.crearPedido(request, jwt, correlationId);
+    public Mono<PedidoResponseDTO> crearPedido(@Valid @RequestBody CrearPedidoRequestDTO request,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String auth,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        String jwt = (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : "dev-token";
+        return gatewayClient.crearPedido(request, jwt, MDC.get("correlationId"));
     }
 
     @GetMapping
     public Mono<List<PedidoResponseDTO>> listarPedidos(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-        String jwt = "dev-token";
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            jwt = authorization.substring(7);
-        }
-        String correlationId = MDC.get("correlationId");
-        return gatewayClient.listarPedidos(jwt, correlationId);
-    }
-
-    @GetMapping("/{id}")
-    public Mono<PedidoResponseDTO> obtenerPedido(
-            @PathVariable Long id,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-        String jwt = "dev-token";
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            jwt = authorization.substring(7);
-        }
-        String correlationId = MDC.get("correlationId");
-        return gatewayClient.obtenerPedido(id, jwt, correlationId);
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String auth) {
+        String jwt = (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : "dev-token";
+        return gatewayClient.listarPedidos(jwt, MDC.get("correlationId"));
     }
 }
