@@ -1,22 +1,24 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ShoppingCart, Package, Truck } from 'lucide-react';
-import { useCarritoStore } from '@/store/carritoStore';
+import { useTotalItems } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 
-export default function Navbar() {
-  const totalItems = useCarritoStore((state) => state.totalItems);
+export default function NavbarCliente() {
+  const totalItems = useTotalItems();
+  const pathname = usePathname();
 
   return (
     <nav className="border-b bg-white">
       <div className="container mx-auto flex justify-between items-center px-4 py-3">
-        <Link href="/" className="text-xl font-bold">
+        <Link href="/cliente" className="text-xl font-bold">
           SmartLogix
         </Link>
         <div className="flex gap-4">
-          <Link href="/pedidos">
-            <Button variant="ghost" size="sm">
+          <Link href="/cliente/pedidos">
+            <Button variant={pathname === '/cliente/pedidos' ? 'default' : 'ghost'} size="sm">
               <Package className="h-4 w-4 mr-1" /> Mis pedidos
             </Button>
           </Link>
@@ -25,7 +27,7 @@ export default function Navbar() {
               <Truck className="h-4 w-4 mr-1" /> Logística
             </Button>
           </Link>
-          <Link href="/carrito">
+          <Link href="/cliente/carrito">
             <Button variant="outline" className="relative">
               <ShoppingCart className="h-5 w-5" />
               {totalItems > 0 && (

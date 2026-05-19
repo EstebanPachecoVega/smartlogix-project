@@ -45,6 +45,7 @@ export interface PedidoResponse {
   numeroOrden: string;
   estado: string;
   totalCompra: number;
+  fechaCreacion?: string;
 }
 
 export interface Envio {

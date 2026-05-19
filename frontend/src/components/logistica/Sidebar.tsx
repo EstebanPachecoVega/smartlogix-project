@@ -2,21 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PackageSearch, AlertTriangle, Search } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, ShoppingCart, Truck, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const items = [
   { href: '/logistica', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/logistica/envios', label: 'Envíos', icon: PackageSearch },
-  { href: '/logistica/problemas', label: 'Problemas', icon: AlertTriangle },
+  { href: '/logistica/productos', label: 'Productos', icon: Package },
+  { href: '/logistica/categorias', label: 'Categorías', icon: Tag },
+  { href: '/logistica/pedidos', label: 'Pedidos', icon: ShoppingCart },
+  { href: '/logistica/envios', label: 'Envíos', icon: Truck },
   { href: '/logistica/buscar', label: 'Buscar', icon: Search },
 ];
 
-export default function Sidebar() {
+export default function SidebarLogistica() {
   const pathname = usePathname();
 
   return (
     <aside className="w-64 border-r bg-gray-50 p-4">
+      <div className="mb-8 px-4 text-xl font-bold">SmartLogix</div>
       <nav className="space-y-2">
         {items.map((item) => {
           const isActive = pathname === item.href;

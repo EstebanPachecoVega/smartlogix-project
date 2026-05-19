@@ -2,7 +2,6 @@ import axios from 'axios';
 import { Producto, PedidoRequest, PedidoResponse, Envio } from '@/types';
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:8084/bff';
-const INVENTARIO_URL = process.env.NEXT_PUBLIC_INVENTARIO_URL || 'http://localhost:8081';
 
 const apiClient = axios.create({
   baseURL: BFF_URL,

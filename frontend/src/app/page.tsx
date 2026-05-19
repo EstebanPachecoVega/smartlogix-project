@@ -1,32 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { productosApi } from '@/lib/api';
-import { Producto } from '@/types';
-import ProductCard from '@/components/cliente/ProductCard';
-import Spinner from '@/components/shared/Spinner';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function CatalogoPage() {
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [loading, setLoading] = useState(true);
-
+export default function HomePage() {
+  const router = useRouter();
   useEffect(() => {
-    productosApi.listar()
-      .then(setProductos)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <Spinner />;
-
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Catálogo</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {productos.map((prod) => (
-          <ProductCard key={prod.id} producto={prod} />
-        ))}
-      </div>
-    </div>
-  );
+    router.push('/cliente');
+  }, [router]);
+  return null;
 }

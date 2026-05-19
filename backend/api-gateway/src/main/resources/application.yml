@@ -4,10 +4,24 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: inventario_route
+        - id: productos_route
           uri: http://ms-inventario:8081
           predicates:
-            - Path=/api/inventario/**
+            - Path=/api/productos/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: inventarioCB
+                fallbackUri: forward:/fallback
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+        - id: categorias_route
+          uri: http://ms-inventario:8081
+          predicates:
+            - Path=/api/categorias/**
           filters:
             - name: CircuitBreaker
               args:
