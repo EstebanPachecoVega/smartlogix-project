@@ -16,4 +16,11 @@ public class EnvioResponseDTO {
     private String estadoEnvio;
     private String destinatario;
     private String fechaCreacion;
+    private String calle;
+    private String numero;
+    private String comuna;
+    private String ciudad;
+    private String metodoEnvio;
+    private String empresaLogistica;
+    private String fechaEstimadaEntrega;
 }

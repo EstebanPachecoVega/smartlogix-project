@@ -1,9 +1,7 @@
 package cl.smartlogix.bff.client;
 
-import cl.smartlogix.bff.dto.request.CrearPedidoRequestDTO;
-import cl.smartlogix.bff.dto.response.PedidoResponseDTO;
-import cl.smartlogix.bff.dto.response.ProductoResponseDTO;
-import cl.smartlogix.bff.dto.response.EnvioResponseDTO;
+import cl.smartlogix.bff.dto.request.*;
+import cl.smartlogix.bff.dto.response.*;
 import cl.smartlogix.bff.exception.DomainException;
 import cl.smartlogix.bff.exception.ResourceNotFoundException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -26,7 +24,7 @@ public class GatewayClient {
 
     private final WebClient gatewayWebClient;
 
-    // ==================== PRODUCTOS ====================
+    // ==================== PRODUCTOS (cliente) ====================
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackGetProductos")
     public Mono<List<ProductoResponseDTO>> getProductos(String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -40,10 +38,110 @@ public class GatewayClient {
                 .collectList();
     }
 
-    private Mono<List<ProductoResponseDTO>> fallbackGetProductos(String jwtToken, String correlationId, Throwable t) {
-        log.error("Circuit breaker abierto para getProductos: {}", t.getMessage());
-        return Mono.error(
-                new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de productos no disponible"));
+    // ==================== PRODUCTOS (gestión) ====================
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackCrearProducto")
+    public Mono<ProductoResponseDTO> crearProducto(ProductoRequestDTO request, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .post()
+                .uri("/api/productos")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(ProductoResponseDTO.class);
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackActualizarProducto")
+    public Mono<ProductoResponseDTO> actualizarProducto(Long id, ProductoRequestDTO request, String jwtToken,
+            String correlationId) {
+        return gatewayWebClient
+                .put()
+                .uri("/api/productos/" + id)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(ProductoResponseDTO.class);
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEliminarProducto")
+    public Mono<Void> eliminarProducto(Long id, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .delete()
+                .uri("/api/productos/" + id)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(Void.class);
+    }
+
+    // ==================== CATEGORÍAS (Gestión CRUD) ====================
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackListarCategorias")
+    public Mono<List<CategoriaResponseDTO>> listarCategorias(String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/categorias")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToFlux(CategoriaResponseDTO.class)
+                .collectList();
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerCategoria")
+    public Mono<CategoriaResponseDTO> obtenerCategoria(Long id, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/categorias/" + id)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(CategoriaResponseDTO.class);
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackCrearCategoria")
+    public Mono<CategoriaResponseDTO> crearCategoria(CategoriaRequestDTO request, String jwtToken,
+            String correlationId) {
+        return gatewayWebClient
+                .post()
+                .uri("/api/categorias")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(CategoriaResponseDTO.class);
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackActualizarCategoria")
+    public Mono<CategoriaResponseDTO> actualizarCategoria(Long id, CategoriaRequestDTO request, String jwtToken,
+            String correlationId) {
+        return gatewayWebClient
+                .put()
+                .uri("/api/categorias/" + id)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(CategoriaResponseDTO.class);
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEliminarCategoria")
+    public Mono<Void> eliminarCategoria(Long id, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .delete()
+                .uri("/api/categorias/" + id)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(Void.class);
     }
 
     // ==================== PEDIDOS ====================
@@ -73,32 +171,19 @@ public class GatewayClient {
                 .collectList();
     }
 
-    private Mono<PedidoResponseDTO> fallbackCrearPedido(CrearPedidoRequestDTO request, String jwtToken,
-            String correlationId, Throwable t) {
-        log.error("Circuit breaker abierto para crearPedido: {}", t.getMessage());
-        return Mono.error(
-                new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de pedidos no disponible"));
-    }
-
-    private Mono<List<PedidoResponseDTO>> fallbackListarPedidos(String jwtToken, String correlationId, Throwable t) {
-        log.error("Circuit breaker abierto para listarPedidos: {}", t.getMessage());
-        return Mono.error(
-                new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de pedidos no disponible"));
-    }
-
-    // ==================== ENVÍOS ====================
-    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerEnvioPorId")
-    public Mono<EnvioResponseDTO> obtenerEnvioPorId(Long envioId, String jwtToken, String correlationId) {
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerPedido")
+    public Mono<PedidoResponseDTO> obtenerPedido(Long id, String jwtToken, String correlationId) {
         return gatewayWebClient
                 .get()
-                .uri("/api/envios/" + envioId)
+                .uri("/api/pedidos/" + id)
                 .header("Authorization", "Bearer " + jwtToken)
                 .header("X-Correlation-Id", correlationId)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToMono(EnvioResponseDTO.class);
+                .bodyToMono(PedidoResponseDTO.class);
     }
 
+    // ==================== ENVÍOS ====================
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackListarEnvios")
     public Mono<List<EnvioResponseDTO>> listarEnvios(String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -110,6 +195,30 @@ public class GatewayClient {
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToFlux(EnvioResponseDTO.class)
                 .collectList();
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerEnvio")
+    public Mono<EnvioResponseDTO> obtenerEnvio(Long id, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/envios/" + id)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(EnvioResponseDTO.class);
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerEnvioPorPedidoId")
+    public Mono<EnvioResponseDTO> obtenerEnvioPorPedidoId(Long pedidoId, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/envios/pedido/" + pedidoId)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(EnvioResponseDTO.class);
     }
 
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackActualizarEstadoEnvio")
@@ -138,31 +247,93 @@ public class GatewayClient {
     }
 
     // ==================== FALLBACKS ====================
-    private Mono<EnvioResponseDTO> fallbackObtenerEnvioPorId(Long envioId, String jwtToken, String correlationId,
+    private Mono<List<ProductoResponseDTO>> fallbackGetProductos(String jwt, String cid, Throwable t) {
+        log.error("CB abierto getProductos: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Productos no disponible"));
+    }
+
+    private Mono<ProductoResponseDTO> fallbackCrearProducto(ProductoRequestDTO req, String jwt, String cid,
             Throwable t) {
-        log.error("Circuit breaker abierto para obtenerEnvioPorId {}: {}", envioId, t.getMessage());
-        return Mono
-                .error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de envíos no disponible"));
+        log.error("CB abierto crearProducto: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Productos no disponible"));
     }
 
-    private Mono<List<EnvioResponseDTO>> fallbackListarEnvios(String jwtToken, String correlationId, Throwable t) {
-        log.error("Circuit breaker abierto para listarEnvios: {}", t.getMessage());
-        return Mono
-                .error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de envíos no disponible"));
+    private Mono<ProductoResponseDTO> fallbackActualizarProducto(Long id, ProductoRequestDTO req, String jwt,
+            String cid, Throwable t) {
+        log.error("CB abierto actualizarProducto: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Productos no disponible"));
     }
 
-    private Mono<EnvioResponseDTO> fallbackActualizarEstadoEnvio(Long envioId, String nuevoEstado, String jwtToken,
-            String correlationId, Throwable t) {
-        log.error("Circuit breaker abierto para actualizarEstadoEnvio: {}", t.getMessage());
-        return Mono
-                .error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de envíos no disponible"));
+    private Mono<Void> fallbackEliminarProducto(Long id, String jwt, String cid, Throwable t) {
+        log.error("CB abierto eliminarProducto: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Productos no disponible"));
     }
 
-    private Mono<EnvioResponseDTO> fallbackObtenerEnvioPorTracking(String tracking, String jwtToken,
-            String correlationId, Throwable t) {
-        log.error("Circuit breaker abierto para obtenerEnvioPorTracking: {}", t.getMessage());
+    private Mono<List<CategoriaResponseDTO>> fallbackListarCategorias(String jwt, String cid, Throwable t) {
+        log.error("CB abierto listarCategorias: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Categorías no disponible"));
+    }
+
+    private Mono<CategoriaResponseDTO> fallbackCrearCategoria(CategoriaRequestDTO req, String jwt, String cid,
+            Throwable t) {
+        log.error("CB abierto crearCategoria: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Categorías no disponible"));
+    }
+
+    private Mono<CategoriaResponseDTO> fallbackActualizarCategoria(Long id, CategoriaRequestDTO req, String jwt,
+            String cid, Throwable t) {
+        log.error("CB abierto actualizarCategoria: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Categorías no disponible"));
+    }
+
+    private Mono<Void> fallbackEliminarCategoria(Long id, String jwt, String cid, Throwable t) {
+        log.error("CB abierto eliminarCategoria: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Categorías no disponible"));
+    }
+
+    private Mono<PedidoResponseDTO> fallbackCrearPedido(CrearPedidoRequestDTO req, String jwt, String cid,
+            Throwable t) {
+        log.error("CB abierto crearPedido: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pedidos no disponible"));
+    }
+
+    private Mono<List<PedidoResponseDTO>> fallbackListarPedidos(String jwt, String cid, Throwable t) {
+        log.error("CB abierto listarPedidos: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pedidos no disponible"));
+    }
+
+    private Mono<PedidoResponseDTO> fallbackObtenerPedido(Long id, String jwt, String cid, Throwable t) {
+        log.error("CB abierto obtenerPedido: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pedidos no disponible"));
+    }
+
+    private Mono<List<EnvioResponseDTO>> fallbackListarEnvios(String jwt, String cid, Throwable t) {
+        log.error("CB abierto listarEnvios: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Envíos no disponible"));
+    }
+
+    private Mono<EnvioResponseDTO> fallbackObtenerEnvio(Long id, String jwt, String cid, Throwable t) {
+        log.error("CB abierto obtenerEnvio: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Envíos no disponible"));
+    }
+
+    private Mono<EnvioResponseDTO> fallbackObtenerEnvioPorPedidoId(Long pedidoId, String jwtToken, String correlationId,
+            Throwable t) {
+        log.error("Circuit breaker abierto para obtenerEnvioPorPedidoId {}: {}", pedidoId, t.getMessage());
         return Mono
                 .error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de envíos no disponible"));
+    }    
+
+    private Mono<EnvioResponseDTO> fallbackActualizarEstadoEnvio(Long id, String estado, String jwt, String cid,
+            Throwable t) {
+        log.error("CB abierto actualizarEstadoEnvio: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Envíos no disponible"));
+    }
+
+    private Mono<EnvioResponseDTO> fallbackObtenerEnvioPorTracking(String tracking, String jwt, String cid,
+            Throwable t) {
+        log.error("CB abierto obtenerEnvioPorTracking: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Envíos no disponible"));
     }
 
     // Manejo común de errores

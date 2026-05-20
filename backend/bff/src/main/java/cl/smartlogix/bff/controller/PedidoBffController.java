@@ -20,7 +20,7 @@ public class PedidoBffController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<PedidoResponseDTO> crearPedido(@Valid @RequestBody CrearPedidoRequestDTO request,
+    public Mono<PedidoResponseDTO> crear(@Valid @RequestBody CrearPedidoRequestDTO request,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String auth,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         String jwt = (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : "dev-token";
@@ -28,9 +28,16 @@ public class PedidoBffController {
     }
 
     @GetMapping
-    public Mono<List<PedidoResponseDTO>> listarPedidos(
+    public Mono<List<PedidoResponseDTO>> listar(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String auth) {
         String jwt = (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : "dev-token";
         return gatewayClient.listarPedidos(jwt, MDC.get("correlationId"));
+    }
+
+    @GetMapping("/{id}")
+    public Mono<PedidoResponseDTO> obtener(@PathVariable Long id,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String auth) {
+        String jwt = (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : "dev-token";
+        return gatewayClient.obtenerPedido(id, jwt, MDC.get("correlationId"));
     }
 }

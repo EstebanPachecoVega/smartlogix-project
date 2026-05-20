@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.util.List;
 
 @Getter
@@ -16,33 +15,25 @@ import java.util.List;
 @AllArgsConstructor
 public class CrearPedidoRequestDTO {
 
-    @NotNull(message = "El ID del usuario es obligatorio")
+    @NotNull
     private Long usuarioId;
-
-    @NotBlank(message = "El destinatario es obligatorio")
+    @NotBlank
     private String destinatario;
-
-    @NotBlank(message = "La calle es obligatoria")
+    @NotBlank
     private String calle;
-
-    @NotBlank(message = "El número es obligatorio")
+    @NotBlank
     private String numero;
-
-    @NotBlank(message = "La comuna es obligatoria")
+    @NotBlank
     private String comuna;
-
-    @NotBlank(message = "La ciudad es obligatoria")
+    @NotBlank
     private String ciudad;
-
     private String codigoPostal;
-
-    @NotBlank(message = "El método de envío es obligatorio")
+    @NotBlank
     private String metodoEnvio;
-
     private Double pesoKg;
     private String dimensiones;
 
-    @NotNull(message = "Debe incluir al menos un ítem")
+    @NotNull
     private List<DetalleDTO> items;
 
     @Getter
@@ -50,21 +41,17 @@ public class CrearPedidoRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DetalleDTO {
-        @NotNull(message = "El ID del producto es obligatorio")
+        @NotNull
         private Long productoId;
-
-        @NotBlank(message = "El SKU es obligatorio")
+        @NotBlank
         private String sku;
-
-        @NotBlank(message = "El nombre del producto es obligatorio")
+        @NotBlank
         private String nombreProducto;
-
-        @NotNull(message = "El precio unitario es obligatorio")
-        @Min(value = 0, message = "El precio no puede ser negativo")
+        @NotNull
+        @Min(0)
         private Integer precioUnitario;
-
-        @NotNull(message = "La cantidad es obligatoria")
-        @Min(value = 1, message = "La cantidad debe ser al menos 1")
+        @NotNull
+        @Min(1)
         private Integer cantidad;
     }
 }

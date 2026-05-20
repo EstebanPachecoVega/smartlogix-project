@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Producto, PedidoRequest, PedidoResponse, Envio } from '@/types';
+import { Producto, PedidoRequest, PedidoResponse, Envio, Categoria } from '@/types';
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:8084/bff';
 
@@ -16,11 +16,45 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// =================== PRODUCTOS (directo a inventario por ahora) ===================
+// ==================== PRODUCTOS CRUD (vía BFF) ====================
 export const productosApi = {
   listar: async (): Promise<Producto[]> => {
-    const res = await apiClient.get('/productos');
+    const res = await apiClient.get('/logistica/productos');
     return res.data;
+  },
+  crear: async (data: any): Promise<Producto> => {
+    const res = await apiClient.post('/logistica/productos', data);
+    return res.data;
+  },
+  actualizar: async (id: number, data: any): Promise<Producto> => {
+    const res = await apiClient.put(`/logistica/productos/${id}`, data);
+    return res.data;
+  },
+  eliminar: async (id: number): Promise<void> => {
+    await apiClient.delete(`/logistica/productos/${id}`);
+  },
+};
+
+// ==================== CATEGORÍAS (CRUD) ====================
+export const categoriasApi = {
+  listar: async (): Promise<Categoria[]> => {
+    const res = await apiClient.get('/logistica/categorias');
+    return res.data;
+  },
+  obtener: async (id: number): Promise<Categoria> => {
+    const res = await apiClient.get(`/logistica/categorias/${id}`);
+    return res.data;
+  },
+  crear: async (data: any): Promise<Categoria> => {
+    const res = await apiClient.post('/logistica/categorias', data);
+    return res.data;
+  },
+  actualizar: async (id: number, data: any): Promise<Categoria> => {
+    const res = await apiClient.put(`/logistica/categorias/${id}`, data);
+    return res.data;
+  },
+  eliminar: async (id: number): Promise<void> => {
+    await apiClient.delete(`/logistica/categorias/${id}`);
   },
 };
 
@@ -28,7 +62,7 @@ export const productosApi = {
 export const pedidosApi = {
   crear: async (data: PedidoRequest, idempotencyKey: string): Promise<PedidoResponse> => {
     const res = await apiClient.post('/pedidos', data, {
-      headers: { 'Idempotency-Key': idempotencyKey },
+      headers: { 'Idempotency-Key': idempotencyKey }
     });
     return res.data;
   },
@@ -52,12 +86,16 @@ export const enviosApi = {
     const res = await apiClient.get(`/envios/${id}`);
     return res.data;
   },
-  actualizarEstado: async (envioId: number, nuevoEstado: string): Promise<Envio> => {
-    const res = await apiClient.patch(`/envios/${envioId}/estado?nuevoEstado=${nuevoEstado}`);
+  obtenerPorPedidoId: async (pedidoId: number): Promise<Envio> => {
+    const res = await apiClient.get(`/envios/pedido/${pedidoId}`);
     return res.data;
   },
   obtenerPorTracking: async (tracking: string): Promise<Envio> => {
     const res = await apiClient.get(`/envios/tracking/${tracking}`);
+    return res.data;
+  },
+  actualizarEstado: async (id: number, nuevoEstado: string): Promise<Envio> => {
+    const res = await apiClient.patch(`/envios/${id}/estado?nuevoEstado=${nuevoEstado}`);
     return res.data;
   },
   listarProblemas: async (): Promise<Envio[]> => {
