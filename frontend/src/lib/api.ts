@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getSession } from 'next-auth/react';
 import { Producto, PedidoRequest, PedidoResponse, Envio, Categoria } from '@/types';
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:8084/bff';
@@ -7,11 +8,15 @@ const apiClient = axios.create({
   baseURL: BFF_URL,
   headers: {
     'Content-Type': 'application/json',
-    Authorization: 'Bearer dev-token', // mock
   },
 });
 
-apiClient.interceptors.request.use((config) => {
+// Interceptor para añadir el token de autenticación y Correlation-ID
+apiClient.interceptors.request.use(async (config) => {
+  const session = await getSession();
+  if (session?.accessToken) {
+    config.headers.Authorization = `Bearer ${session.accessToken}`;
+  }
   config.headers['X-Correlation-Id'] = crypto.randomUUID();
   return config;
 });

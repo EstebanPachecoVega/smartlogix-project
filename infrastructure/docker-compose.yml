@@ -1,10 +1,8 @@
-version: '3.8'
-
-# version eliminada (obsoleta)
+version: "3.8"
 
 services:
   # ==========================================
-  # 1. BASES DE DATOS (sin cambios)
+  # 1. BASES DE DATOS
   # ==========================================
   mysql-inventario:
     image: mysql:8.0
@@ -20,7 +18,17 @@ services:
     networks:
       - smartlogix-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -39,7 +47,17 @@ services:
     networks:
       - smartlogix-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,7 +76,17 @@ services:
     networks:
       - smartlogix-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -160,7 +188,7 @@ services:
       rabbitmq:
         condition: service_healthy
       ms-inventario:
-        condition: service_started   
+        condition: service_started
     networks:
       - smartlogix-network
 
@@ -231,7 +259,24 @@ services:
       SERVER_PORT: 8084
     depends_on:
       api-gateway:
-        condition: service_started   # o service_healthy si el gateway expone healthcheck
+        condition: service_started # o service_healthy si el gateway expone healthcheck
+    networks:
+      - smartlogix-network
+
+  # ==========================================
+  # 6. KEYCLOAK (autenticación y autorización)
+  # ==========================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: smartlogix-keycloak
+    restart: unless-stopped
+    ports:
+      - "${KEYCLOAK_PORT:-8180}:8080"
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: dev-file
+    command: start-dev
     networks:
       - smartlogix-network
 

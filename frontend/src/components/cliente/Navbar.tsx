@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ShoppingCart, Package, Truck } from 'lucide-react';
+import { useSession, signOut } from "next-auth/react";
+import { ShoppingCart, Package, Truck, LogOut } from 'lucide-react';
 import { useTotalItems } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 
 export default function NavbarCliente() {
+  const { data: session } = useSession();
   const totalItems = useTotalItems();
-  const pathname = usePathname();
+
+  const handleLogout = () => signOut({ callbackUrl: '/login' });
 
   return (
     <nav className="border-b bg-white">
@@ -16,9 +18,17 @@ export default function NavbarCliente() {
         <Link href="/cliente" className="text-xl font-bold">
           SmartLogix
         </Link>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
+          {session ? (
+            <>
+              <span className="text-sm text-gray-600">Hola, {session.user?.name || session.user?.email}</span>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-1" /> Salir
+              </Button>
+            </>
+          ) : null}
           <Link href="/cliente/pedidos">
-            <Button variant={pathname === '/cliente/pedidos' ? 'default' : 'ghost'} size="sm">
+            <Button variant="ghost" size="sm">
               <Package className="h-4 w-4 mr-1" /> Mis pedidos
             </Button>
           </Link>

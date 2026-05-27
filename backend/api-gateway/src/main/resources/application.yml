@@ -80,6 +80,12 @@ spring:
       port: ${REDIS_PORT:6379}
   main:
     web-application-type: reactive
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # URL del JWK de Keycloak (dentro de la red Docker)
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://keycloak:8180/realms/smartlogix/protocol/openid-connect/certs}
 
 server:
   port: 8080
@@ -108,7 +114,7 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     cl.smartlogix.gateway: DEBUG
   pattern:
-    console: "{\"timestamp\":\"%d{ISO8601}\",\"level\":\"%p\",\"correlationId\":\"%X{correlationId}\",\"message\":\"%m\",\"logger\":\"%c\"}%n"
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
 
 management:
   endpoints:
