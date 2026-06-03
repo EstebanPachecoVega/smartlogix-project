@@ -10,7 +10,22 @@ export default function NavbarCliente() {
   const { data: session } = useSession();
   const totalItems = useTotalItems();
 
-  const handleLogout = () => signOut({ callbackUrl: '/login' });
+  const handleLogout = async () => {
+    // Obtener el idToken de la sesión actual
+    const idToken = session?.idToken;
+    if (idToken) {
+      // Redirigir a la URL de logout de Keycloak con redirect a /login
+      const keycloakLogoutUrl = new URL('http://localhost:8180/realms/smartlogix/protocol/openid-connect/logout');
+      keycloakLogoutUrl.searchParams.set('id_token_hint', idToken);
+      keycloakLogoutUrl.searchParams.set('post_logout_redirect_uri', `${window.location.origin}/login`);
+      // Cerrar sesión local y redirigir a Keycloak
+      await signOut({ redirect: false });
+      window.location.href = keycloakLogoutUrl.toString();
+    } else {
+      // Fallback: solo cerrar sesión local
+      signOut({ callbackUrl: '/login' });
+    }
+  };
 
   return (
     <nav className="border-b bg-white">
@@ -21,7 +36,9 @@ export default function NavbarCliente() {
         <div className="flex items-center gap-4">
           {session ? (
             <>
-              <span className="text-sm text-gray-600">Hola, {session.user?.name || session.user?.email}</span>
+              <span className="text-sm text-gray-600">
+                Hola, {session.user?.name || session.user?.email}
+              </span>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-1" /> Salir
               </Button>
