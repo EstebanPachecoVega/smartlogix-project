@@ -85,7 +85,7 @@ spring:
       resourceserver:
         jwt:
           # URL del JWK de Keycloak (dentro de la red Docker)
-          jwk-set-uri: ${JWT_JWK_SET_URI:http://keycloak:8180/realms/smartlogix/protocol/openid-connect/certs}
+          jwk-set-uri: ${JWT_JWK_SET_URI}
 
 server:
   port: 8080

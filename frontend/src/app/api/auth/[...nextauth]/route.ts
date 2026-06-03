@@ -9,21 +9,34 @@ export const authOptions: NextAuthOptions = {
             clientSecret: "",
             issuer: process.env.KEYCLOAK_ISSUER,
             authorization: {
-                params: { prompt: "login" }, // 👈 Fuerza autenticación cada vez
+                params: { prompt: "login" },
             },
         }),
     ],
     callbacks: {
         async jwt({ token, account }) {
-            if (account) {
+            // Solo procesamos account cuando existe (primer login)
+            if (account && account.access_token) {
                 token.accessToken = account.access_token;
                 token.idToken = account.id_token;
+
+                // Decodificar el access_token para extraer roles (sin librería externa)
+                try {
+                    const payload = JSON.parse(
+                        Buffer.from(account.access_token.split('.')[1], 'base64').toString()
+                    );
+                    token.roles = payload.realm_access?.roles || [];
+                } catch (error) {
+                    console.error("Error decodificando token:", error);
+                    token.roles = [];
+                }
             }
             return token;
         },
         async session({ session, token }) {
             session.accessToken = token.accessToken as string;
             session.idToken = token.idToken as string;
+            session.roles = token.roles as string[];
             return session;
         },
         async redirect({ url, baseUrl }) {

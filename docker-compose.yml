@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # ==========================================
   # 1. BASES DE DATOS
@@ -219,7 +217,7 @@ services:
       - smartlogix-network
 
   # ==========================================
-  # 4. API GATEWAY - depende de redis y microservicios, pero NO del BFF
+  # 4. API GATEWAY
   # ==========================================
   api-gateway:
     build: ./backend/api-gateway
@@ -230,8 +228,7 @@ services:
     environment:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      # Si usas Keycloak, ajusta la URL. Si no, puedes deshabilitar JWT temporalmente
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${JWT_JWK_SET_URI:-http://localhost:8180/realms/smartlogix/protocol/openid-connect/certs}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
     depends_on:
       redis:
         condition: service_healthy
@@ -245,7 +242,7 @@ services:
       - smartlogix-network
 
   # ==========================================
-  # 5. BFF (Backend For Frontend) - depende del API Gateway y espera que esté sano
+  # 5. BFF (Backend For Frontend)
   # ==========================================
   bff:
     build: ./backend/bff
@@ -259,17 +256,16 @@ services:
       SERVER_PORT: 8084
     depends_on:
       api-gateway:
-        condition: service_started # o service_healthy si el gateway expone healthcheck
+        condition: service_started
     networks:
       - smartlogix-network
 
   # ==========================================
-  # 6. KEYCLOAK (autenticación y autorización)
+  # 6. KEYCLOAK
   # ==========================================
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
     container_name: smartlogix-keycloak
-    restart: unless-stopped
     ports:
       - "${KEYCLOAK_PORT:-8180}:8080"
     environment:

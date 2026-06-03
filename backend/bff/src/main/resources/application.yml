@@ -19,8 +19,10 @@ springdoc:
 logging:
   level:
     cl.smartlogix.bff: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
+    org.springframework.web.reactive.function.client.ExchangeFunctions: DEBUG
   pattern:
-    console: "{\"timestamp\":\"%d{ISO8601}\",\"level\":\"%p\",\"correlationId\":\"%X{correlationId}\",\"message\":\"%m\",\"logger\":\"%c\"}%n"
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
 
 resilience4j:
   circuitbreaker:
