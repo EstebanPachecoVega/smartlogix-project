@@ -1,7 +1,3 @@
-¡Perfecto! Aquí tienes el `README.md` completo y profesional, listo para incluir en la raíz del proyecto `smartlogix-project/`.
-
----
-
 # SmartLogix - Plataforma Inteligente de Gestión Logística
 
 [![Java](https://img.shields.io/badge/Java-21-blue)](https://adoptium.net/)
