@@ -14,10 +14,10 @@ const apiClient = axios.create({
 // Interceptor para añadir el token de autenticación y Correlation-ID
 apiClient.interceptors.request.use(async (config) => {
   const session = await getSession();
+  console.log("Token en apiClient:", session?.accessToken); // 👈 Agrega esto
   if (session?.accessToken) {
     config.headers.Authorization = `Bearer ${session.accessToken}`;
   }
-  config.headers['X-Correlation-Id'] = crypto.randomUUID();
   return config;
 });
 

@@ -84,35 +84,46 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # URL del JWK de Keycloak (dentro de la red Docker)
           jwk-set-uri: ${JWT_JWK_SET_URI}
-
 server:
   port: 8080
 
-resilience4j.circuitbreaker:
-  instances:
-    inventarioCB:
-      slidingWindowSize: 10
-      failureRateThreshold: 50
-      waitDurationInOpenState: 5s
-    pedidosCB:
-      slidingWindowSize: 10
-      failureRateThreshold: 50
-      waitDurationInOpenState: 5s
-    enviosCB:
-      slidingWindowSize: 10
-      failureRateThreshold: 50
-      waitDurationInOpenState: 5s
-    bffCB:
-      slidingWindowSize: 10
-      failureRateThreshold: 50
-      waitDurationInOpenState: 5s
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventarioCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+      pedidosCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+      enviosCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+      bffCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+  timelimiter:
+    instances:
+      inventarioCB:
+        timeoutDuration: 3s
+      pedidosCB:
+        timeoutDuration: 3s
+      enviosCB:
+        timeoutDuration: 3s
+      bffCB:
+        timeoutDuration: 3s
 
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     cl.smartlogix.gateway: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
   pattern:
     console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
 

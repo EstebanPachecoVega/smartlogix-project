@@ -16,7 +16,7 @@ public class FallbackController {
     public Mono<ProblemDetail> fallback(ServerWebExchange exchange) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.SERVICE_UNAVAILABLE,
-                "El servicio no está disponible en este momento. Intente más tarde.");
+                "El servicio no está disponible temporalmente. Intente más tarde.");
         pd.setTitle("Servicio no disponible");
         pd.setType(URI.create("https://smartlogix.cl/errors/service-unavailable"));
         pd.setInstance(URI.create(exchange.getRequest().getURI().getPath()));
