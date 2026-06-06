@@ -11,10 +11,24 @@ const apiClient = axios.create({
   },
 });
 
-// Interceptor para añadir el token de autenticación y Correlation-ID
+// 💡 Guardaremos la promesa de la sesión aquí para evitar llamadas duplicadas en paralelo
+let activeSessionPromise: Promise<any> | null = null;
+
 apiClient.interceptors.request.use(async (config) => {
-  const session = await getSession();
-  console.log("Token en apiClient:", session?.accessToken); // 👈 Agrega esto
+
+  // Si no hay una petición de sesión activa en este instante, la creamos
+  if (!activeSessionPromise) {
+    activeSessionPromise = getSession().then((session) => {
+      // Limpiamos la promesa un segundo después para que futuras navegaciones tengan datos frescos
+      setTimeout(() => { activeSessionPromise = null; }, 1000);
+      return session;
+    });
+  }
+
+  // Todas las peticiones de la ráfaga (Promise.all) esperarán la MISMA respuesta
+  const session = await activeSessionPromise;
+
+  console.log("Token en apiClient:", session?.accessToken);
   if (session?.accessToken) {
     config.headers.Authorization = `Bearer ${session.accessToken}`;
   }

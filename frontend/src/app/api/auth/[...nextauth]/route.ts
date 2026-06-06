@@ -15,12 +15,11 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, account }) {
-            // Solo procesamos account cuando existe (primer login)
             if (account && account.access_token) {
                 token.accessToken = account.access_token;
-                token.idToken = account.id_token;
+                // 💡 Comentamos esto para bajar el peso de la cookie a la mitad.
+                // token.idToken = account.id_token; 
 
-                // Decodificar el access_token para extraer roles (sin librería externa)
                 try {
                     const payload = JSON.parse(
                         Buffer.from(account.access_token.split('.')[1], 'base64').toString()
@@ -35,9 +34,10 @@ export const authOptions: NextAuthOptions = {
         },
         async session({ session, token }) {
             session.accessToken = token.accessToken as string;
-            session.idToken = token.idToken as string;
             session.roles = token.roles as string[];
             session.sub = token.sub as string;
+            // 💡 Quitamos esto también de la sesión del cliente
+            // session.idToken = token.idToken as string; 
             return session;
         },
         async redirect({ url, baseUrl }) {
