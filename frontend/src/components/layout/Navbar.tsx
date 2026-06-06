@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from "next-auth/react";
-import { ShoppingCart, Package, LayoutDashboard, LogOut, User, ChevronDown } from 'lucide-react';
+import { ShoppingCart, LogOut, User, ChevronDown, Package, LayoutDashboard } from 'lucide-react';
 import { useTotalItems } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,19 +22,22 @@ export default function Navbar() {
     const isGestor = userRoles.includes('gestor');
 
     const handleLogout = async () => {
-        const idToken = session?.idToken;
-        if (idToken) {
-            const keycloakLogoutUrl = new URL('http://localhost:8180/realms/smartlogix/protocol/openid-connect/logout');
-            keycloakLogoutUrl.searchParams.set('id_token_hint', idToken);
-            keycloakLogoutUrl.searchParams.set('post_logout_redirect_uri', `${window.location.origin}/login`);
+        try {
+            // 1. Obtener la URL segura desde el servidor
+            const res = await fetch('/api/auth/logout');
+            const data = await res.json();
+
+            // 2. Cerrar sesión de Next-Auth en el entorno local
             await signOut({ redirect: false });
-            window.location.href = keycloakLogoutUrl.toString();
-        } else {
-            signOut({ callbackUrl: '/login' });
+
+            // 3. Ejecutar la redirección hacia Keycloak
+            window.location.href = data.url;
+        } catch (error) {
+            console.error("Error durante el logout:", error);
+            await signOut({ callbackUrl: '/login' });
         }
     };
 
-    // Obtener iniciales para el avatar
     const userInitials = session?.user?.name
         ? session.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
         : session?.user?.email?.charAt(0).toUpperCase() || 'U';
@@ -45,9 +48,7 @@ export default function Navbar() {
                 <Link href="/cliente" className="text-xl font-bold hover:text-blue-600 transition-colors">
                     SmartLogix
                 </Link>
-
                 <div className="flex items-center gap-2">
-                    {/* Carrito - visible siempre */}
                     <Link href="/cliente/carrito">
                         <Button variant="outline" className="relative">
                             <ShoppingCart className="h-5 w-5" />
@@ -58,8 +59,6 @@ export default function Navbar() {
                             )}
                         </Button>
                     </Link>
-
-                    {/* Si el usuario está autenticado, mostrar menú desplegable */}
                     {session ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -77,24 +76,25 @@ export default function Navbar() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuLabel>
-                                    <div className="font-normal">
-                                        <p className="text-sm font-medium">{session.user?.name || 'Usuario'}</p>
-                                        <p className="text-xs text-gray-500 truncate">{session.user?.email}</p>
-                                    </div>
+                                    <p className="text-sm font-medium">{session.user?.name || 'Usuario'}</p>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                    <Link href="/cliente/perfil" className="cursor-pointer">
-                                        <User className="mr-2 h-4 w-4" />
-                                        <span>Mi perfil</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/cliente/pedidos" className="cursor-pointer">
-                                        <Package className="mr-2 h-4 w-4" />
-                                        <span>Mis pedidos</span>
-                                    </Link>
-                                </DropdownMenuItem>
+                                {!isGestor && (
+                                    <>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/cliente/perfil" className="cursor-pointer">
+                                                <User className="mr-2 h-4 w-4" />
+                                                <span>Mi perfil</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/cliente/pedidos" className="cursor-pointer">
+                                                <Package className="mr-2 h-4 w-4" />
+                                                <span>Mis pedidos</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
                                 {isGestor && (
                                     <DropdownMenuItem asChild>
                                         <Link href="/logistica" className="cursor-pointer">
@@ -111,7 +111,6 @@ export default function Navbar() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
-                        // Si no está autenticado, mostrar botón de login (opcional)
                         <Link href="/login">
                             <Button variant="default" size="sm">Iniciar sesión</Button>
                         </Link>
