@@ -36,7 +36,7 @@ public class Pedido {
 
     // --- DATOS DE AUDITORÍA Y LOGÍSTICA ---
     @Column(name = "usuario_id", nullable = false)
-    private Long usuarioId;
+    private String usuarioId;
     
     private String destinatario;
     private String calle;

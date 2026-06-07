@@ -39,7 +39,7 @@ export default function DetallePedidoClientePage() {
             <Button
                 variant="ghost"
                 className="mb-4"
-                onClick={() => router.push('/cliente/pedidos')}
+                onClick={() => router.push('/dashboard/pedidos')}
             >
                 ← Volver a mis pedidos
             </Button>

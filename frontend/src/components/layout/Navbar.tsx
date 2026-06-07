@@ -45,11 +45,11 @@ export default function Navbar() {
     return (
         <nav className="border-b bg-white sticky top-0 z-50">
             <div className="container mx-auto flex justify-between items-center px-4 py-3">
-                <Link href="/cliente" className="text-xl font-bold hover:text-blue-600 transition-colors">
+                <Link href="/" className="text-xl font-bold hover:text-blue-600 transition-colors">
                     SmartLogix
                 </Link>
                 <div className="flex items-center gap-2">
-                    <Link href="/cliente/carrito">
+                    <Link href="/dashboard/carrito">
                         <Button variant="outline" className="relative">
                             <ShoppingCart className="h-5 w-5" />
                             {totalItems > 0 && (
@@ -82,13 +82,13 @@ export default function Navbar() {
                                 {!isGestor && (
                                     <>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/cliente/perfil" className="cursor-pointer">
+                                            <Link href="/dashboard/perfil" className="cursor-pointer">
                                                 <User className="mr-2 h-4 w-4" />
                                                 <span>Mi perfil</span>
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/cliente/pedidos" className="cursor-pointer">
+                                            <Link href="/dashboard/pedidos" className="cursor-pointer">
                                                 <Package className="mr-2 h-4 w-4" />
                                                 <span>Mis pedidos</span>
                                             </Link>

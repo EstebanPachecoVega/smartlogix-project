@@ -93,7 +93,7 @@ export default function SidebarLogistica() {
           Editar perfil
         </Link>
         <Link
-          href="/cliente"
+          href="/"
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
         >
           <Store className="h-5 w-5" />

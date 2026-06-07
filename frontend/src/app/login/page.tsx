@@ -8,16 +8,12 @@ export default function LoginPage() {
     const router = useRouter();
 
     useEffect(() => {
-        if (status === "authenticated" && session?.roles) {
-            if (session.roles.includes('gestor')) {
-                router.push('/logistica');
-            } else {
-                router.push('/cliente');
-            }
+        if (status === "authenticated") {
+            router.push("/dashboard/perfil");
         }
-    }, [status, session, router]);
+    }, [status, router]);
 
-    if (status === "loading") return <div>Cargando...</div>;
+    if (status === "loading") return <div className="text-center py-8">Cargando...</div>;
     if (session) return null;
 
     return (

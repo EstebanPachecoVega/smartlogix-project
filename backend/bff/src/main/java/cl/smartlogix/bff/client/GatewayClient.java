@@ -145,14 +145,16 @@ public class GatewayClient {
     }
 
     // ==================== PEDIDOS ====================
-    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackCrearPedido")
-    public Mono<PedidoResponseDTO> crearPedido(CrearPedidoRequestDTO request, String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .post()
+    public Mono<PedidoResponseDTO> crearPedido(CrearPedidoRequestDTO request, String jwtToken, String idempotencyKey,
+            String correlationId) {
+        var requestBuilder = gatewayWebClient.post()
                 .uri("/api/pedidos")
                 .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .bodyValue(request)
+                .header("X-Correlation-Id", correlationId);
+        if (idempotencyKey != null) {
+            requestBuilder.header("Idempotency-Key", idempotencyKey);
+        }
+        return requestBuilder.bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(PedidoResponseDTO.class);
@@ -322,7 +324,7 @@ public class GatewayClient {
         log.error("Circuit breaker abierto para obtenerEnvioPorPedidoId {}: {}", pedidoId, t.getMessage());
         return Mono
                 .error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Servicio de envíos no disponible"));
-    }    
+    }
 
     private Mono<EnvioResponseDTO> fallbackActualizarEstadoEnvio(Long id, String estado, String jwt, String cid,
             Throwable t) {
@@ -346,7 +348,8 @@ public class GatewayClient {
                     } else if (status == HttpStatus.UNPROCESSABLE_ENTITY) {
                         return Mono.error(new DomainException(body));
                     } else {
-                        return Mono.error(new RuntimeException("Error " + status + ": " + body));
+                        // Preserva el código de estado real (401, 403, 500, etc.)
+                        return Mono.error(new ResponseStatusException(status, body));
                     }
                 });
     }

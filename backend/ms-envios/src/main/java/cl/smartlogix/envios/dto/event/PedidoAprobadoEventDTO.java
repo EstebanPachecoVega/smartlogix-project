@@ -15,7 +15,7 @@ public class PedidoAprobadoEventDTO implements Serializable {
     private String numeroOrden;
     
     // --- DATOS REALES DE DESPACHO ---
-    private Long usuarioId;
+    private String usuarioId;
     private String destinatario;
     private String calle;
     private String numero;

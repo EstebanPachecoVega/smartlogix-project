@@ -27,10 +27,7 @@ public class PedidoBffController {
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
-        // Nota: idempotencyKey se reenvía en el header por el GatewayClient si se
-        // implementa,
-        // por ahora no se usa en el cliente.
-        return gatewayClient.crearPedido(request, jwt, MDC.get("correlationId"));
+        return gatewayClient.crearPedido(request, jwt, idempotencyKey, MDC.get("correlationId"));
     }
 
     @GetMapping

@@ -32,14 +32,14 @@ export default function PedidosPage() {
 
             {exito && (
                 <div className="bg-green-100 text-green-800 p-4 rounded mb-4">
-                    ¡Pedido creado exitosamente! ID: {exito}
+                    ¡Pedido creado exitosamente! Número de orden: {exito}
                 </div>
             )}
 
             {pedidos.length === 0 ? (
                 <div className="text-center py-12">
                     <p className="text-gray-500">No tienes pedidos aún</p>
-                    <Link href="/cliente">
+                    <Link href="/">
                         <Button className="mt-4" variant="outline">
                             Ir al catálogo
                         </Button>
@@ -65,7 +65,7 @@ export default function PedidosPage() {
                                     <p className="text-xl font-bold">
                                         Total: ${pedido.totalCompra.toLocaleString()}
                                     </p>
-                                    <Link href={`/cliente/pedidos/${pedido.id}`}>
+                                    <Link href={`/dashboard/pedidos/${pedido.id}`}>
                                         <Button variant="outline" size="sm">
                                             Ver detalle
                                         </Button>

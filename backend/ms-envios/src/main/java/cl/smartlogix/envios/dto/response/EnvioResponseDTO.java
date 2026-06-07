@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class EnvioResponseDTO {
     private Long id;
     private Long pedidoId;
-    private Long usuarioId;
+    private String usuarioId;
     private String destinatario;
     private String calle;
     private String numero;

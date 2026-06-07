@@ -19,7 +19,7 @@ public class CrearPedidoRequestDTO {
 
     // --- CAMPOS LOGÍSTICOS OBLIGATORIOS ---
     @NotNull(message = "El ID del usuario es obligatorio.")
-    private Long usuarioId;
+    private String usuarioId;
 
     @NotBlank(message = "El destinatario es obligatorio.")
     private String destinatario;

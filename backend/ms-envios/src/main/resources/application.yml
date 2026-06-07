@@ -2,6 +2,12 @@ spring:
   application:
     name: ms-envios
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWT_JWK_SET_URI}    
+
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:db_envios}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:root}

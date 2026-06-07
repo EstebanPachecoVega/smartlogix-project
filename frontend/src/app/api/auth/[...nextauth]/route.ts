@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, account }) {
             if (account && account.access_token) {
                 token.accessToken = account.access_token;
-                token.idToken = account.id_token; // Se almacena exclusivamente en el servidor
+                token.idToken = account.id_token;
                 try {
                     const payload = JSON.parse(
                         Buffer.from(account.access_token.split('.')[1], 'base64').toString()
@@ -31,18 +31,19 @@ export const authOptions: NextAuthOptions = {
         },
         async session({ session, token }) {
             session.accessToken = token.accessToken as string;
-            // ELIMINADO: session.idToken = token.idToken as string;
+            // session.idToken no se envía al cliente (solo al servidor)
             session.roles = token.roles as string[];
             session.sub = token.sub as string;
             return session;
         },
         async redirect({ url, baseUrl }) {
+            // Redirige siempre al home (catálogo) después de login
             if (url === baseUrl || url === `${baseUrl}/login` || url === '/login') {
-                return `${baseUrl}/cliente`;
+                return `${baseUrl}/`;  // 👈 Cambiado de /dashboard/perfil a /
             }
             if (url.startsWith('/')) return `${baseUrl}${url}`;
             if (new URL(url).origin === baseUrl) return url;
-            return `${baseUrl}/cliente`;
+            return `${baseUrl}/`;
         },
     },
     pages: {

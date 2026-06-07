@@ -4,19 +4,28 @@ import { NextResponse } from "next/server";
 export default withAuth(
     function middleware(req) {
         const token = req.nextauth.token;
-        const roles = (token?.roles as string[]) || [];
-        const isLogistica = req.nextUrl.pathname.startsWith("/logistica");
+        const path = req.nextUrl.pathname;
 
-        if (isLogistica && !roles.includes("gestor")) {
-            return NextResponse.redirect(new URL("/cliente", req.url));
+        // Permitir acceso público a / y /login
+        if (path === "/" || path === "/login") return NextResponse.next();
+
+        // Proteger dashboard (requiere autenticación)
+        if (path.startsWith("/dashboard")) {
+            if (!token) return NextResponse.redirect(new URL("/login", req.url));
+            return NextResponse.next();
         }
+
+        // Proteger logística (requiere rol gestor)
+        if (path.startsWith("/logistica")) {
+            if (!token) return NextResponse.redirect(new URL("/login", req.url));
+            const roles = token.roles as string[] || [];
+            if (!roles.includes("gestor")) return NextResponse.redirect(new URL("/", req.url));
+            return NextResponse.next();
+        }
+
         return NextResponse.next();
     },
-    {
-        callbacks: {
-            authorized: ({ token }) => !!token,
-        },
-    }
+    { callbacks: { authorized: ({ token }) => true } }
 );
 
-export const config = { matcher: ["/cliente/:path*", "/logistica/:path*"] };
+export const config = { matcher: ["/((?!api/auth|_next/static|favicon.ico).*)"] };

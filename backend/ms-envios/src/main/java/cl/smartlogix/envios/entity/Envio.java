@@ -22,7 +22,7 @@ public class Envio {
     private Long pedidoId;
 
     @Column(name = "usuario_id", nullable = false)
-    private Long usuarioId;
+    private String usuarioId;
 
     @Column(nullable = false, length = 150)
     private String destinatario;

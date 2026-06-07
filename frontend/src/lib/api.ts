@@ -35,6 +35,26 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
+// ==================== CLIENTE PÚBLICO (sin autenticación) ====================
+const publicApi = axios.create({
+  baseURL: 'http://localhost:8080', // Gateway
+  headers: { 'Content-Type': 'application/json' },
+});
+
+export const productosPublicApi = {
+  listar: async (): Promise<Producto[]> => {
+    const res = await publicApi.get('/api/productos');
+    return res.data;
+  },
+};
+
+export const categoriasPublicApi = {
+  listar: async (): Promise<Categoria[]> => {
+    const res = await publicApi.get('/api/categorias');
+    return res.data;
+  },
+};
+
 // ==================== PRODUCTOS CRUD (vía BFF) ====================
 export const productosApi = {
   listar: async (): Promise<Producto[]> => {

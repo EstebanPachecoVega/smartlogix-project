@@ -1,11 +1,12 @@
 'use client';
 
-import { useCarritoStore } from '@/store/carritoStore';
+import { useCarritoStore, useTotalPrecio } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function CarritoResumen() {
-  const { items, actualizarCantidad, eliminar, totalPrecio } = useCarritoStore();
+  const { items, actualizarCantidad, eliminar } = useCarritoStore();
+  const totalPrecio = useTotalPrecio();
 
   if (items.length === 0) return <p className="text-center py-8">Carrito vacío</p>;
 

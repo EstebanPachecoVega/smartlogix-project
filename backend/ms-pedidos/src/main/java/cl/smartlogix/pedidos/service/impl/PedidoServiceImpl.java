@@ -37,20 +37,20 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional
-    public Pedido crearPedido(CrearPedidoRequestDTO request, String idempotencyKey) {
+    public Pedido crearPedido(CrearPedidoRequestDTO request, String usuarioId, String idempotencyKey) {
         if (idempotencyKey != null && idempotencyService.isProcessed(idempotencyKey)) {
             log.info("Petición duplicada con idempotencyKey: {}. Rechazada.", idempotencyKey);
             throw new DomainException("La petición ya fue procesada anteriormente (idempotencia)");
         }
 
-        log.info("Creando pedido para usuario: {}", request.getUsuarioId());
+        log.info("Creando pedido para usuario: {}", usuarioId);
 
         Pedido pedido = Pedido.builder()
                 .numeroOrden("ORD-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-"
                         + UUID.randomUUID().toString().substring(0, 4).toUpperCase())
                 .fechaPedido(LocalDateTime.now())
                 .estado(EstadoPedido.PENDIENTE)
-                .usuarioId(request.getUsuarioId())
+                .usuarioId(usuarioId)
                 .destinatario(request.getDestinatario())
                 .calle(request.getCalle())
                 .numero(request.getNumero())
@@ -164,6 +164,12 @@ public class PedidoServiceImpl implements PedidoService {
     public Pedido obtenerPedidoPorNumeroOrden(String numeroOrden) {
         return pedidoRepository.findByNumeroOrden(numeroOrden)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con número: " + numeroOrden));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Pedido> listarPedidosPorUsuario(String usuarioId) {
+        return pedidoRepository.findByUsuarioId(usuarioId);
     }
 
     @Override
