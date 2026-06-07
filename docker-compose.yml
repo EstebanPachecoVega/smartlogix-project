@@ -122,6 +122,7 @@ services:
       RABBIT_PASSWORD: ${RABBITMQ_PASS}
       SERVER_PORT: 8081
       JPA_DDL_AUTO: update
+      JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
     depends_on:
       mysql-inventario:
         condition: service_healthy
