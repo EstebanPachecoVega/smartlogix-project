@@ -359,6 +359,7 @@ public class GatewayClient {
     private Mono<? extends Throwable> handleError(ClientResponse response) {
         HttpStatusCode status = response.statusCode();
         return response.bodyToMono(String.class)
+                .defaultIfEmpty("")
                 .flatMap(body -> {
                     if (status == HttpStatus.NOT_FOUND) {
                         return Mono.error(new ResourceNotFoundException(body));

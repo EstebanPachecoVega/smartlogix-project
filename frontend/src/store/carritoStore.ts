@@ -49,7 +49,7 @@ export const useCarritoStore = create<CarritoState>()(
             name: 'carrito-storage',
             storage: createJSONStorage(() => localStorage),
         }
-    ) as any // 👈 Forzar tipado para evitar el error de TypeScript
+    )
 );
 
 // Selectores para totales

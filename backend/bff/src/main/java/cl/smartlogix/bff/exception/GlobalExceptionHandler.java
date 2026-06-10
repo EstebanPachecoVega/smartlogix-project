@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -34,6 +35,11 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
             pd.setTitle("Regla de negocio violada");
             pd.setType(URI.create("https://smartlogix.cl/errors/business-rule"));
+        } else if (ex instanceof ResponseStatusException rse) {
+            status = HttpStatus.valueOf(rse.getStatusCode().value());
+            pd = ProblemDetail.forStatusAndDetail(status, rse.getReason());
+            pd.setTitle("Error en el servicio externo");
+            pd.setType(URI.create("https://smartlogix.cl/errors/external-service"));
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             pd = ProblemDetail.forStatusAndDetail(status, "Error interno en el BFF");

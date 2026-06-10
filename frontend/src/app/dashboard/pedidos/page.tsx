@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { EstadoPedidoBadge } from '@/components/ui/EstadoPedidoBadge';
 import Spinner from '@/components/shared/Spinner';
 
-export default function PedidosPage() {
+function PedidosContent() {
     const searchParams = useSearchParams();
     const [pedidos, setPedidos] = useState<PedidoResponse[]>([]);
     const [loading, setLoading] = useState(true);
@@ -77,5 +78,13 @@ export default function PedidosPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function PedidosPage() {
+    return (
+        <Suspense fallback={<Spinner />}>
+            <PedidosContent />
+        </Suspense>
     );
 }

@@ -6,10 +6,15 @@ declare module "next-auth" {
         idToken?: string;
         roles?: string[];
         sub?: string;
+        error?: string;
     }
     interface JWT {
         accessToken?: string;
         idToken?: string;
+        refreshToken?: string;
+        expiresAt?: number;
         roles?: string[];
+        sub?: string;
+        error?: string;
     }
 }

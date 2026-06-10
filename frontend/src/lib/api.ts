@@ -35,6 +35,18 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Redirigir al login cuando el token expira
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      const { signOut } = await import('next-auth/react');
+      await signOut({ callbackUrl: '/login' });
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ==================== CLIENTE PÚBLICO (sin autenticación) ====================
 const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
 
