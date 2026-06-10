@@ -36,8 +36,10 @@ apiClient.interceptors.request.use(async (config) => {
 });
 
 // ==================== CLIENTE PÚBLICO (sin autenticación) ====================
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+
 const publicApi = axios.create({
-  baseURL: 'http://localhost:8080', // Gateway
+  baseURL: GATEWAY_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -63,6 +65,10 @@ export const productosApi = {
   },
   crear: async (data: any): Promise<Producto> => {
     const res = await apiClient.post('/logistica/productos', data);
+    return res.data;
+  },
+  obtener: async (id: number): Promise<Producto> => {
+    const res = await apiClient.get(`/logistica/productos/${id}`);
     return res.data;
   },
   actualizar: async (id: number, data: any): Promise<Producto> => {

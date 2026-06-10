@@ -52,6 +52,18 @@ public class GatewayClient {
                 .bodyToMono(ProductoResponseDTO.class);
     }
 
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerProducto")
+    public Mono<ProductoResponseDTO> obtenerProducto(Long id, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/productos/" + id)
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(ProductoResponseDTO.class);
+    }
+
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackActualizarProducto")
     public Mono<ProductoResponseDTO> actualizarProducto(Long id, ProductoRequestDTO request, String jwtToken,
             String correlationId) {
@@ -258,6 +270,11 @@ public class GatewayClient {
             Throwable t) {
         log.error("CB abierto crearProducto: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Productos no disponible"));
+    }
+
+    private Mono<ProductoResponseDTO> fallbackObtenerProducto(Long id, String jwt, String cid, Throwable t) {
+        log.error("CB abierto obtenerProducto {}: {}", id, t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Producto no disponible"));
     }
 
     private Mono<ProductoResponseDTO> fallbackActualizarProducto(Long id, ProductoRequestDTO req, String jwt,

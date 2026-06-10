@@ -15,5 +15,9 @@ public class CategoriaResponseDTO {
     private String slug;
     private String descripcion;
     private Long padreId;
+    private String padreNombre;
+    private Integer ordenVisual;
     private Boolean activo;
+    private String fechaCreacion;
+    private String fechaActualizacion;
 }
