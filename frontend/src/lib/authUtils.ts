@@ -7,9 +7,9 @@ export async function getUserRoles(): Promise<string[]> {
 
 export async function hasRole(role: string): Promise<boolean> {
   const roles = await getUserRoles();
-  return roles.includes(role);
+  return roles.some((r: string) => r.toLowerCase() === role.toLowerCase());
 }
 
 export function hasRoleSync(session: any, role: string): boolean {
-  return session?.roles?.includes(role) || false;
+  return session?.roles?.some((r: string) => r.toLowerCase() === role.toLowerCase()) || false;
 }

@@ -52,6 +52,7 @@ export interface PedidoRequest {
     nombreProducto: string;
     precioUnitario: number;
     cantidad: number;
+    imagenPrincipal?: string;
   }[];
 }
 
@@ -61,6 +62,13 @@ export interface PedidoResponse {
   estado: string;
   totalCompra: number;
   fechaPedido?: string;
+  destinatario?: string;
+  calle?: string;
+  numero?: string;
+  comuna?: string;
+  ciudad?: string;
+  codigoPostal?: string;
+  metodoEnvio?: string;
   detalles?: DetallePedido[];
 }
 
@@ -72,6 +80,7 @@ export interface DetallePedido {
   precioUnitario: number;
   cantidad: number;
   subtotal: number;
+  imagenPrincipal?: string;
 }
 
 export interface Envio {

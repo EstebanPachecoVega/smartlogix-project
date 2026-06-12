@@ -6,33 +6,44 @@ import { useCarritoStore, useTotalPrecio } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Breadcrumbs from '@/components/ui/breadcrumbs';
+import Image from 'next/image';
 
 export default function CarritoPage() {
     const router = useRouter();
     const { items, actualizarCantidad, eliminar } = useCarritoStore();
     const totalPrecio = useTotalPrecio();
 
-    if (items.length === 0) {
-        return (
-            <div className="text-center py-12">
-                <h1 className="text-2xl font-bold mb-4">Carrito vacío</h1>
-                <Button onClick={() => router.push('/')}>
-                    Ir al catálogo
-                </Button>
-            </div>
-        );
-    }
-
     return (
         <div>
+            <Breadcrumbs items={[{ label: 'Carrito' }]} />
+            {items.length === 0 ? (
+                <div className="text-center py-12">
+                    <h1 className="text-2xl font-bold mb-4">Carrito vacío</h1>
+                    <Button onClick={() => router.push('/')}>
+                        Ir al catálogo
+                    </Button>
+                </div>
+            ) : (
+            <>
             <h1 className="text-2xl font-bold mb-6">Mi carrito</h1>
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
                     {items.map((item) => (
                         <Card key={item.producto.id}>
-                            <CardContent className="flex justify-between items-center p-4">
-                                <div className="flex-1">
-                                    <h3 className="font-semibold">{item.producto.nombre}</h3>
+                            <CardContent className="flex items-center gap-4 p-4">
+                                {item.producto.imagenPrincipal && (
+                                    <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden border">
+                                        <Image
+                                            src={item.producto.imagenPrincipal}
+                                            alt={item.producto.nombre}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold truncate">{item.producto.nombre}</h3>
                                     <p className="text-sm text-gray-600">
                                         ${item.producto.precio.toLocaleString()} c/u
                                     </p>
@@ -83,6 +94,8 @@ export default function CarritoPage() {
                     </Card>
                 </div>
             </div>
+            </>
+            )}
         </div>
     );
 }

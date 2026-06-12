@@ -5,9 +5,10 @@ export async function GET(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     // Variables de configuración de Keycloak
-    const keycloakBaseUrl = 'http://localhost:8180';
-    const realm = 'smartlogix';
-    const clientId = 'smartlogix-frontend';
+    const issuer = process.env.KEYCLOAK_ISSUER || 'http://localhost:8180/realms/smartlogix';
+    const keycloakBaseUrl = issuer.replace(/\/realms\/.*$/, '');
+    const realm = issuer.split('/realms/')[1] || 'smartlogix';
+    const clientId = process.env.KEYCLOAK_CLIENT_ID || 'smartlogix-frontend';
 
     // La URL a la que Keycloak redirigirá después de destruir la sesión
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';

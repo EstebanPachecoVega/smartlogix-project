@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class PedidoServiceImpl implements PedidoService {
         Pedido pedido = Pedido.builder()
                 .numeroOrden("ORD-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-"
                         + UUID.randomUUID().toString().substring(0, 4).toUpperCase())
-                .fechaPedido(LocalDateTime.now())
+                .fechaPedido(LocalDateTime.now(ZoneId.of("America/Santiago")))
                 .estado(EstadoPedido.PENDIENTE)
                 .usuarioId(usuarioId)
                 .destinatario(request.getDestinatario())
@@ -74,6 +75,7 @@ public class PedidoServiceImpl implements PedidoService {
                     .precioUnitario(itemDto.getPrecioUnitario())
                     .cantidad(itemDto.getCantidad())
                     .subtotal(subtotal)
+                    .imagenPrincipal(itemDto.getImagenPrincipal())
                     .build();
             pedido.agregarDetalle(detalle);
         }

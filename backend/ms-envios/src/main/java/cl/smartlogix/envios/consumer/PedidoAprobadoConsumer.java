@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Component
@@ -55,7 +56,7 @@ public class PedidoAprobadoConsumer {
                     .estadoEnvio(EstadoEnvio.PENDIENTE)
                     .empresaLogistica("LOGIX_CARRIER_INTEGRATION")
                     .numeroTracking("TRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
-                    .fechaEstimadaEntrega(LocalDate.now().plusDays(3))
+                    .fechaEstimadaEntrega(LocalDate.now(ZoneId.of("America/Santiago")).plusDays(3))
                     .build();
 
             envioRepository.save(envio);

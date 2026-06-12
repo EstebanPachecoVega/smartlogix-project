@@ -70,5 +70,7 @@ public class CrearPedidoRequestDTO {
         @NotNull(message = "La cantidad es obligatoria.")
         @Min(value = 1, message = "La cantidad mínima debe ser al menos 1.")
         private Integer cantidad;
+
+        private String imagenPrincipal;
     }
 }

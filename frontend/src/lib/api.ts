@@ -6,29 +6,48 @@ const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:8084/bff';
 
 const apiClient = axios.create({
   baseURL: BFF_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 💡 Guardaremos la promesa de la sesión aquí para evitar llamadas duplicadas en paralelo
-let activeSessionPromise: Promise<any> | null = null;
+// Cache de sesión para evitar llamadas duplicadas en paralelo
+let inFlightPromise: Promise<any> | null = null;
+let sessionCacheValue: { session: any; timestamp: number } | null = null;
+const SESSION_CACHE_TTL = 2000; // 2 segundos
 
-apiClient.interceptors.request.use(async (config) => {
+async function getSessionWithCache(): Promise<any> {
+  const now = Date.now();
 
-  // Si no hay una petición de sesión activa en este instante, la creamos
-  if (!activeSessionPromise) {
-    activeSessionPromise = getSession().then((session) => {
-      // Limpiamos la promesa un segundo después para que futuras navegaciones tengan datos frescos
-      setTimeout(() => { activeSessionPromise = null; }, 1000);
-      return session;
-    });
+  if (sessionCacheValue && (now - sessionCacheValue.timestamp) < SESSION_CACHE_TTL) {
+    return sessionCacheValue.session;
   }
 
-  // Todas las peticiones de la ráfaga (Promise.all) esperarán la MISMA respuesta
-  const session = await activeSessionPromise;
+  if (!inFlightPromise) {
+    inFlightPromise = (async () => {
+      try {
+        let session = await getSession().catch(() => null);
+        if (!session) {
+          await new Promise(r => setTimeout(r, 300));
+          session = await getSession().catch(() => null);
+        }
+        if (session) {
+          sessionCacheValue = { session, timestamp: now };
+        }
+        return session;
+      } finally {
+        inFlightPromise = null;
+      }
+    })();
+  }
 
-  console.log("Token en apiClient:", session?.accessToken);
+  return inFlightPromise;
+}
+
+apiClient.interceptors.request.use(async (config) => {
+  const session = await getSessionWithCache();
+  console.log("Token en apiClient:", session?.accessToken ? "presente" : "NO HAY TOKEN");
   if (session?.accessToken) {
     config.headers.Authorization = `Bearer ${session.accessToken}`;
   }
@@ -55,9 +74,20 @@ const publicApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+export interface ProductoFilterParams {
+  nombre?: string;
+  categoriaId?: number;
+  precioMin?: number;
+  precioMax?: number;
+}
+
 export const productosPublicApi = {
-  listar: async (): Promise<Producto[]> => {
-    const res = await publicApi.get('/api/productos');
+  listar: async (params?: ProductoFilterParams): Promise<Producto[]> => {
+    const res = await publicApi.get('/api/productos', { params });
+    return res.data;
+  },
+  obtenerPorSlug: async (slug: string): Promise<Producto> => {
+    const res = await publicApi.get(`/api/productos/slug/${slug}`);
     return res.data;
   },
 };
@@ -65,6 +95,14 @@ export const productosPublicApi = {
 export const categoriasPublicApi = {
   listar: async (): Promise<Categoria[]> => {
     const res = await publicApi.get('/api/categorias');
+    return res.data;
+  },
+  obtenerPorId: async (id: number): Promise<Categoria> => {
+    const res = await publicApi.get(`/api/categorias/${id}`);
+    return res.data;
+  },
+  obtenerPorSlug: async (slug: string): Promise<Categoria> => {
+    const res = await publicApi.get(`/api/categorias/slug/${slug}`);
     return res.data;
   },
 };

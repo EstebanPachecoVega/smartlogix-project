@@ -16,6 +16,13 @@ public class PedidoResponseDTO {
     private String estado;
     private Integer totalCompra;
     private String fechaPedido;
+    private String destinatario;
+    private String calle;
+    private String numero;
+    private String comuna;
+    private String ciudad;
+    private String codigoPostal;
+    private String metodoEnvio;
     private List<DetallePedidoDTO> detalles;
 
     @Getter
@@ -30,5 +37,6 @@ public class PedidoResponseDTO {
         private Integer precioUnitario;
         private Integer cantidad;
         private Integer subtotal;
+        private String imagenPrincipal;
     }
 }

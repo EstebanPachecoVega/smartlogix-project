@@ -15,17 +15,38 @@ function PedidosContent() {
     const searchParams = useSearchParams();
     const [pedidos, setPedidos] = useState<PedidoResponse[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const exito = searchParams.get('exito');
 
-    useEffect(() => {
+    const cargarPedidos = () => {
+        setLoading(true);
+        setError(null);
         pedidosApi
             .listar()
             .then(setPedidos)
-            .catch(console.error)
+            .catch((err) => {
+                console.error(err);
+                setError("No se pudieron cargar tus pedidos. Intenta nuevamente más tarde.");
+            })
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        cargarPedidos();
     }, []);
 
     if (loading) return <Spinner />;
+
+    if (error) {
+        return (
+            <div>
+                <div className="text-center py-12">
+                    <p className="text-red-500 mb-4">{error}</p>
+                    <Button onClick={cargarPedidos} variant="outline">Reintentar</Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div>

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import ImageUploader from '@/components/ui/ImageUploader';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Spinner from '@/components/shared/Spinner';
@@ -249,23 +250,18 @@ export default function EditarProductoPage({ params }: EditPageProps) {
                             </div>
                         </div>
 
-                        <div>
-                            <Label htmlFor="imagenPrincipal">Imagen principal (URL)</Label>
-                            <Input
-                                id="imagenPrincipal"
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <ImageUploader
+                                mode="single"
                                 value={form.imagenPrincipal}
-                                onChange={(e) => setForm({ ...form, imagenPrincipal: e.target.value })}
-                                placeholder="https://..."
+                                onChange={(val) => setForm({ ...form, imagenPrincipal: val as string })}
+                                label="Imagen principal"
                             />
-                        </div>
-
-                        <div>
-                            <Label htmlFor="imagenes">Imágenes adicionales (URLs separadas por coma)</Label>
-                            <Input
-                                id="imagenes"
-                                value={form.imagenes.join(', ')}
-                                onChange={(e) => setForm({ ...form, imagenes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                                placeholder="https://..., https://..."
+                            <ImageUploader
+                                mode="multiple"
+                                value={form.imagenes}
+                                onChange={(val) => setForm({ ...form, imagenes: val as string[] })}
+                                label="Imágenes adicionales"
                             />
                         </div>
 

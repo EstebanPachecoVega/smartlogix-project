@@ -249,6 +249,8 @@ services:
         NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8180
         NEXT_PUBLIC_BFF_URL: http://localhost:8084/bff
         NEXT_PUBLIC_GATEWAY_URL: http://localhost:8080
+        NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dtkxwlj5g
+        NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: smartlogix_preset
     container_name: smartlogix-frontend
     restart: unless-stopped
     ports:
@@ -260,6 +262,10 @@ services:
       KEYCLOAK_CLIENT_ID: smartlogix-frontend
       KEYCLOAK_ISSUER: http://localhost:8180/realms/smartlogix
       KEYCLOAK_INTERNAL_ISSUER: ${KEYCLOAK_INTERNAL_ISSUER}
+      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dtkxwlj5g
+      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: smartlogix_preset
     depends_on:
       bff:
         condition: service_started

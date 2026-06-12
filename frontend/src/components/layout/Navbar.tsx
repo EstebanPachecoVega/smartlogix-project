@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
+import { Suspense } from 'react';
 import { useSession, signOut } from "next-auth/react";
 import { ShoppingCart, LogOut, User, ChevronDown, Package, LayoutDashboard } from 'lucide-react';
 import { useTotalItems } from '@/store/carritoStore';
@@ -14,23 +16,22 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import SearchBar from './SearchBar';
+import CategoryNav from './CategoryNav';
 
 export default function Navbar() {
+    const router = useRouter();
+    const pathname = usePathname();
     const { data: session } = useSession();
     const totalItems = useTotalItems();
-    const userRoles = session?.roles || [];
-    const isGestor = userRoles.includes('gestor');
+    const userRoles: string[] = session?.roles || [];
+    const isGestor = userRoles.some(r => r.toLowerCase() === 'gestor');
 
     const handleLogout = async () => {
         try {
-            // 1. Obtener la URL segura desde el servidor
             const res = await fetch('/api/auth/logout');
             const data = await res.json();
-
-            // 2. Cerrar sesión de Next-Auth en el entorno local
             await signOut({ redirect: false });
-
-            // 3. Ejecutar la redirección hacia Keycloak
             window.location.href = data.url;
         } catch (error) {
             console.error("Error durante el logout:", error);
@@ -43,32 +44,39 @@ export default function Navbar() {
         : session?.user?.email?.charAt(0).toUpperCase() || 'U';
 
     return (
-        <nav className="border-b bg-white sticky top-0 z-50">
-            <div className="container mx-auto flex justify-between items-center px-4 py-3">
-                <Link href="/" className="text-xl font-bold hover:text-blue-600 transition-colors">
+        <header className="sticky top-0 z-50 bg-white border-b">
+            <div className="container mx-auto flex items-center justify-between px-4 py-2.5 gap-4">
+                <Link href="/" className="text-2xl font-bold hover:text-blue-600 transition-colors shrink-0">
                     SmartLogix
                 </Link>
-                <div className="flex items-center gap-2">
-                    <Link href="/dashboard/carrito">
-                        <Button variant="outline" className="relative">
-                            <ShoppingCart className="h-5 w-5" />
+
+                {!pathname.startsWith('/logistica') && (
+                    <div className="flex-1 flex justify-center">
+                        <SearchBar />
+                    </div>
+                )}
+
+                <div className="flex items-center gap-2 shrink-0">
+                    {!isGestor && (
+                        <Button variant="outline" size="default" className="relative" onClick={() => router.push('/dashboard/carrito')}>
+                            <ShoppingCart className="h-6 w-6" />
                             {totalItems > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center font-medium">
                                     {totalItems}
                                 </span>
                             )}
                         </Button>
-                    </Link>
+                    )}
                     {session ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="flex items-center gap-2">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarFallback className="bg-gray-200 text-gray-700">
+                                <Button variant="ghost" className="flex items-center gap-2 px-2">
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarFallback className="bg-gray-200 text-gray-700 text-sm">
                                             {userInitials}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <span className="hidden md:inline-block text-sm">
+                                    <span className="hidden md:inline-block text-sm font-medium">
                                         {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}
                                     </span>
                                     <ChevronDown className="h-4 w-4" />
@@ -111,12 +119,23 @@ export default function Navbar() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
-                        <Link href="/login">
-                            <Button variant="default" size="sm">Iniciar sesión</Button>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <Link href="/registro">
+                                <Button variant="outline" size="default">Registrarse</Button>
+                            </Link>
+                            <Link href="/login">
+                                <Button variant="default" size="default">Iniciar sesión</Button>
+                            </Link>
+                        </div>
                     )}
                 </div>
             </div>
-        </nav>
+
+            {!pathname.startsWith('/logistica') && (
+                <Suspense fallback={null}>
+                    <CategoryNav />
+                </Suspense>
+            )}
+        </header>
     );
 }

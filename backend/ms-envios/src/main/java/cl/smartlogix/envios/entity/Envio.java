@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "envios")
@@ -73,7 +74,7 @@ public class Envio {
      */
     @PrePersist
     protected void onCreate() {
-        this.fechaCreacion = LocalDateTime.now();
+        this.fechaCreacion = LocalDateTime.now(ZoneId.of("America/Santiago"));
         if (this.estadoEnvio == null) {
             this.estadoEnvio = EstadoEnvio.PENDIENTE;
         }

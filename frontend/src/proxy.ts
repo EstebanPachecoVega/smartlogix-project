@@ -18,8 +18,8 @@ export default withAuth(
         // Proteger logística (requiere rol gestor)
         if (path.startsWith("/logistica")) {
             if (!token) return NextResponse.redirect(new URL("/login", req.url));
-            const roles = token.roles as string[] || [];
-            if (!roles.includes("gestor")) return NextResponse.redirect(new URL("/", req.url));
+            const roles = (token.roles as string[]) || [];
+            if (!roles.some(r => r.toLowerCase() === "gestor")) return NextResponse.redirect(new URL("/", req.url));
             return NextResponse.next();
         }
 

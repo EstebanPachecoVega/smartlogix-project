@@ -1,54 +1,108 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
+import CredentialsProvider from "next-auth/providers/credentials";
 
-const externalIssuer = process.env.KEYCLOAK_ISSUER!;              // http://localhost:8180/realms/smartlogix
-const internalIssuer = process.env.KEYCLOAK_INTERNAL_ISSUER!;     // http://keycloak:8080/realms/smartlogix
+const externalIssuer = process.env.KEYCLOAK_ISSUER!;
+const internalIssuer = process.env.KEYCLOAK_INTERNAL_ISSUER!;
 
 export const authOptions: NextAuthOptions = {
-    debug: false, // cámbialo a true temporalmente si necesitas logs detallados
+    debug: false,
     providers: [
         KeycloakProvider({
             clientId: process.env.KEYCLOAK_CLIENT_ID!,
-            clientSecret: "", // public client
-            // El issuer que usará el servidor para validaciones internas (debe ser accesible desde el contenedor)
+            clientSecret: "",
             issuer: internalIssuer,
-            // La URL de autorización debe ser accesible desde el navegador (externa)
             authorization: {
                 url: `${externalIssuer}/protocol/openid-connect/auth`,
                 params: { prompt: "login" },
             },
-            // Los endpoints de token y userinfo también deben ser accesibles desde el contenedor (internos)
             token: `${internalIssuer}/protocol/openid-connect/token`,
             userinfo: `${internalIssuer}/protocol/openid-connect/userinfo`,
-            // Opcional: forzar el well-known para evitar una llamada extra
             wellKnown: `${internalIssuer}/.well-known/openid-configuration`,
+        }),
+        CredentialsProvider({
+            name: "credentials",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Contraseña", type: "password" },
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null;
+
+                const res = await fetch(`${internalIssuer}/protocol/openid-connect/token`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({
+                        client_id: process.env.KEYCLOAK_CLIENT_ID!,
+                        grant_type: "password",
+                        username: credentials.email,
+                        password: credentials.password,
+                        scope: "openid profile email",
+                    }),
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    throw new Error(error.error_description || "Credenciales incorrectas");
+                }
+
+                const tokens = await res.json();
+                const payload = JSON.parse(
+                    Buffer.from(tokens.access_token.split('.')[1], 'base64').toString()
+                );
+
+                const extractRoles = (p: any): string[] => {
+                    const realmRoles: string[] = p.realm_access?.roles || [];
+                    const clientRoles: string[] = p.resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles || [];
+                    return realmRoles.length > 0 ? realmRoles : clientRoles;
+                };
+
+                return {
+                    id: payload.sub,
+                    email: payload.email || credentials.email,
+                    name: payload.name || payload.preferred_username || credentials.email,
+                    accessToken: tokens.access_token,
+                    refreshToken: tokens.refresh_token,
+                    expiresAt: Math.floor(Date.now() / 1000) + tokens.expires_in,
+                    idToken: tokens.id_token,
+                    roles: extractRoles(payload),
+                };
+            },
         }),
     ],
     callbacks: {
-        async jwt({ token, account }) {
-            // Login inicial
-            if (account) {
-                token.accessToken = account.access_token;
-                token.refreshToken = account.refresh_token;
-                token.expiresAt = account.expires_at;
-                token.idToken = account.id_token;
+        async jwt({ token, account, user }) {
+            const extractRoles = (p: any): string[] => {
+                const realmRoles: string[] = p.realm_access?.roles || [];
+                const clientRoles: string[] = p.resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles || [];
+                const all = realmRoles.length > 0 ? realmRoles : clientRoles;
+                return all.map((r: string) => r.toLowerCase());
+            };
+
+            const sessionToken = account?.access_token ? account : user;
+            if (sessionToken) {
+                const tok = sessionToken as any;
+                token.accessToken = tok.access_token || tok.accessToken;
+                token.refreshToken = tok.refresh_token || tok.refreshToken;
+                token.expiresAt = tok.expires_at || tok.expiresAt;
+                token.idToken = tok.id_token || tok.idToken;
                 try {
+                    const at = token.accessToken as string;
                     const payload = JSON.parse(
-                        Buffer.from(account.access_token!.split('.')[1], 'base64').toString()
+                        Buffer.from(at.split('.')[1], 'base64').toString()
                     );
-                    token.roles = payload.realm_access?.roles || [];
+                    const rawRoles: string[] = extractRoles(payload);
+                    token.roles = rawRoles;
                     token.sub = payload.sub;
-                } catch (error) {
-                    console.error("Error decodificando token:", error);
+                } catch {
+                    console.warn("[NextAuth] Error decodificando token, roles vacíos");
                     token.roles = [];
                 }
                 return token;
             }
-            // Token aún vigente
             if (token.expiresAt && Date.now() < (token.expiresAt as number) * 1000) {
                 return token;
             }
-            // Token expirado → refresh
             try {
                 const response = await fetch(`${internalIssuer}/protocol/openid-connect/token`, {
                     method: "POST",
@@ -64,6 +118,17 @@ export const authOptions: NextAuthOptions = {
                 token.accessToken = tokens.access_token;
                 token.refreshToken = tokens.refresh_token ?? token.refreshToken;
                 token.expiresAt = Math.floor(Date.now() / 1000) + tokens.expires_in;
+                // Re-extractar roles del nuevo access token
+                try {
+                    const payload = JSON.parse(
+                        Buffer.from(tokens.access_token.split('.')[1], 'base64').toString()
+                    );
+                    const refreshedRoles: string[] = extractRoles(payload);
+                    console.log("[NextAuth] Roles re-extraídos tras refresh:", refreshedRoles);
+                    token.roles = refreshedRoles;
+                } catch {
+                    console.warn("[NextAuth] Error decodificando token refrescado");
+                }
                 return token;
             } catch (error) {
                 console.error("Error refrescando token:", error);

@@ -11,6 +11,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { EstadoPedidoBadge } from '@/components/ui/EstadoPedidoBadge';
 import { EstadoEnvioBadge } from '@/components/ui/EstadoEnvioBadge';
 import Spinner from '@/components/shared/Spinner';
+import Image from 'next/image';
 
 export default function DetallePedidoLogisticaPage() {
     const { id } = useParams();
@@ -75,18 +76,27 @@ export default function DetallePedidoLogisticaPage() {
                     </CardContent>
                 </Card>
 
-                {/* Información del envío (si existe) */}
+                {/* Dirección de envío */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Dirección de envío</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        <p><strong>Destinatario:</strong> {pedido.destinatario || 'No disponible'}</p>
+                        <p><strong>Dirección:</strong> {pedido.calle} {pedido.numero}, {pedido.comuna}, {pedido.ciudad}</p>
+                        <p><strong>Método de envío:</strong> {pedido.metodoEnvio || 'No disponible'}</p>
+                    </CardContent>
+                </Card>
+
+                {/* Seguimiento del envío (si existe) */}
                 {envio && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Información del envío</CardTitle>
+                            <CardTitle>Seguimiento del envío</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <p><strong>Número de tracking:</strong> {envio.numeroTracking}</p>
                             <p><strong>Estado envío:</strong> <EstadoEnvioBadge estado={envio.estadoEnvio} /></p>
-                            <p><strong>Destinatario:</strong> {envio.destinatario}</p>
-                            <p><strong>Dirección:</strong> {envio.calle} {envio.numero}, {envio.comuna}, {envio.ciudad}</p>
-                            <p><strong>Método de envío:</strong> {envio.metodoEnvio}</p>
                             <p><strong>Empresa logística:</strong> {envio.empresaLogistica}</p>
                             <p><strong>Fecha estimada:</strong> {envio.fechaEstimadaEntrega}</p>
                             <p><strong>Fecha creación:</strong> {envio.fechaCreacion ? new Date(envio.fechaCreacion).toLocaleString() : 'No disponible'}</p>
@@ -114,7 +124,21 @@ export default function DetallePedidoLogisticaPage() {
                         <TableBody>
                             {pedido.detalles?.map((det) => (
                                 <TableRow key={det.id}>
-                                    <TableCell>{det.nombreProducto}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            {det.imagenPrincipal && (
+                                                <div className="relative w-20 h-20 shrink-0 rounded-md overflow-hidden border">
+                                                    <Image
+                                                        src={det.imagenPrincipal}
+                                                        alt={det.nombreProducto}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                            )}
+                                            <span className="font-medium">{det.nombreProducto}</span>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>{det.sku}</TableCell>
                                     <TableCell>{det.cantidad}</TableCell>
                                     <TableCell>${det.precioUnitario.toLocaleString()}</TableCell>

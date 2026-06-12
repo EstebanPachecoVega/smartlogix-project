@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Spinner from "@/components/shared/Spinner";
+import ProfileNameFields from '@/components/cliente/ProfileNameFields';
 import { getUserProfile, updateUserProfile, UserProfile } from '@/lib/userService';
-import { censorEmail } from '@/lib/emailUtils';
+import { capitalizeName } from '@/lib/normalize';
 
 export default function PerfilGestorPage() {
     const { data: session, status } = useSession();
@@ -49,8 +49,16 @@ export default function PerfilGestorPage() {
         if (!form) return;
         setLoading(true);
         try {
-            await updateUserProfile(form);
-            setOriginalForm(JSON.parse(JSON.stringify(form)));
+            const normalized = {
+                ...form,
+                primerNombre: capitalizeName(form.primerNombre),
+                segundoNombre: capitalizeName(form.segundoNombre),
+                primerApellido: capitalizeName(form.primerApellido),
+                segundoApellido: capitalizeName(form.segundoApellido),
+            };
+            await updateUserProfile(normalized);
+            setForm(normalized);
+            setOriginalForm(JSON.parse(JSON.stringify(normalized)));
             toast.success("Perfil actualizado", { description: "Los cambios se han guardado correctamente." });
             setIsEditing(false);
         } catch (error) {
@@ -65,12 +73,11 @@ export default function PerfilGestorPage() {
 
     const isGestor = session.roles?.includes('gestor');
     if (!isGestor) {
-        router.push('/cliente/perfil');
+        router.push('/dashboard/perfil');
         return null;
     }
 
     const rolTexto = 'Gestor Logístico';
-    const censoredEmail = censorEmail(session.user?.email || '');
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -82,29 +89,15 @@ export default function PerfilGestorPage() {
                 <CardHeader><CardTitle>Información personal</CardTitle></CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label>Primer nombre *</Label>
-                                <Input name="primerNombre" value={form.primerNombre} onChange={handleChange} required disabled={!isEditing} placeholder="Ingresar primer nombre" />
-                            </div>
-                            <div>
-                                <Label>Segundo nombre (opcional)</Label>
-                                <Input name="segundoNombre" value={form.segundoNombre} onChange={handleChange} disabled={!isEditing} placeholder="Ingresar segundo nombre (opcional)" />
-                            </div>
-                            <div>
-                                <Label>Primer apellido *</Label>
-                                <Input name="primerApellido" value={form.primerApellido} onChange={handleChange} required disabled={!isEditing} placeholder="Ingresar primer apellido" />
-                            </div>
-                            <div>
-                                <Label>Segundo apellido (opcional)</Label>
-                                <Input name="segundoApellido" value={form.segundoApellido} onChange={handleChange} disabled={!isEditing} placeholder="Ingresar segundo apellido (opcional)" />
-                            </div>
-                        </div>
-                        <div>
-                            <Label>Correo electrónico</Label>
-                            <p className="text-sm text-gray-500 mt-1">{censoredEmail}</p>
-                            <p className="text-xs text-gray-400">El correo no puede ser modificado directamente.</p>
-                        </div>
+                        <ProfileNameFields
+                            primerNombre={form.primerNombre}
+                            segundoNombre={form.segundoNombre}
+                            primerApellido={form.primerApellido}
+                            segundoApellido={form.segundoApellido}
+                            email={session.user?.email || ''}
+                            disabled={!isEditing}
+                            onChange={handleChange}
+                        />
                         <div>
                             <Label>Rol</Label>
                             <p className="text-sm font-medium text-blue-600">{rolTexto}</p>

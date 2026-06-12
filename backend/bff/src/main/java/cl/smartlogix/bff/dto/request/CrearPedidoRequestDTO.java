@@ -53,5 +53,6 @@ public class CrearPedidoRequestDTO {
         @NotNull
         @Min(1)
         private Integer cantidad;
+        private String imagenPrincipal;
     }
 }

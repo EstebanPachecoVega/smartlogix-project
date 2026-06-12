@@ -36,6 +36,9 @@ public class DetallePedido {
     @Column(nullable = false)
     private Integer subtotal;
 
+    @Column(name = "imagen_principal")
+    private String imagenPrincipal;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pedido_id")
     private Pedido pedido;
