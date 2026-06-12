@@ -63,7 +63,6 @@ export default function ProductosPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>ID</TableHead>
                                 <TableHead>SKU</TableHead>
                                 <TableHead>Nombre</TableHead>
                                 <TableHead>Categoría</TableHead>
@@ -76,14 +75,13 @@ export default function ProductosPage() {
                         <TableBody>
                             {productos.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center text-gray-500 py-8">
+                                    <TableCell colSpan={7} className="text-center text-gray-500 py-8">
                                         No hay productos registrados.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 productos.map((prod) => (
                                     <TableRow key={prod.id}>
-                                        <TableCell>{prod.id}</TableCell>
                                         <TableCell>{prod.sku}</TableCell>
                                         <TableCell>{prod.nombre}</TableCell>
                                         <TableCell>{prod.categoriaNombre || '-'}</TableCell>

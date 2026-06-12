@@ -27,5 +27,7 @@ public interface ProductoService {
             Long categoriaId,
             Boolean conStock,
             Integer precioMin,
-            Integer precioMax);
+            Integer precioMax,
+            Boolean destacado,
+            Boolean novedad);
 }

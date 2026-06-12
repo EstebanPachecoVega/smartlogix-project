@@ -50,10 +50,12 @@ public class ProductoController {
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) Boolean conStock,
             @RequestParam(required = false) Integer precioMin,
-            @RequestParam(required = false) Integer precioMax) {
+            @RequestParam(required = false) Integer precioMax,
+            @RequestParam(required = false) Boolean destacado,
+            @RequestParam(required = false) Boolean novedad) {
         
-        if (nombre != null || categoriaId != null || conStock != null || precioMin != null || precioMax != null) {
-            return productoService.getProductosFiltrados(nombre, categoriaId, conStock, precioMin, precioMax);
+        if (nombre != null || categoriaId != null || conStock != null || precioMin != null || precioMax != null || destacado != null || novedad != null) {
+            return productoService.getProductosFiltrados(nombre, categoriaId, conStock, precioMin, precioMax, destacado, novedad);
         }
         return productoService.getAllProductos();
     }

@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { productosPublicApi, categoriasPublicApi } from '@/lib/api';
 import { Producto, Categoria } from '@/types';
+import { getAllDescendantIds } from '@/lib/categoryTree';
 import ProductCard from '@/components/cliente/ProductCard';
+import ProductCarousel from '@/components/cliente/ProductCarousel';
+import HeroSlider from '@/components/cliente/HeroSlider';
 import Breadcrumbs from '@/components/ui/breadcrumbs';
 import Spinner from '@/components/shared/Spinner';
 
@@ -18,13 +21,15 @@ function buildCategoryChainBySlug(slug: string, allCats: Categoria[]): Categoria
   return chain;
 }
 
-function CatalogoContent() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const catSlug = searchParams.get('cat');
   const search = searchParams.get('search');
 
-  const [productos, setProductos] = useState<Producto[]>([]);
+  const [destacados, setDestacados] = useState<Producto[]>([]);
+  const [novedades, setNovedades] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
   const [breadcrumbCats, setBreadcrumbCats] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,10 +52,21 @@ function CatalogoContent() {
         }
 
         const prods = await productosPublicApi.listar({
-          ...(currentCat ? { categoriaId: currentCat.id } : {}),
           ...(search ? { nombre: search } : {}),
         });
-        setProductos(prods);
+        setProductos(currentCat && !search
+          ? prods.filter((p) => getAllDescendantIds(currentCat.id, allCats).has(p.categoriaId))
+          : prods
+        );
+
+        if (!currentCat && !search) {
+          const [dest, nov] = await Promise.all([
+            productosPublicApi.listar({ destacado: true }),
+            productosPublicApi.listar({ novedad: true }),
+          ]);
+          setDestacados(dest);
+          setNovedades(nov);
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -59,6 +75,28 @@ function CatalogoContent() {
     };
     fetchAll();
   }, [catSlug, search]);
+
+  // Build parent category list sorted by ordenVisual
+  const parentCats = useMemo(() =>
+    categorias
+      .filter((cat) => !cat.padreId)
+      .sort((a, b) => (a.ordenVisual ?? 999) - (b.ordenVisual ?? 999)),
+  [categorias]);
+
+  // Map parent category ID → products (recursive, includes all descendants)
+  const productosPorCategoria = useMemo(() => {
+    const map: Record<number, Producto[]> = {};
+
+    parentCats.forEach((parent) => {
+      const ids = getAllDescendantIds(parent.id, categorias);
+      const prods = productos.filter((p) => ids.has(p.categoriaId));
+      if (prods.length > 0) {
+        map[parent.id] = prods;
+      }
+    });
+
+    return map;
+  }, [parentCats, categorias, productos]);
 
   const title = search
     ? `Resultados: "${search}"`
@@ -78,35 +116,68 @@ function CatalogoContent() {
       });
     });
   } else {
-    breadcrumbItems.push({ label: 'Catálogo' });
+    breadcrumbItems.push({ label: 'Inicio' });
   }
+
+  const isFiltered = !!catSlug || !!search;
 
   if (loading) return <Spinner />;
 
   return (
     <div>
-      <Breadcrumbs items={breadcrumbItems} />
-      <h1 className="text-2xl font-bold mb-6">{title}</h1>
+      {!isFiltered ? (
+        <>
+          <HeroSlider />
 
-      {productos.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No se encontraron productos</p>
-        </div>
+          <ProductCarousel
+            productos={destacados}
+            title="Productos Destacados"
+          />
+
+          <ProductCarousel
+            productos={novedades}
+            title="Novedades"
+          />
+
+          {parentCats.map((parent) => {
+            const prods = productosPorCategoria[parent.id];
+            if (!prods || prods.length === 0) return null;
+
+            return (
+              <ProductCarousel
+                key={parent.id}
+                productos={prods}
+                title={parent.nombre}
+              />
+            );
+          })}
+        </>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {productos.map((prod) => (
-            <ProductCard key={prod.id} producto={prod} />
-          ))}
-        </div>
+        <>
+          <Breadcrumbs items={breadcrumbItems} />
+          <h1 className="text-2xl font-bold mb-6">{title}</h1>
+
+          {productos.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No se encontraron productos</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {productos.map((prod) => (
+                <ProductCard key={prod.id} producto={prod} />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-export default function CatalogoPage() {
+export default function HomePage() {
   return (
     <Suspense fallback={<Spinner />}>
-      <CatalogoContent />
+      <HomeContent />
     </Suspense>
   );
 }

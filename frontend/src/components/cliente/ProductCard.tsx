@@ -28,6 +28,7 @@ export default function ProductCard({ producto }: { producto: Producto }) {
             <img
               src={producto.imagenPrincipal}
               alt={producto.nombre}
+              draggable={false}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (

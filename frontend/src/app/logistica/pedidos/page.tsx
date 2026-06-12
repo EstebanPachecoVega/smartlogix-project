@@ -42,7 +42,6 @@ export default function PedidosLogisticaPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
                 <TableHead>Nº Orden</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Total</TableHead>
@@ -52,7 +51,6 @@ export default function PedidosLogisticaPage() {
             <TableBody>
               {pedidos.map((pedido) => (
                 <TableRow key={pedido.id}>
-                  <TableCell>{pedido.id}</TableCell>
                   <TableCell>{pedido.numeroOrden}</TableCell>
                   <TableCell><EstadoPedidoBadge estado={pedido.estado}/></TableCell>
                   <TableCell>${pedido.totalCompra.toLocaleString()}</TableCell>

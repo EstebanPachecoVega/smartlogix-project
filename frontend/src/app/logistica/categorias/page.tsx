@@ -62,10 +62,10 @@ export default function CategoriasPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>ID</TableHead>
                                 <TableHead>Nombre</TableHead>
                                 <TableHead>Slug</TableHead>
                                 <TableHead>Categoría padre</TableHead>
+                                <TableHead>Orden</TableHead>
                                 <TableHead>Activo</TableHead>
                                 <TableHead>Acciones</TableHead>
                             </TableRow>
@@ -73,10 +73,10 @@ export default function CategoriasPage() {
                         <TableBody>
                             {categorias.map((cat) => (
                                 <TableRow key={cat.id}>
-                                    <TableCell>{cat.id}</TableCell>
                                     <TableCell>{cat.nombre}</TableCell>
                                     <TableCell>{cat.slug}</TableCell>
                                     <TableCell>{cat.padreNombre || '-'}</TableCell>
+                                    <TableCell>{cat.ordenVisual ?? '—'}</TableCell>
                                     <TableCell>{cat.activo ? 'Sí' : 'No'}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">

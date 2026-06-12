@@ -121,7 +121,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoriaResponseDTO> getAllCategorias() {
-        return categoriaRepository.findAll().stream()
+        return categoriaRepository.findAllByOrderByOrdenVisualAsc().stream()
                 .map(categoriaMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -131,7 +131,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoriaResponseDTO> getCategoriasPrincipales() {
-        return categoriaRepository.findByPadreIsNull().stream()
+        return categoriaRepository.findByPadreIsNullOrderByOrdenVisualAsc().stream()
                 .map(categoriaMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }

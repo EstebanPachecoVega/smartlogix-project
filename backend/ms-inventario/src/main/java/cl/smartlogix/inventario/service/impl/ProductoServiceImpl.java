@@ -124,10 +124,10 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    public List<ProductoResponseDTO> getProductosFiltrados(String nombre, Long categoriaId, Boolean conStock, Integer precioMin, Integer precioMax) {
+    public List<ProductoResponseDTO> getProductosFiltrados(String nombre, Long categoriaId, Boolean conStock, Integer precioMin, Integer precioMax, Boolean destacado, Boolean novedad) {
         log.debug("Filtrando productos por criterios avanzados");
         String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre : null;
-        return productoRepository.filtrarProductos(nombreFiltro, categoriaId, conStock, precioMin, precioMax)
+        return productoRepository.filtrarProductos(nombreFiltro, categoriaId, conStock, precioMin, precioMax, destacado, novedad)
                 .stream()
                 .map(productoMapper::toResponseDTO)
                 .collect(Collectors.toList());

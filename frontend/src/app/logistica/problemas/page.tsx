@@ -44,7 +44,6 @@ export default function ProblemasPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Tracking</TableHead>
-                                    <TableHead>Pedido ID</TableHead>
                                     <TableHead>Destinatario</TableHead>
                                     <TableHead>Estado</TableHead>
                                     <TableHead>Fecha creación</TableHead>
@@ -55,7 +54,6 @@ export default function ProblemasPage() {
                                 {envios.map((envio) => (
                                     <TableRow key={envio.id}>
                                         <TableCell>{envio.numeroTracking}</TableCell>
-                                        <TableCell>{envio.pedidoId}</TableCell>
                                         <TableCell>{envio.destinatario}</TableCell>
                                         <TableCell>
                                             <EstadoEnvioBadge estado={envio.estadoEnvio} />

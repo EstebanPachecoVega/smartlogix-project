@@ -79,6 +79,8 @@ export interface ProductoFilterParams {
   categoriaId?: number;
   precioMin?: number;
   precioMax?: number;
+  destacado?: boolean;
+  novedad?: boolean;
 }
 
 export const productosPublicApi = {

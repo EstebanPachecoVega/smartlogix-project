@@ -3,12 +3,64 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { categoriasPublicApi } from '@/lib/api';
-import { Categoria } from '@/types';
+import { buildCategoryTree, CategoryNode } from '@/lib/categoryTree';
 import { ChevronRight } from 'lucide-react';
 
+function SubmenuList({ nodes, router, activeSlug, parentHovered, onChildHover }: {
+  nodes: CategoryNode[];
+  router: ReturnType<typeof useRouter>;
+  activeSlug: string | null;
+  parentHovered: boolean | null;
+  onChildHover: (hovered: boolean) => void;
+}) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <>
+      {nodes.map((node, i) => {
+        const hasChildren = node.children.length > 0;
+        return (
+          <div
+            key={node.category.id}
+            className="relative"
+            onMouseEnter={() => { setOpenIndex(i); onChildHover(true); }}
+            onMouseLeave={() => { setOpenIndex(null); onChildHover(false); }}
+          >
+            <button
+              onClick={() => router.push(`/?cat=${node.category.slug}`)}
+              className={`w-full text-left px-3 py-2 text-sm whitespace-nowrap transition-colors flex items-center justify-between gap-2 ${
+                activeSlug === node.category.slug
+                  ? 'text-blue-600 bg-blue-50 font-medium'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              <span>{node.category.nombre}</span>
+              {hasChildren && <ChevronRight className="h-3 w-3 shrink-0" />}
+            </button>
+            {hasChildren && openIndex === i && (
+              <div
+                className="absolute left-full top-0 bg-white border rounded-lg shadow-lg min-w-[180px] py-1 z-50 ml-0.5"
+                onMouseEnter={() => setOpenIndex(i)}
+                onMouseLeave={() => setOpenIndex(null)}
+              >
+                <SubmenuList
+                  nodes={node.children}
+                  router={router}
+                  activeSlug={activeSlug}
+                  parentHovered={null}
+                  onChildHover={() => {}}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export default function CategoryNav() {
-  const [parents, setParents] = useState<Categoria[]>([]);
-  const [children, setChildren] = useState<Record<number, Categoria[]>>({});
+  const [tree, setTree] = useState<CategoryNode[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined as any);
   const router = useRouter();
@@ -17,83 +69,64 @@ export default function CategoryNav() {
 
   useEffect(() => {
     categoriasPublicApi.listar().then((all) => {
-      const childMap: Record<number, Categoria[]> = {};
-      const roots: Categoria[] = [];
-
-      all.forEach((cat) => {
-        if (cat.padreId) {
-          if (!childMap[cat.padreId]) childMap[cat.padreId] = [];
-          childMap[cat.padreId].push(cat);
-        } else {
-          roots.push(cat);
-        }
-      });
-
-      setParents(roots);
-      setChildren(childMap);
+      setTree(buildCategoryTree(all));
     });
   }, []);
 
   const scheduleClose = () => {
     clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setOpenId(null), 150);
+    timeoutRef.current = setTimeout(() => setOpenId(null), 200);
   };
 
   const cancelClose = () => {
     clearTimeout(timeoutRef.current);
   };
 
-  if (parents.length === 0) return null;
+  if (tree.length === 0) return null;
 
   return (
     <nav className="border-t bg-white">
       <div className="container mx-auto px-4">
         <ul className="flex items-center justify-center gap-0.5 py-2 flex-wrap">
-          {parents.map((parent) => {
-            const subs = children[parent.id] || [];
-            const isActive = activeSlug === parent.slug;
-            const isOpen = openId === parent.id;
+          {tree.map((node) => {
+            const hasChildren = node.children.length > 0;
+            const isActive = activeSlug === node.category.slug;
+            const isOpen = openId === node.category.id;
 
             return (
               <li
-                key={parent.id}
+                key={node.category.id}
                 className="relative"
-                onMouseEnter={() => { cancelClose(); setOpenId(parent.id); }}
+                onMouseEnter={() => { cancelClose(); setOpenId(node.category.id); }}
                 onMouseLeave={scheduleClose}
               >
                 <button
-                  onClick={() => router.push(`/?cat=${parent.slug}`)}
+                  onClick={() => router.push(`/?cat=${node.category.slug}`)}
                   className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap transition-colors flex items-center gap-1 ${
                     isActive
                       ? 'text-blue-600 bg-blue-50 font-medium'
                       : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                   }`}
                 >
-                  {parent.nombre}
-                  {subs.length > 0 && (
+                  {node.category.nombre}
+                  {hasChildren && (
                     <ChevronRight className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                   )}
                 </button>
 
-                {subs.length > 0 && (
+                {hasChildren && (
                   <div
                     className={`absolute top-full left-0 mt-0.5 bg-white border rounded-lg shadow-lg min-w-[180px] py-1 z-50 ${isOpen ? 'block' : 'hidden'}`}
                     onMouseEnter={cancelClose}
                     onMouseLeave={scheduleClose}
                   >
-                    {subs.map((child) => (
-                      <button
-                        key={child.id}
-                        onClick={() => router.push(`/?cat=${child.slug}`)}
-                        className={`w-full text-left px-3 py-2 text-sm whitespace-nowrap transition-colors ${
-                          activeSlug === child.slug
-                            ? 'text-blue-600 bg-blue-50 font-medium'
-                            : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        {child.nombre}
-                      </button>
-                    ))}
+                    <SubmenuList
+                      nodes={node.children}
+                      router={router}
+                      activeSlug={activeSlug}
+                      parentHovered={null}
+                      onChildHover={() => {}}
+                    />
                   </div>
                 )}
               </li>

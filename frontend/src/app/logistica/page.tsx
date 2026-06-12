@@ -215,7 +215,7 @@ export default function DashboardPage() {
                                 <div key={envio.id} className="flex items-center justify-between border-b pb-2">
                                     <div>
                                         <p className="font-medium">{envio.numeroTracking}</p>
-                                        <p className="text-sm text-gray-500">Pedido #{envio.pedidoId} - {envio.destinatario}</p>
+                                        <p className="text-sm text-gray-500">{envio.numeroTracking} - {envio.destinatario}</p>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <EstadoEnvioBadge estado={envio.estadoEnvio} />

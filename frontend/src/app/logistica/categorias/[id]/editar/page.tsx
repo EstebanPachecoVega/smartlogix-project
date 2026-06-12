@@ -129,7 +129,7 @@ export default function EditarCategoriaPage({ params }: EditPageProps) {
                 </Button>
                 <h1 className="text-2xl font-bold">Editar Categoría</h1>
                 {categoria && (
-                    <span className="text-sm text-gray-500">#{categoria.id} — {categoria.nombre}</span>
+                    <span className="text-sm text-gray-500">{categoria.nombre}</span>
                 )}
             </div>
 

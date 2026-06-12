@@ -23,9 +23,7 @@ export default function TablaEnvios({ envios }: { envios: Envio[] }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>ID</TableHead>
           <TableHead>Tracking</TableHead>
-          <TableHead>Pedido ID</TableHead>
           <TableHead>Destinatario</TableHead>
           <TableHead>Estado</TableHead>
           <TableHead>Fecha creación</TableHead>
@@ -34,13 +32,11 @@ export default function TablaEnvios({ envios }: { envios: Envio[] }) {
       <TableBody>
         {envios.map((envio) => (
           <TableRow key={envio.id}>
-            <TableCell>{envio.id}</TableCell>
             <TableCell>
               <Link href={`/logistica/envios/${envio.id}`} className="text-blue-600 underline">
                 {envio.numeroTracking}
               </Link>
             </TableCell>
-            <TableCell>{envio.pedidoId}</TableCell>
             <TableCell>{envio.destinatario}</TableCell>
             <TableCell>
               <Badge className={estadoColor[envio.estadoEnvio] || 'bg-gray-500'}>

@@ -68,7 +68,6 @@ export default function DetalleEnvioPage() {
                     <CardHeader><CardTitle>Información del envío</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
                         <p><strong>Número de tracking:</strong> {envio.numeroTracking}</p>
-                        <p><strong>Pedido ID:</strong> {envio.pedidoId}</p>
                         <p><strong>Destinatario:</strong> {envio.destinatario}</p>
                         <p><strong>Dirección:</strong> {envio.calle} {envio.numero}, {envio.comuna}, {envio.ciudad}</p>
                         <p><strong>Método de envío:</strong> {envio.metodoEnvio}</p>

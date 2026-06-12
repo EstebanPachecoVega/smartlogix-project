@@ -112,10 +112,6 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div>
-                            <span className="text-sm text-gray-500">ID</span>
-                            <p className="font-medium">{categoria.id}</p>
-                        </div>
-                        <div>
                             <span className="text-sm text-gray-500">Nombre</span>
                             <p className="font-medium">{categoria.nombre}</p>
                         </div>
@@ -188,7 +184,6 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>ID</TableHead>
                                         <TableHead>Nombre</TableHead>
                                         <TableHead>Slug</TableHead>
                                         <TableHead>Activo</TableHead>
@@ -198,7 +193,6 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
                                 <TableBody>
                                     {subcategorias.map((sub) => (
                                         <TableRow key={sub.id}>
-                                            <TableCell>{sub.id}</TableCell>
                                             <TableCell>{sub.nombre}</TableCell>
                                             <TableCell className="font-mono text-sm">{sub.slug}</TableCell>
                                             <TableCell>{sub.activo ? 'Sí' : 'No'}</TableCell>

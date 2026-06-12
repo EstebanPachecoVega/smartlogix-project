@@ -45,11 +45,10 @@ export default function BuscarPorTrackingPage() {
             <h1 className="text-2xl font-bold mb-6">Resultado de búsqueda</h1>
             <Card>
                 <CardHeader>
-                    <CardTitle>Envío #{envio.id}</CardTitle>
+                    <CardTitle>Envío {envio.numeroTracking}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                     <p><strong>Tracking:</strong> {envio.numeroTracking}</p>
-                    <p><strong>Pedido ID:</strong> {envio.pedidoId}</p>
                     <p><strong>Destinatario:</strong> {envio.destinatario}</p>
                     <p><strong>Estado:</strong><EstadoPedidoBadge estado={envio.estadoEnvio}/></p>
                     <Link href={`/logistica/envios/${envio.id}`}>

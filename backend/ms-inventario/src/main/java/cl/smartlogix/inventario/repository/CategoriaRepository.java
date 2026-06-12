@@ -21,4 +21,10 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     boolean existsBySlugAndIdNot(String slug, Long id);
     
     List<Categoria> findByPadreIsNull();
+
+    List<Categoria> findAllByOrderByOrdenVisualAsc();
+
+    List<Categoria> findByPadreIsNullOrderByOrdenVisualAsc();
+
+    List<Categoria> findByPadreIdOrderByOrdenVisualAsc(Long padreId);
 }

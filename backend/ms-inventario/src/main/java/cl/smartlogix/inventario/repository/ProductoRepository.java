@@ -50,11 +50,15 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
                         "  (:conStock = true AND p.cantidad > 0) OR " +
                         "  (:conStock = false AND p.cantidad = 0)) AND " +
                         "(:precioMin IS NULL OR p.precio >= :precioMin) AND " +
-                        "(:precioMax IS NULL OR p.precio <= :precioMax)")
+                        "(:precioMax IS NULL OR p.precio <= :precioMax) AND " +
+                        "(:destacado IS NULL OR p.destacado = :destacado) AND " +
+                        "(:novedad IS NULL OR p.novedad = :novedad)")
         List<Producto> filtrarProductos(
                         @Param("nombre") String nombre,
                         @Param("categoriaId") Long categoriaId,
                         @Param("conStock") Boolean conStock,
                         @Param("precioMin") Integer precioMin,
-                        @Param("precioMax") Integer precioMax);
+                        @Param("precioMax") Integer precioMax,
+                        @Param("destacado") Boolean destacado,
+                        @Param("novedad") Boolean novedad);
 }
