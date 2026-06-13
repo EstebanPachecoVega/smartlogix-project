@@ -16,7 +16,8 @@ export default function ProblemasPage() {
     useEffect(() => {
         enviosApi.listar()
             .then(data => {
-                const problemas = data.filter(e =>
+                const lista = Array.isArray(data) ? data : data.content;
+                const problemas = lista.filter(e =>
                     e.estadoEnvio === 'INTENTO_FALLIDO' ||
                     e.estadoEnvio === 'RETRASADO' ||
                     e.estadoEnvio === 'DEVUELTO'

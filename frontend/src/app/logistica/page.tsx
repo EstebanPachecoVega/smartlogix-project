@@ -2,34 +2,34 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { productosApi, categoriasApi, pedidosApi, enviosApi } from '@/lib/api';
-import { Producto, Categoria, PedidoResponse, Envio } from '@/types';
+import { productosApi, pedidosApi, enviosApi } from '@/lib/api';
+import { Producto, PedidoResponse, Envio } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EstadoPedidoBadge } from '@/components/ui/EstadoPedidoBadge';
 import { EstadoEnvioBadge } from '@/components/ui/EstadoEnvioBadge';
-import { Package, ShoppingCart, Truck, CheckCircle, AlertCircle, Clock, TrendingUp } from 'lucide-react';
+import {
+    Package, ShoppingCart, Truck, CheckCircle,
+    AlertCircle, Clock, TrendingUp,
+} from 'lucide-react';
 import Spinner from '@/components/shared/Spinner';
 
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [productos, setProductos] = useState<Producto[]>([]);
-    const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [pedidos, setPedidos] = useState<PedidoResponse[]>([]);
     const [envios, setEnvios] = useState<Envio[]>([]);
 
     useEffect(() => {
         Promise.all([
             productosApi.listar(),
-            categoriasApi.listar(),
             pedidosApi.listar(),
             enviosApi.listar(),
         ])
-            .then(([prod, cat, ped, env]) => {
-                setProductos(prod);
-                setCategorias(cat);
-                setPedidos(ped);
-                setEnvios(env);
+            .then(([prod, ped, env]) => {
+                setProductos(Array.isArray(prod) ? prod : prod.content);
+                setPedidos(Array.isArray(ped) ? ped : ped.content);
+                setEnvios(Array.isArray(env) ? env : env.content);
             })
             .catch(console.error)
             .finally(() => setLoading(false));
@@ -37,163 +37,151 @@ export default function DashboardPage() {
 
     if (loading) return <Spinner />;
 
-    // Calcular métricas
+    // Métricas
     const totalProductos = productos.length;
-    const totalVentas = pedidos.reduce((total, pedido) => total + pedido.totalCompra, 0);
+    const totalVentas = pedidos.reduce((s, p) => s + p.totalCompra, 0);
     const totalPedidos = pedidos.length;
     const totalEnvios = envios.length;
-    const pedidosEntregados = pedidos.filter(p => p.estado === 'ENTREGADO').length;
-    const enviosEntregados = envios.filter(e => e.estadoEnvio === 'ENTREGADO').length;
-    const enviosProblemas = envios.filter(e =>
-        e.estadoEnvio === 'INTENTO_FALLIDO' ||
-        e.estadoEnvio === 'RETRASADO' ||
-        e.estadoEnvio === 'DEVUELTO'
+    const pedidosEntregados = pedidos.filter((p) => p.estado === 'ENTREGADO').length;
+    const enviosEntregados = envios.filter((e) => e.estadoEnvio === 'ENTREGADO').length;
+    const enviosProblemas = envios.filter((e) =>
+        ['INTENTO_FALLIDO', 'RETRASADO', 'DEVUELTO'].includes(e.estadoEnvio),
     ).length;
 
-    // Envíos por estado (conteo)
-    const enviosPorEstado = envios.reduce((acc, e) => {
+    const enviosPorEstado = envios.reduce<Record<string, number>>((acc, e) => {
         acc[e.estadoEnvio] = (acc[e.estadoEnvio] || 0) + 1;
         return acc;
-    }, {} as Record<string, number>);
+    }, {});
 
-    // Últimos 5 pedidos
-    const ultimosPedidos = [...pedidos].sort((a, b) => {
-        if (a.fechaPedido && b.fechaPedido) {
-            return new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime();
-        }
-        return b.id - a.id;
-    }).slice(0, 5);
+    const ultimosPedidos = [...pedidos]
+        .sort((a, b) => {
+            if (a.fechaPedido && b.fechaPedido)
+                return new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime();
+            return b.id - a.id;
+        })
+        .slice(0, 5);
 
-    // Envíos con problemas (hasta 5)
-    const enviosConProblemas = envios.filter(e =>
-        e.estadoEnvio === 'INTENTO_FALLIDO' ||
-        e.estadoEnvio === 'RETRASADO' ||
-        e.estadoEnvio === 'DEVUELTO'
-    ).slice(0, 5);
+    const enviosConProblemas = envios
+        .filter((e) => ['INTENTO_FALLIDO', 'RETRASADO', 'DEVUELTO'].includes(e.estadoEnvio))
+        .slice(0, 5);
 
+    // Render 
     return (
-        <div>
-            <h1 className="text-2xl font-bold mb-6">Dashboard Logística</h1>
+        <div className="space-y-8 pb-8">
+            <h1 className="text-2xl font-bold">Dashboard Logística</h1>
 
-            {/* Tarjetas de métricas principales */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Productos</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalProductos}</div>
-                        <p className="text-xs text-muted-foreground">Activos en catálogo</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Ventas</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">${totalVentas.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground">Total facturado</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Pedidos</CardTitle>
-                        <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalPedidos}</div>
-                        <p className="text-xs text-muted-foreground">{pedidosEntregados} entregados</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Envíos</CardTitle>
-                        <Truck className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalEnvios}</div>
-                        <p className="text-xs text-muted-foreground">{enviosEntregados} entregados</p>
-                    </CardContent>
-                </Card>
+            {/* Tarjetas de métricas */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCard
+                    title="Productos"
+                    value={totalProductos}
+                    subtitle="Activos en catálogo"
+                    icon={<Package className="h-4 w-4 text-muted-foreground" />}
+                />
+                <MetricCard
+                    title="Ventas"
+                    value={`$${totalVentas.toLocaleString('es-CL')}`}
+                    subtitle="Total facturado"
+                    icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
+                />
+                <MetricCard
+                    title="Pedidos"
+                    value={totalPedidos}
+                    subtitle={`${pedidosEntregados} entregados`}
+                    icon={<ShoppingCart className="h-4 w-4 text-muted-foreground" />}
+                />
+                <MetricCard
+                    title="Envíos"
+                    value={totalEnvios}
+                    subtitle={`${enviosEntregados} entregados`}
+                    icon={<Truck className="h-4 w-4 text-muted-foreground" />}
+                />
             </div>
 
-            {/* Envíos por estado (resumen) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Distribución de envíos + Resumen rápido */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Envíos por estado</CardTitle>
+                        <CardTitle className="text-base">Envíos por estado</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-3">
-                            {Object.entries(enviosPorEstado).map(([estado, cantidad]) => (
-                                <div key={estado} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
+                        {Object.keys(enviosPorEstado).length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No hay envíos registrados.</p>
+                        ) : (
+                            <ul className="space-y-2.5">
+                                {Object.entries(enviosPorEstado).map(([estado, cantidad]) => (
+                                    <li key={estado} className="flex items-center justify-between">
                                         <EstadoEnvioBadge estado={estado} />
-                                    </div>
-                                    <span className="font-semibold">{cantidad}</span>
-                                </div>
-                            ))}
-                            {Object.keys(enviosPorEstado).length === 0 && (
-                                <p className="text-gray-500">No hay envíos registrados</p>
-                            )}
-                        </div>
+                                        <span className="text-sm font-semibold tabular-nums">{cantidad}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Resumen rápido</CardTitle>
+                        <CardTitle className="text-base">Resumen rápido</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        <div className="flex justify-between items-center">
-                            <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Pedidos completados</span>
-                            <span className="font-semibold">{pedidosEntregados}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-yellow-500" /> Pendientes / En curso</span>
-                            <span className="font-semibold">{totalPedidos - pedidosEntregados}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-500" /> Envíos con problemas</span>
-                            <span className="font-semibold">{enviosProblemas}</span>
-                        </div>
+                        <SummaryRow
+                            icon={<CheckCircle className="h-4 w-4 text-green-500" />}
+                            label="Pedidos completados"
+                            value={pedidosEntregados}
+                        />
+                        <SummaryRow
+                            icon={<Clock className="h-4 w-4 text-yellow-500" />}
+                            label="Pendientes / en curso"
+                            value={totalPedidos - pedidosEntregados}
+                        />
+                        <SummaryRow
+                            icon={<AlertCircle className="h-4 w-4 text-red-500" />}
+                            label="Envíos con problemas"
+                            value={enviosProblemas}
+                        />
                     </CardContent>
                 </Card>
             </div>
 
             {/* Últimos pedidos */}
-            <Card className="mb-8">
+            <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Últimos pedidos</CardTitle>
+                    <CardTitle className="text-base">Últimos pedidos</CardTitle>
                     <Link href="/logistica/pedidos">
                         <Button variant="outline" size="sm">Ver todos</Button>
                     </Link>
                 </CardHeader>
                 <CardContent>
                     {ultimosPedidos.length === 0 ? (
-                        <p className="text-gray-500">No hay pedidos registrados</p>
+                        <p className="text-sm text-muted-foreground">No hay pedidos registrados.</p>
                     ) : (
-                        <div className="space-y-3">
+                        <ul className="divide-y">
                             {ultimosPedidos.map((pedido) => (
-                                <div key={pedido.id} className="flex items-center justify-between border-b pb-2">
-                                    <div>
-                                        <p className="font-medium">{pedido.numeroOrden}</p>
-                                        <p className="text-sm text-gray-500">
-                                            {pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleDateString() : 'Fecha no disponible'}
+                                <li
+                                    key={pedido.id}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium truncate">{pedido.numeroOrden}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {pedido.fechaPedido
+                                                ? new Date(pedido.fechaPedido).toLocaleDateString('es-CL')
+                                                : 'Fecha no disponible'}
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 shrink-0">
                                         <EstadoPedidoBadge estado={pedido.estado} />
-                                        <span className="font-semibold">${pedido.totalCompra.toLocaleString()}</span>
+                                        <span className="text-sm font-semibold tabular-nums">
+                                            ${pedido.totalCompra.toLocaleString('es-CL')}
+                                        </span>
                                         <Link href={`/logistica/pedidos/${pedido.id}`}>
                                             <Button variant="ghost" size="sm">Ver</Button>
                                         </Link>
                                     </div>
-                                </div>
+                                </li>
                             ))}
-                        </div>
+                        </ul>
                     )}
                 </CardContent>
             </Card>
@@ -201,34 +189,83 @@ export default function DashboardPage() {
             {/* Envíos con problemas */}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>⚠️ Envíos con problemas</CardTitle>
+                    <CardTitle className="text-base">⚠️ Envíos con problemas</CardTitle>
                     <Link href="/logistica/envios">
                         <Button variant="outline" size="sm">Ver todos</Button>
                     </Link>
                 </CardHeader>
                 <CardContent>
                     {enviosConProblemas.length === 0 ? (
-                        <p className="text-gray-500">No hay envíos con problemas</p>
+                        <p className="text-sm text-muted-foreground">No hay envíos con problemas.</p>
                     ) : (
-                        <div className="space-y-3">
+                        <ul className="divide-y">
                             {enviosConProblemas.map((envio) => (
-                                <div key={envio.id} className="flex items-center justify-between border-b pb-2">
-                                    <div>
-                                        <p className="font-medium">{envio.numeroTracking}</p>
-                                        <p className="text-sm text-gray-500">{envio.numeroTracking} - {envio.destinatario}</p>
+                                <li
+                                    key={envio.id}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium">{envio.numeroTracking}</p>
+                                        <p className="text-xs text-muted-foreground truncate max-w-xs">
+                                            {envio.destinatario}
+                                        </p>
                                     </div>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 shrink-0">
                                         <EstadoEnvioBadge estado={envio.estadoEnvio} />
                                         <Link href={`/logistica/envios/${envio.id}`}>
                                             <Button variant="ghost" size="sm">Ver</Button>
                                         </Link>
                                     </div>
-                                </div>
+                                </li>
                             ))}
-                        </div>
+                        </ul>
                     )}
                 </CardContent>
             </Card>
+        </div>
+    );
+}
+
+// Subcomponentes 
+
+function MetricCard({
+    title,
+    value,
+    subtitle,
+    icon,
+}: {
+    title: string;
+    value: string | number;
+    subtitle: string;
+    icon: React.ReactNode;
+}) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs sm:text-sm font-medium">{title}</CardTitle>
+                {icon}
+            </CardHeader>
+            <CardContent>
+                <div className="text-xl sm:text-2xl font-bold tabular-nums">{value}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+            </CardContent>
+        </Card>
+    );
+}
+
+function SummaryRow({
+    icon,
+    label,
+    value,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    value: number;
+}) {
+    return (
+        <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 text-sm">{icon}{label}</span>
+            <span className="text-sm font-semibold tabular-nums">{value}</span>
         </div>
     );
 }

@@ -9,7 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EstadoEnvioBadge } from '@/components/ui/EstadoEnvioBadge';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import Spinner from '@/components/shared/Spinner';
-import { estadoEnvioOpciones, estadoEnvioTexto } from '@/lib/estados';
+import { estadoEnvioOpciones, estadoEnvioTexto, isEstadoEnvio } from '@/lib/estados';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export default function DetalleEnvioPage() {
     const { id } = useParams();
@@ -41,54 +43,68 @@ export default function DetalleEnvioPage() {
         try {
             await enviosApi.actualizarEstado(envio.id, nuevoEstado);
             await cargar();
+            const label = isEstadoEnvio(nuevoEstado) ? estadoEnvioTexto[nuevoEstado] : nuevoEstado;
+            toast.success('Estado actualizado', {
+                description: `El envío pasó a "${label}".`,
+            });
         } catch (error) {
             console.error(error);
-            alert('Error al actualizar el estado');
+            toast.error('Error al actualizar el estado', {
+                description: 'Intenta de nuevo.',
+            });
         } finally {
             setUpdating(false);
         }
     };
 
     if (loading) return <Spinner />;
-    if (!envio) return <div>Envío no encontrado</div>;
+    if (!envio) return <div className="p-6 text-muted-foreground">Envío no encontrado.</div>;
 
     return (
-        <div>
+        <div className="space-y-6 pb-8">
             <Button
                 variant="ghost"
-                className="mb-4"
+                className="mb-2 -ml-2"
                 onClick={() => router.push('/logistica/envios')}
             >
                 ← Volver a envíos
             </Button>
 
-            <h1 className="text-2xl font-bold mb-6">Detalle del Envío</h1>
+            <h1 className="text-2xl font-bold">Detalle del Envío</h1>
+
             <div className="grid md:grid-cols-2 gap-6">
                 <Card>
-                    <CardHeader><CardTitle>Información del envío</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                        <p><strong>Número de tracking:</strong> {envio.numeroTracking}</p>
-                        <p><strong>Destinatario:</strong> {envio.destinatario}</p>
-                        <p><strong>Dirección:</strong> {envio.calle} {envio.numero}, {envio.comuna}, {envio.ciudad}</p>
-                        <p><strong>Método de envío:</strong> {envio.metodoEnvio}</p>
-                        <p><strong>Empresa logística:</strong> {envio.empresaLogistica}</p>
-                        <p><strong>Fecha estimada:</strong> {envio.fechaEstimadaEntrega}</p>
-                        <p><strong>Fecha creación:</strong> {new Date(envio.fechaCreacion).toLocaleString()}</p>
+                    <CardHeader>
+                        <CardTitle className="text-base">Información del envío</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                        <p><span className="font-medium">Tracking:</span> {envio.numeroTracking}</p>
+                        <p><span className="font-medium">Destinatario:</span> {envio.destinatario}</p>
+                        <p><span className="font-medium">Dirección:</span> {envio.calle} {envio.numero}, {envio.comuna}, {envio.ciudad}</p>
+                        <p><span className="font-medium">Método de envío:</span> {envio.metodoEnvio}</p>
+                        <p><span className="font-medium">Empresa logística:</span> {envio.empresaLogistica}</p>
+                        <p><span className="font-medium">Fecha estimada:</span> {envio.fechaEstimadaEntrega}</p>
+                        <p><span className="font-medium">Fecha creación:</span> {new Date(envio.fechaCreacion).toLocaleString('es-CL')}</p>
                     </CardContent>
                 </Card>
+
                 <Card>
-                    <CardHeader><CardTitle>Actualizar estado</CardTitle></CardHeader>
+                    <CardHeader>
+                        <CardTitle className="text-base">Actualizar estado</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-4">
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Estado actual:</p>
+                            <p className="text-sm text-muted-foreground mb-1.5">Estado actual:</p>
                             <EstadoEnvioBadge estado={envio.estadoEnvio} />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Cambiar a:</p>
+                            <p className="text-sm text-muted-foreground mb-1.5">Cambiar a:</p>
                             <Select value={nuevoEstado} onValueChange={setNuevoEstado}>
-                                <SelectTrigger className="w-48">
+                                <SelectTrigger className="w-52">
                                     <SelectValue>
-                                        {estadoEnvioTexto[nuevoEstado] || nuevoEstado}
+                                        {isEstadoEnvio(nuevoEstado)
+                                            ? estadoEnvioTexto[nuevoEstado]
+                                            : nuevoEstado}
                                     </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -104,7 +120,8 @@ export default function DetalleEnvioPage() {
                             onClick={handleActualizarEstado}
                             disabled={updating || nuevoEstado === envio.estadoEnvio}
                         >
-                            {updating ? 'Actualizando...' : 'Actualizar estado'}
+                            {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {updating ? 'Actualizando…' : 'Actualizar estado'}
                         </Button>
                     </CardContent>
                 </Card>

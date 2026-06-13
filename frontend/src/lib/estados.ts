@@ -1,5 +1,13 @@
 // ==================== PEDIDOS ====================
-export const estadoPedidoTexto: Record<string, string> = {
+
+export type EstadoPedido =
+    | 'PENDIENTE'
+    | 'APROBADO'
+    | 'RECHAZADO'
+    | 'EN_CAMINO'
+    | 'ENTREGADO';
+
+export const estadoPedidoTexto: Record<EstadoPedido, string> = {
     PENDIENTE: 'Pendiente',
     APROBADO: 'Aprobado',
     RECHAZADO: 'Rechazado',
@@ -7,7 +15,7 @@ export const estadoPedidoTexto: Record<string, string> = {
     ENTREGADO: 'Entregado',
 };
 
-export const estadoPedidoColor: Record<string, string> = {
+export const estadoPedidoColor: Record<EstadoPedido, string> = {
     PENDIENTE: 'bg-yellow-500',
     APROBADO: 'bg-blue-500',
     RECHAZADO: 'bg-red-500',
@@ -16,7 +24,20 @@ export const estadoPedidoColor: Record<string, string> = {
 };
 
 // ==================== ENVÍOS ====================
-export const estadoEnvioTexto: Record<string, string> = {
+
+export type EstadoEnvio =
+    | 'PENDIENTE'
+    | 'PREPARANDO'
+    | 'ENVIADO'
+    | 'EN_TRANSITO'
+    | 'EN_REPARTO'
+    | 'ENTREGADO'
+    | 'INTENTO_FALLIDO'
+    | 'RETRASADO'
+    | 'DEVUELTO'
+    | 'CANCELADO';
+
+export const estadoEnvioTexto: Record<EstadoEnvio, string> = {
     PENDIENTE: 'Pendiente',
     PREPARANDO: 'Preparando',
     ENVIADO: 'Enviado',
@@ -29,7 +50,7 @@ export const estadoEnvioTexto: Record<string, string> = {
     CANCELADO: 'Cancelado',
 };
 
-export const estadoEnvioColor: Record<string, string> = {
+export const estadoEnvioColor: Record<EstadoEnvio, string> = {
     PENDIENTE: 'bg-gray-500',
     PREPARANDO: 'bg-blue-500',
     ENVIADO: 'bg-purple-500',
@@ -39,15 +60,23 @@ export const estadoEnvioColor: Record<string, string> = {
     INTENTO_FALLIDO: 'bg-red-500',
     RETRASADO: 'bg-orange-500',
     DEVUELTO: 'bg-rose-500',
-    CANCELADO: 'bg-black',
+    CANCELADO: 'bg-zinc-900',
 };
 
-// Opciones para Select (envíos)
 export interface EstadoEnvioOption {
-    value: string;
+    value: EstadoEnvio;
     label: string;
 }
 
-export const estadoEnvioOpciones: EstadoEnvioOption[] = Object.entries(estadoEnvioTexto).map(
-    ([value, label]) => ({ value, label })
-);
+export const estadoEnvioOpciones: EstadoEnvioOption[] = (
+    Object.entries(estadoEnvioTexto) as [EstadoEnvio, string][]
+).map(([value, label]) => ({ value, label }));
+
+// Helper: castea un string a EstadoEnvio de forma segura
+export function isEstadoEnvio(s: string): s is EstadoEnvio {
+    return s in estadoEnvioTexto;
+}
+
+export function isEstadoPedido(s: string): s is EstadoPedido {
+    return s in estadoPedidoTexto;
+}

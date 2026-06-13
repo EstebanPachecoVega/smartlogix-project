@@ -83,6 +83,17 @@ export interface DetallePedido {
   imagenPrincipal?: string;
 }
 
+export interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
 export interface Envio {
   id: number;
   pedidoId: number;

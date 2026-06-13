@@ -5,8 +5,8 @@ import { enviosApi } from '@/lib/api';
 interface EnviosState {
   envios: Envio[];
   loading: boolean;
-  filtroEstado: string;
-  setFiltroEstado: (estado: string) => void;
+  filtroEstado: string | null;
+  setFiltroEstado: (estado: string | null) => void;
   cargarEnvios: () => Promise<void>;
   actualizarEstado: (id: number, nuevoEstado: string) => Promise<void>;
 }
@@ -14,13 +14,13 @@ interface EnviosState {
 export const useEnviosStore = create<EnviosState>((set, get) => ({
   envios: [],
   loading: false,
-  filtroEstado: '',
+  filtroEstado: null,
   setFiltroEstado: (estado) => set({ filtroEstado: estado }),
   cargarEnvios: async () => {
     set({ loading: true });
     try {
       const data = await enviosApi.listar();
-      set({ envios: data });
+      set({ envios: Array.isArray(data) ? data : data.content });
     } catch (error) {
       console.error(error);
     } finally {

@@ -23,7 +23,13 @@ function PedidosContent() {
         setError(null);
         pedidosApi
             .listar()
-            .then(setPedidos)
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    setPedidos(data);
+                } else {
+                    setPedidos(data.content);
+                }
+            })
             .catch((err) => {
                 console.error(err);
                 setError("No se pudieron cargar tus pedidos. Intenta nuevamente más tarde.");

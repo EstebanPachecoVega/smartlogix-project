@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { estadoPedidoTexto, estadoPedidoColor } from '@/lib/estados';
+import { estadoPedidoTexto, estadoPedidoColor, isEstadoPedido } from '@/lib/estados';
 
 interface Props {
     estado: string;
@@ -7,8 +7,8 @@ interface Props {
 
 export function EstadoPedidoBadge({ estado }: Props) {
     return (
-        <Badge className={estadoPedidoColor[estado] || 'bg-gray-500'}>
-            {estadoPedidoTexto[estado] || estado}
+        <Badge className={isEstadoPedido(estado) ? estadoPedidoColor[estado] : 'bg-gray-500'}>
+            {isEstadoPedido(estado) ? estadoPedidoTexto[estado] : estado}
         </Badge>
     );
 }

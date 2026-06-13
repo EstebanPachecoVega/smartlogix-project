@@ -34,3 +34,6 @@ yarn-error.log
 # 5. Sistema Operativo
 .DS_Store
 Thumbs.db
+
+AGENTS.md
+opencode.json

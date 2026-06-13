@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Suspense } from 'react';
-import { useSession, signOut } from "next-auth/react";
-import { ShoppingCart, LogOut, User, ChevronDown, Package, LayoutDashboard } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
+import {
+    ShoppingCart, LogOut, User, ChevronDown,
+    Package, LayoutDashboard,
+} from 'lucide-react';
 import { useTotalItems } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,8 +17,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import SearchBar from './SearchBar';
 import CategoryNav from './CategoryNav';
 
@@ -25,7 +28,8 @@ export default function Navbar() {
     const { data: session } = useSession();
     const totalItems = useTotalItems();
     const userRoles: string[] = session?.roles || [];
-    const isGestor = userRoles.some(r => r.toLowerCase() === 'gestor');
+    const isGestor = userRoles.some((r) => r.toLowerCase() === 'gestor');
+    const isLogistica = pathname.startsWith('/logistica');
 
     const handleLogout = async () => {
         try {
@@ -34,104 +38,151 @@ export default function Navbar() {
             await signOut({ redirect: false });
             window.location.href = data.url;
         } catch (error) {
-            console.error("Error durante el logout:", error);
+            console.error('Error durante el logout:', error);
             await signOut({ callbackUrl: '/login' });
         }
     };
 
     const userInitials = session?.user?.name
-        ? session.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        ? session.user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
         : session?.user?.email?.charAt(0).toUpperCase() || 'U';
 
-    return (
-        <header className="sticky top-0 z-50 bg-white border-b">
-            <div className="container mx-auto flex items-center justify-between px-4 py-2.5 gap-4">
-                <Link href="/" className="text-2xl font-bold hover:text-blue-600 transition-colors shrink-0">
-                    SmartLogix
-                </Link>
+    const UserMenu = () => (
+        <>
+            {session ? (
+                <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="flex items-center gap-1.5 px-2">
+                            <Avatar className="h-8 w-8">
+                                <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
+                                    {userInitials}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="hidden md:inline text-sm font-medium">
+                                {session.user?.name?.split(' ')[0] ||
+                                    session.user?.email?.split('@')[0]}
+                            </span>
+                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                    </DropdownMenuTrigger>
 
-                {!pathname.startsWith('/logistica') && (
-                    <div className="flex-1 flex justify-center">
+                    <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel className="font-normal">
+                            <p className="text-sm font-medium truncate">
+                                {session.user?.name || 'Usuario'}
+                            </p>
+                        </DropdownMenuLabel>
+
+                        <DropdownMenuSeparator />
+
+                        {!isGestor && (
+                            <>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/dashboard/perfil" className="cursor-pointer">
+                                        <User className="mr-2 h-4 w-4" />
+                                        Mi perfil
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/dashboard/pedidos" className="cursor-pointer">
+                                        <Package className="mr-2 h-4 w-4" />
+                                        Mis pedidos
+                                    </Link>
+                                </DropdownMenuItem>
+                            </>
+                        )}
+
+                        {isGestor && (
+                            <DropdownMenuItem asChild>
+                                <Link href="/logistica" className="cursor-pointer">
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    Panel Logística
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
+
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuItem
+                            onClick={handleLogout}
+                            className="cursor-pointer text-destructive focus:text-destructive"
+                        >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Cerrar sesión
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                <div className="flex items-center gap-2">
+                    <Link href="/registro">
+                        <Button variant="outline" size="sm">
+                            Registrarse
+                        </Button>
+                    </Link>
+                    <Link href="/login">
+                        <Button size="sm">Iniciar sesión</Button>
+                    </Link>
+                </div>
+            )}
+        </>
+    );
+
+    return (
+        <header className="sticky top-0 z-50 h-16 bg-background border-b">
+            {isLogistica ? (
+                /* ── Layout logistica: logo alineado con sidebar ── */
+                <div className="h-full flex items-center">
+                    <div className="hidden lg:flex items-center lg:w-64 px-4 shrink-0">
+                        <Link
+                            href="/"
+                            className="text-xl font-bold hover:text-primary transition-colors"
+                        >
+                            SmartLogix
+                        </Link>
+                    </div>
+                    <div className="flex items-center justify-end flex-1 px-4 gap-3">
+                        <UserMenu />
+                    </div>
+                </div>
+            ) : (
+                /* ── Layout público: container con buscador centrado ── */
+                <div className="h-full container mx-auto grid grid-cols-3 items-center px-4">
+                    <div className="flex justify-start">
+                        <Link
+                            href="/"
+                            className="text-xl font-bold hover:text-primary transition-colors"
+                        >
+                            SmartLogix
+                        </Link>
+                    </div>
+
+                    <div className="flex justify-center max-w-xl hidden sm:flex mx-auto w-full">
                         <SearchBar />
                     </div>
-                )}
 
-                <div className="flex items-center gap-2 shrink-0">
-                    {!isGestor && (
-                        <Button variant="outline" size="default" className="relative" onClick={() => router.push('/dashboard/carrito')}>
-                            <ShoppingCart className="h-6 w-6" />
-                            {totalItems > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center font-medium">
-                                    {totalItems}
-                                </span>
-                            )}
-                        </Button>
-                    )}
-                    {session ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="flex items-center gap-2 px-2">
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarFallback className="bg-gray-200 text-gray-700 text-sm">
-                                            {userInitials}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <span className="hidden md:inline-block text-sm font-medium">
-                                        {session.user?.name?.split(' ')[0] || session.user?.email?.split('@')[0]}
+                    <div className="flex items-center justify-end gap-2">
+                        {!isGestor && (
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="relative"
+                                onClick={() => router.push('/dashboard/carrito')}
+                                aria-label="Carrito"
+                            >
+                                <ShoppingCart className="h-5 w-5" />
+                                {totalItems > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold leading-none">
+                                        {totalItems > 99 ? '99+' : totalItems}
                                     </span>
-                                    <ChevronDown className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuLabel>
-                                    <p className="text-sm font-medium">{session.user?.name || 'Usuario'}</p>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                {!isGestor && (
-                                    <>
-                                        <DropdownMenuItem asChild>
-                                            <Link href="/dashboard/perfil" className="cursor-pointer">
-                                                <User className="mr-2 h-4 w-4" />
-                                                <span>Mi perfil</span>
-                                            </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem asChild>
-                                            <Link href="/dashboard/pedidos" className="cursor-pointer">
-                                                <Package className="mr-2 h-4 w-4" />
-                                                <span>Mis pedidos</span>
-                                            </Link>
-                                        </DropdownMenuItem>
-                                    </>
                                 )}
-                                {isGestor && (
-                                    <DropdownMenuItem asChild>
-                                        <Link href="/logistica" className="cursor-pointer">
-                                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                                            <span>Panel Logística</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Cerrar sesión</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            <Link href="/registro">
-                                <Button variant="outline" size="default">Registrarse</Button>
-                            </Link>
-                            <Link href="/login">
-                                <Button variant="default" size="default">Iniciar sesión</Button>
-                            </Link>
-                        </div>
-                    )}
+                            </Button>
+                        )}
+                        <UserMenu />
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {!pathname.startsWith('/logistica') && (
+            {!isLogistica && (
                 <Suspense fallback={null}>
                     <CategoryNav />
                 </Suspense>

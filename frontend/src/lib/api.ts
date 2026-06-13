@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
-import { Producto, PedidoRequest, PedidoResponse, Envio, Categoria } from '@/types';
+import { Producto, PedidoRequest, PedidoResponse, Envio, Categoria, PageResponse } from '@/types';
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:8084/bff';
 
@@ -111,8 +111,8 @@ export const categoriasPublicApi = {
 
 // ==================== PRODUCTOS CRUD (vía BFF) ====================
 export const productosApi = {
-  listar: async (): Promise<Producto[]> => {
-    const res = await apiClient.get('/logistica/productos');
+  listar: async (params?: { page?: number; size?: number }): Promise<Producto[] | PageResponse<Producto>> => {
+    const res = await apiClient.get('/logistica/productos', { params });
     return res.data;
   },
   crear: async (data: any): Promise<Producto> => {
@@ -163,8 +163,8 @@ export const pedidosApi = {
     });
     return res.data;
   },
-  listar: async (): Promise<PedidoResponse[]> => {
-    const res = await apiClient.get('/pedidos');
+  listar: async (params?: { page?: number; size?: number }): Promise<PedidoResponse[] | PageResponse<PedidoResponse>> => {
+    const res = await apiClient.get('/pedidos', { params });
     return res.data;
   },
   obtener: async (id: number): Promise<PedidoResponse> => {
@@ -175,8 +175,8 @@ export const pedidosApi = {
 
 // =================== ENVÍOS (vía BFF -> Gateway) ===================
 export const enviosApi = {
-  listar: async (): Promise<Envio[]> => {
-    const res = await apiClient.get('/envios');
+  listar: async (params?: { page?: number; size?: number }): Promise<Envio[] | PageResponse<Envio>> => {
+    const res = await apiClient.get('/envios', { params });
     return res.data;
   },
   obtener: async (id: number): Promise<Envio> => {

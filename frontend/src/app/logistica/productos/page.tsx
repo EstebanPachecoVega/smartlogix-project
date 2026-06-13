@@ -3,23 +3,39 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { productosApi } from '@/lib/api';
-import { Producto } from '@/types';
+import { Producto, PageResponse } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Pagination } from '@/components/ui/pagination';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Spinner from '@/components/shared/Spinner';
+
+const PAGE_SIZE = 10;
 
 export default function ProductosPage() {
     const router = useRouter();
     const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
 
-    const cargarProductos = async () => {
+    const cargarProductos = async (pageNum: number) => {
+        setLoading(true);
         try {
-            const data = await productosApi.listar();
-            setProductos(data);
+            const data = await productosApi.listar({ page: pageNum, size: PAGE_SIZE });
+            if (Array.isArray(data)) {
+                setProductos(data);
+                setTotalPages(1);
+                setTotalElements(data.length);
+            } else {
+                const pageData = data as PageResponse<Producto>;
+                setProductos(pageData.content);
+                setTotalPages(pageData.totalPages);
+                setTotalElements(pageData.totalElements);
+            }
         } catch (error) {
             console.error(error);
         } finally {
@@ -28,14 +44,14 @@ export default function ProductosPage() {
     };
 
     useEffect(() => {
-        cargarProductos();
-    }, []);
+        cargarProductos(page);
+    }, [page]);
 
     const handleEliminar = async (id: number) => {
         if (!confirm('¿Eliminar este producto?')) return;
         try {
             await productosApi.eliminar(id);
-            cargarProductos();
+            cargarProductos(page);
         } catch (error) {
             console.error(error);
             alert('Error al eliminar producto');
@@ -83,8 +99,8 @@ export default function ProductosPage() {
                                 productos.map((prod) => (
                                     <TableRow key={prod.id}>
                                         <TableCell>{prod.sku}</TableCell>
-                                        <TableCell>{prod.nombre}</TableCell>
-                                        <TableCell>{prod.categoriaNombre || '-'}</TableCell>
+                                        <TableCell className="truncate max-w-[200px]">{prod.nombre}</TableCell>
+                                        <TableCell className="truncate max-w-[150px]">{prod.categoriaNombre || '-'}</TableCell>
                                         <TableCell>${prod.precio.toLocaleString()}</TableCell>
                                         <TableCell>{prod.cantidad}</TableCell>
                                         <TableCell>{prod.activo ? 'Sí' : 'No'}</TableCell>
@@ -105,6 +121,13 @@ export default function ProductosPage() {
                             )}
                         </TableBody>
                     </Table>
+                    <Pagination
+                        page={page}
+                        totalPages={totalPages}
+                        totalElements={totalElements}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={setPage}
+                    />
                 </CardContent>
             </Card>
         </div>
