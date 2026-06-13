@@ -47,6 +47,10 @@ export default function Navbar() {
         ? session.user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
         : session?.user?.email?.charAt(0).toUpperCase() || 'U';
 
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const UserMenu = () => (
         <>
             {session ? (
@@ -128,10 +132,10 @@ export default function Navbar() {
     );
 
     return (
-        <header className="sticky top-0 z-50 h-16 bg-background border-b">
+        <header className="sticky top-0 z-50 bg-background border-b">
             {isLogistica ? (
                 /* ── Layout logistica: logo alineado con sidebar ── */
-                <div className="h-full flex items-center">
+                <div className="h-16 flex items-center">
                     <div className="hidden lg:flex items-center lg:w-64 px-4 shrink-0">
                         <Link
                             href="/"
@@ -146,10 +150,11 @@ export default function Navbar() {
                 </div>
             ) : (
                 /* ── Layout público: container con buscador centrado ── */
-                <div className="h-full container mx-auto grid grid-cols-3 items-center px-4">
+                <div className="h-16 container mx-auto grid grid-cols-3 items-center px-4">
                     <div className="flex justify-start">
                         <Link
                             href="/"
+                            onClick={scrollToTop}
                             className="text-xl font-bold hover:text-primary transition-colors"
                         >
                             SmartLogix

@@ -85,7 +85,7 @@ export default function CategoryNav() {
   if (tree.length === 0) return null;
 
   return (
-    <nav className="border-t bg-white">
+    <nav className="bg-white">
       <div className="container mx-auto px-4">
         <ul className="flex items-center justify-center gap-0.5 py-2 flex-wrap">
           {tree.map((node) => {
