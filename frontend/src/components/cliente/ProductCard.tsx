@@ -22,7 +22,7 @@ export default function ProductCard({ producto }: { producto: Producto }) {
 
   return (
     <Card className="overflow-hidden flex flex-col h-full group">
-      <Link href={`/productos/${slug}`} className="block">
+      <Link href={`/productos/${slug}`} className="block" draggable={false}>
         <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
           {producto.imagenPrincipal ? (
             <img
@@ -39,7 +39,7 @@ export default function ProductCard({ producto }: { producto: Producto }) {
         </div>
       </Link>
 
-      <Link href={`/productos/${slug}`} className="flex flex-col flex-1">
+      <Link href={`/productos/${slug}`} className="flex flex-col flex-1" draggable={false}>
         <div className="p-3 pb-0 flex-1">
           <CardTitle className="text-sm font-semibold truncate">{producto.nombre}</CardTitle>
           {producto.descripcion && (

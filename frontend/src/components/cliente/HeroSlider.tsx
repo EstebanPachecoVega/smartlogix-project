@@ -48,7 +48,7 @@ export default function HeroSlider() {
   return (
     <section
       className="relative overflow-hidden -mt-8"
-      style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
+      style={{ width: '100dvw', marginLeft: 'calc(-50dvw + 50%)' }}
     >
       <div
         className="flex transition-transform duration-500 ease-in-out"

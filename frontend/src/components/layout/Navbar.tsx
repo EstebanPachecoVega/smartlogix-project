@@ -149,28 +149,28 @@ export default function Navbar() {
                     </div>
                 </div>
             ) : (
-                /* ── Layout público: container con buscador centrado ── */
-                <div className="h-16 container mx-auto grid grid-cols-3 items-center px-4">
-                    <div className="flex justify-start">
+                /* ── Layout público: flex responsivo ── */
+                <div className="h-16 container mx-auto flex items-center justify-between gap-2 px-4">
+                    <div className="shrink-0 min-w-0">
                         <Link
                             href="/"
                             onClick={scrollToTop}
-                            className="text-xl font-bold hover:text-primary transition-colors"
+                            className="text-lg sm:text-xl font-bold hover:text-primary transition-colors truncate block"
                         >
                             SmartLogix
                         </Link>
                     </div>
 
-                    <div className="flex justify-center max-w-xl hidden sm:flex mx-auto w-full">
+                    <div className="hidden sm:flex flex-1 justify-center max-w-xl mx-auto px-4">
                         <SearchBar />
                     </div>
 
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                         {!isGestor && (
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="relative"
+                                className="relative shrink-0"
                                 onClick={() => router.push('/dashboard/carrito')}
                                 aria-label="Carrito"
                             >

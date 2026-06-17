@@ -9,7 +9,11 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
 
 # --ignore-scripts evita el bloqueo de build scripts en pnpm 11
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile --ignore-scripts \
+    --fetch-retries 5 \
+    --fetch-retry-factor 2 \
+    --fetch-retry-mintimeout 10000 \
+    --fetch-retry-maxtimeout 60000
 
 # Etapa 2: Compilar la aplicación
 FROM node:22-alpine AS builder
