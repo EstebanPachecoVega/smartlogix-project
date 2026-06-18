@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { productosPublicApi } from '@/lib/api';
-import { Producto } from '@/types';
+import { productosPublicApi, categoriasPublicApi } from '@/lib/api';
+import { Producto, Categoria } from '@/types';
+import { buildCategoryChainById } from '@/lib/categoryTree';
 import { useCarritoStore } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Breadcrumbs from '@/components/ui/breadcrumbs';
 import ImageGallery from '@/components/cliente/ImageGallery';
+import ProductCarousel from '@/components/cliente/ProductCarousel';
 import Spinner from '@/components/shared/Spinner';
 import { ArrowLeft, ShoppingCart } from 'lucide-react';
 
@@ -17,6 +19,8 @@ export default function ProductoDetallePage() {
   const router = useRouter();
   const agregar = useCarritoStore((state) => state.agregar);
   const [producto, setProducto] = useState<Producto | null>(null);
+  const [similares, setSimilares] = useState<Producto[]>([]);
+  const [breadcrumbCats, setBreadcrumbCats] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [cantidad, setCantidad] = useState(1);
@@ -24,7 +28,18 @@ export default function ProductoDetallePage() {
   useEffect(() => {
     productosPublicApi
       .obtenerPorSlug(slug)
-      .then(setProducto)
+      .then((prod) => {
+        setProducto(prod);
+        if (prod.categoriaId) {
+          categoriasPublicApi.listar().then((allCats) => {
+            setBreadcrumbCats(buildCategoryChainById(prod.categoriaId!, allCats));
+          });
+          productosPublicApi.listar({ categoriaId: prod.categoriaId }).then((all) => {
+            const others = all.filter((p) => p.id !== prod.id);
+            setSimilares(others.sort(() => Math.random() - 0.5).slice(0, 8));
+          });
+        }
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -42,35 +57,41 @@ export default function ProductoDetallePage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: 'Catálogo', href: '/' }, { label: producto.nombre }]} />
+      <Breadcrumbs items={[
+        ...(breadcrumbCats.length > 0
+          ? breadcrumbCats.map((cat) => ({ label: cat.nombre, href: `/?cat=${cat.slug}` }))
+          : [{ label: 'Catálogo', href: '/' }]
+        ),
+        { label: producto.nombre },
+      ]} />
 
       <Button variant="ghost" size="sm" className="mb-4" onClick={() => router.push('/')}>
         <ArrowLeft className="h-4 w-4 mr-2" /> Volver al catálogo
       </Button>
 
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
         <ImageGallery
           imagenPrincipal={producto.imagenPrincipal}
           imagenes={producto.imagenes}
           nombre={producto.nombre}
         />
 
-        <div className="space-y-6">
+        <div className="space-y-4 sticky top-24 self-start">
           <div>
-            <p className="text-sm text-gray-500 uppercase tracking-wide">{producto.categoriaNombre || 'Producto'}</p>
-            <h1 className="text-2xl font-bold mt-1">{producto.nombre}</h1>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">{producto.categoriaNombre || 'Producto'}</p>
+            <h1 className="text-xl font-bold mt-1">{producto.nombre}</h1>
             {producto.sku && (
-              <p className="text-sm text-gray-400 mt-1">SKU: {producto.sku}</p>
+              <p className="text-xs text-gray-400 mt-1">SKU: {producto.sku}</p>
             )}
           </div>
 
-          <p className="text-3xl font-bold text-blue-600">
+          <p className="text-2xl font-bold text-gray-900">
             ${producto.precio.toLocaleString()}
           </p>
 
           {producto.descripcion && (
             <div>
-              <h3 className="font-semibold mb-1">Descripción</h3>
+              <h3 className="font-semibold text-sm mb-1">Descripción</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{producto.descripcion}</p>
             </div>
           )}
@@ -108,18 +129,29 @@ export default function ProductoDetallePage() {
             </div>
           )}
 
-          {producto.destacado && (
-            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-1 rounded">
-              Destacado
-            </span>
-          )}
-          {producto.novedad && (
-            <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded ml-2">
-              Novedad
-            </span>
-          )}
+          <div className="flex gap-2">
+            {producto.destacado && (
+              <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-1 rounded">
+                Destacado
+              </span>
+            )}
+            {producto.novedad && (
+              <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded">
+                Novedad
+              </span>
+            )}
+          </div>
         </div>
       </div>
+
+      {similares.length > 0 && (
+        <div className="mt-12">
+          <ProductCarousel
+            productos={similares}
+            title="Productos Similares"
+          />
+        </div>
+      )}
     </div>
   );
 }

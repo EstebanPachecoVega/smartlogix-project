@@ -10,6 +10,7 @@ import ProductCarousel from '@/components/cliente/ProductCarousel';
 import HeroSlider from '@/components/cliente/HeroSlider';
 import Breadcrumbs from '@/components/ui/breadcrumbs';
 import Spinner from '@/components/shared/Spinner';
+import FilterSidebar from '@/components/cliente/FilterSidebar';
 
 function buildCategoryChainBySlug(slug: string, allCats: Categoria[]): Categoria[] {
   const chain: Categoria[] = [];
@@ -25,6 +26,7 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const catSlug = searchParams.get('cat');
   const search = searchParams.get('search');
+  const novedad = searchParams.get('novedad');
 
   const [destacados, setDestacados] = useState<Producto[]>([]);
   const [novedades, setNovedades] = useState<Producto[]>([]);
@@ -32,6 +34,9 @@ function HomeContent() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [breadcrumbCats, setBreadcrumbCats] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
+  const [precioMin, setPrecioMin] = useState<number | undefined>();
+  const [precioMax, setPrecioMax] = useState<number | undefined>();
+  const [soloStock, setSoloStock] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -53,13 +58,14 @@ function HomeContent() {
 
         const prods = await productosPublicApi.listar({
           ...(search ? { nombre: search } : {}),
+          ...(novedad === 'true' ? { novedad: true } : {}),
         });
-        setProductos(currentCat && !search
+        setProductos(currentCat && !search && novedad !== 'true'
           ? prods.filter((p) => getAllDescendantIds(currentCat.id, allCats).has(p.categoriaId))
           : prods
         );
 
-        if (!currentCat && !search) {
+        if (!currentCat && !search && novedad !== 'true') {
           const [dest, nov] = await Promise.all([
             productosPublicApi.listar({ destacado: true }),
             productosPublicApi.listar({ novedad: true }),
@@ -74,7 +80,7 @@ function HomeContent() {
       }
     };
     fetchAll();
-  }, [catSlug, search]);
+  }, [catSlug, search, novedad]);
 
   // Build parent category list sorted by ordenVisual
   const parentCats = useMemo(() =>
@@ -98,15 +104,19 @@ function HomeContent() {
     return map;
   }, [parentCats, categorias, productos]);
 
-  const title = search
-    ? `Resultados: "${search}"`
-    : breadcrumbCats.length > 0
-      ? breadcrumbCats[breadcrumbCats.length - 1].nombre
-      : 'Catálogo de productos';
+  const title = novedad === 'true'
+    ? 'Novedades'
+    : search
+      ? `Resultados: "${search}"`
+      : breadcrumbCats.length > 0
+        ? breadcrumbCats[breadcrumbCats.length - 1].nombre
+        : 'Catálogo de productos';
 
   const breadcrumbItems: { label: string; href?: string }[] = [];
 
-  if (search) {
+  if (novedad === 'true') {
+    breadcrumbItems.push({ label: 'Novedades' });
+  } else if (search) {
     breadcrumbItems.push({ label: `Resultados: "${search}"` });
   } else if (breadcrumbCats.length > 0) {
     breadcrumbCats.forEach((cat, i) => {
@@ -119,7 +129,23 @@ function HomeContent() {
     breadcrumbItems.push({ label: 'Inicio' });
   }
 
-  const isFiltered = !!catSlug || !!search;
+  const isFiltered = !!catSlug || !!search || novedad === 'true';
+
+  const globalMinPrice = useMemo(() =>
+    productos.length > 0 ? Math.min(...productos.map((p) => p.precio)) : 0,
+  [productos]);
+
+  const globalMaxPrice = useMemo(() =>
+    productos.length > 0 ? Math.max(...productos.map((p) => p.precio)) : 999999,
+  [productos]);
+
+  const filteredProductos = useMemo(() => {
+    let result = productos;
+    if (precioMin !== undefined) result = result.filter((p) => p.precio >= precioMin);
+    if (precioMax !== undefined) result = result.filter((p) => p.precio <= precioMax);
+    if (soloStock) result = result.filter((p) => p.cantidad > 0);
+    return result;
+  }, [productos, precioMin, precioMax, soloStock]);
 
   if (loading) return <Spinner />;
 
@@ -157,17 +183,32 @@ function HomeContent() {
           <Breadcrumbs items={breadcrumbItems} />
           <h1 className="text-2xl font-bold mb-6">{title}</h1>
 
-          {productos.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No se encontraron productos</p>
+          <div className="flex flex-col sm:flex-row gap-6">
+            <FilterSidebar
+              precioMin={precioMin}
+              precioMax={precioMax}
+              soloStock={soloStock}
+              onPrecioChange={(min, max) => { setPrecioMin(min); setPrecioMax(max); }}
+              onStockChange={setSoloStock}
+              onClear={() => { setPrecioMin(undefined); setPrecioMax(undefined); setSoloStock(false); }}
+              minPrice={globalMinPrice}
+              maxPrice={globalMaxPrice}
+            />
+
+            <div className="flex-1 min-w-0">
+              {filteredProductos.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No se encontraron productos</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredProductos.map((prod) => (
+                    <ProductCard key={prod.id} producto={prod} />
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {productos.map((prod) => (
-                <ProductCard key={prod.id} producto={prod} />
-              ))}
-            </div>
-          )}
+          </div>
         </>
       )}
     </div>

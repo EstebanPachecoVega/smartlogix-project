@@ -1,5 +1,15 @@
 import { Categoria } from '@/types';
 
+export function buildCategoryChainById(categoriaId: number, allCats: Categoria[]): Categoria[] {
+  const chain: Categoria[] = [];
+  let current = allCats.find((c) => c.id === categoriaId);
+  while (current) {
+    chain.unshift(current);
+    current = current.padreId ? allCats.find((c) => c.id === current!.padreId) : undefined;
+  }
+  return chain;
+}
+
 export function getAllDescendantIds(categoriaId: number, allCats: Categoria[]): Set<number> {
   const ids = new Set<number>([categoriaId]);
   allCats

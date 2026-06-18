@@ -16,7 +16,16 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
   ];
 
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const currentImage = allImages[selectedIndex];
+  const [erroredImages, setErroredImages] = useState<string[]>([]);
+
+  const handleImgError = (url: string) => {
+    if (!erroredImages.includes(url)) {
+      setErroredImages([...erroredImages, url]);
+    }
+  };
+
+  const validImages = allImages.filter(url => !erroredImages.includes(url));
+  const currentImage = validImages[selectedIndex];
 
   if (!currentImage) {
     return (
@@ -27,34 +36,36 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
   }
 
   return (
-    <div className="space-y-3">
-      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-        <img
-          src={currentImage}
-          alt={`${nombre} - imagen ${selectedIndex + 1}`}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      {allImages.length > 1 && (
-        <div className="grid grid-cols-5 gap-2">
-          {allImages.map((url, i) => (
+    <div className="flex flex-col-reverse md:flex-row gap-3">
+      {validImages.length > 1 && (
+        <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-y-auto md:max-h-[500px] scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {validImages.map((url, i) => (
             <button
               key={url}
               type="button"
               onClick={() => setSelectedIndex(i)}
-              className={`aspect-square rounded-md overflow-hidden border-2 transition-colors ${
+              className={`shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-md overflow-hidden border-2 transition-colors ${
                 i === selectedIndex ? 'border-blue-500' : 'border-transparent hover:border-gray-300'
               }`}
             >
               <img
                 src={url}
                 alt={`${nombre} - miniatura ${i + 1}`}
+                onError={() => handleImgError(url)}
                 className="w-full h-full object-cover"
               />
             </button>
           ))}
         </div>
       )}
+      <div className="flex-1 aspect-square bg-gray-100 rounded-lg overflow-hidden">
+        <img
+          src={currentImage}
+          alt={`${nombre} - imagen ${selectedIndex + 1}`}
+          onError={() => handleImgError(currentImage)}
+          className="w-full h-full object-cover"
+        />
+      </div>
     </div>
   );
 }

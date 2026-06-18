@@ -100,15 +100,31 @@ function MegaMenu({
 export default function CategoryNav() {
   const [tree, setTree] = useState<CategoryNode[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
+  const [isTouch, setIsTouch] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined as any);
+  const navRef = useRef<HTMLElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeSlug = searchParams.get('cat');
 
   useEffect(() => {
+    setIsTouch(matchMedia('(pointer: coarse)').matches);
+  }, []);
+
+  useEffect(() => {
     categoriasPublicApi.listar().then((all) => {
       setTree(buildCategoryTree(all));
     });
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const scheduleClose = () => {
@@ -123,9 +139,9 @@ export default function CategoryNav() {
   if (tree.length === 0) return null;
 
   return (
-    <nav className="bg-white">
+    <nav ref={navRef} className="bg-white">
       <div className="container mx-auto px-4">
-        <ul className="flex items-center justify-center gap-0.5 py-2 overflow-x-auto scrollbar-hide lg:flex-wrap" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <ul className="flex items-center justify-center gap-0.5 py-2 flex-wrap">
           {tree.map((node) => {
             const hasChildren = node.children.length > 0;
             const isActive = activeSlug === node.category.slug;
@@ -135,11 +151,18 @@ export default function CategoryNav() {
               <li
                 key={node.category.id}
                 className="relative"
-                onMouseEnter={() => { cancelClose(); setOpenId(node.category.id); }}
-                onMouseLeave={scheduleClose}
+                onMouseEnter={!isTouch ? () => { cancelClose(); setOpenId(node.category.id); } : undefined}
+                onMouseLeave={!isTouch ? scheduleClose : undefined}
               >
                 <button
-                  onClick={() => router.push(`/?cat=${node.category.slug}`)}
+                  onClick={() => {
+                    if (isTouch && hasChildren) {
+                      cancelClose();
+                      setOpenId(isOpen ? null : node.category.id);
+                    } else {
+                      router.push(`/?cat=${node.category.slug}`);
+                    }
+                  }}
                   className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap transition-colors flex items-center gap-1 ${
                     isActive
                       ? 'text-blue-600 bg-blue-50 font-medium'
@@ -154,8 +177,8 @@ export default function CategoryNav() {
 
                 {hasChildren && isOpen && (
                   <div
-                    onMouseEnter={cancelClose}
-                    onMouseLeave={scheduleClose}
+                    onMouseEnter={!isTouch ? cancelClose : undefined}
+                    onMouseLeave={!isTouch ? scheduleClose : undefined}
                   >
                     <MegaMenu
                       node={node}

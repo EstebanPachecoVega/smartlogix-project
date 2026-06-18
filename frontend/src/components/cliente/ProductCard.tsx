@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
 import { ImageIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 function generarSlug(nombre: string) {
   return nombre
@@ -19,16 +20,18 @@ function generarSlug(nombre: string) {
 export default function ProductCard({ producto }: { producto: Producto }) {
   const agregar = useCarritoStore((state) => state.agregar);
   const slug = producto.slug || generarSlug(producto.nombre);
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Card className="overflow-hidden flex flex-col h-full group">
       <Link href={`/productos/${slug}`} className="block" draggable={false}>
         <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
-          {producto.imagenPrincipal ? (
+          {producto.imagenPrincipal && !imgError ? (
             <img
               src={producto.imagenPrincipal}
               alt={producto.nombre}
               draggable={false}
+              onError={() => setImgError(true)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (

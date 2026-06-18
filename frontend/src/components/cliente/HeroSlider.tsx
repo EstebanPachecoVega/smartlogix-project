@@ -15,15 +15,15 @@ interface Slide {
 const slides: Slide[] = [
   {
     gradient: 'from-blue-600 to-blue-800',
-    title: 'Tecnología de punta',
-    subtitle: 'Los últimos lanzamientos en un solo lugar',
-    cta: { label: 'Ver productos', href: '/productos' },
+    title: 'Novedades',
+    subtitle: 'Descubre los últimos productos agregados',
+    cta: { label: 'Ver novedades', href: '/?novedad=true' },
   },
   {
-    gradient: 'from-purple-600 to-purple-800',
-    title: 'Ofertas exclusivas',
-    subtitle: 'Precios imperdibles por tiempo limitado',
-    cta: { label: 'Aprovechar ofertas', href: '/productos' },
+    gradient: 'from-orange-600 to-red-600',
+    title: 'Componentes para PC',
+    subtitle: 'Todo lo que necesitas para armar tu computadora de escritorio',
+    cta: { label: 'Ver componentes', href: '/?cat=componentes' },
   },
   {
     gradient: 'from-emerald-600 to-emerald-800',

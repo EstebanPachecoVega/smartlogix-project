@@ -1,5 +1,6 @@
 package cl.smartlogix.bff.dto.response;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ public class ProductoResponseDTO {
     private Integer precio;
     private Integer cantidad;
     private String imagenPrincipal;
+    private List<String> imagenes;
     private String fechaCreacion;
     private String fechaActualizacion;
     private Long categoriaId;

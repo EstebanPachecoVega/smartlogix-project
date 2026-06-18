@@ -1,9 +1,7 @@
 'use client';
 
-import { CldUploadWidget } from 'next-cloudinary';
-import { Button } from './button';
+import { useState, useRef } from 'react';
 import { X, Upload, Loader2 } from 'lucide-react';
-import { useState } from 'react';
 
 interface ImageUploaderProps {
   mode: 'single' | 'multiple';
@@ -12,18 +10,67 @@ interface ImageUploaderProps {
   label?: string;
 }
 
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+async function uploadFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+  formData.append('folder', 'smartlogix/productos');
+  const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+  if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
+  const data = await res.json();
+  return data.secure_url;
+}
+
 export default function ImageUploader({ mode, value, onChange, label }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const images = mode === 'single' ? (value ? [value as string] : []) : (value as string[]);
 
-  const handleSuccess = (result: any) => {
-    const url = result?.info?.secure_url || result?.info?.url;
-    if (!url) return;
-    setUploading(false);
-    if (mode === 'single') {
-      onChange(url);
-    } else {
-      onChange([...images, url]);
+  const uploadFiles = async (files: FileList) => {
+    setUploading(true);
+    try {
+      if (mode === 'single') {
+        const url = await uploadFile(files[0]);
+        onChange(url);
+      } else {
+        const fileArray = Array.from(files);
+        const urls = await Promise.all(fileArray.map(uploadFile));
+        onChange([...images, ...urls]);
+      }
+    } catch {
+      // error silently
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      uploadFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragOver(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      uploadFiles(e.target.files);
+      e.target.value = '';
     }
   };
 
@@ -36,63 +83,159 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
     }
   };
 
+  const handleReorderStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.effectAllowed = 'move';
+    setDragIndex(index);
+  };
+
+  const handleReorderOver = (e: React.DragEvent, index: number) => {
+    if (e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropIndex(index);
+  };
+
+  const handleReorderLeave = () => {
+    setDropIndex(null);
+  };
+
+  const handleReorderDrop = (index: number) => {
+    setDropIndex(null);
+    if (dragIndex === null || dragIndex === index) {
+      setDragIndex(null);
+      return;
+    }
+    const updated = [...images];
+    const [moved] = updated.splice(dragIndex, 1);
+    updated.splice(index, 0, moved);
+    onChange(updated);
+    setDragIndex(null);
+  };
+
+  const handleReorderEnd = () => {
+    setDragIndex(null);
+    setDropIndex(null);
+  };
+
   return (
     <div className="space-y-3">
       {label && <p className="text-sm font-medium">{label}</p>}
 
-      {images.length > 0 && (
-        <div className={`grid ${mode === 'single' ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'} gap-3`}>
-          {images.map((url, index) => (
-            <div key={url} className="relative group aspect-square rounded-md overflow-hidden border bg-gray-50">
+      {mode === 'single' ? (
+        <div
+          onDrop={handleFileDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => inputRef.current?.click()}
+          className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer group
+            ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 hover:border-blue-400'}
+            ${images.length > 0 ? '' : 'flex items-center justify-center'}`}
+        >
+          {images.length > 0 ? (
+            <>
               <img
-                src={url}
-                alt={`Imagen ${index + 1}`}
-                className="w-full h-full object-cover"
+                src={images[0]}
+                alt="Imagen principal"
+                className="w-full h-full object-cover pointer-events-none"
               />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="text-center text-white">
+                  <Upload className="h-8 w-8 mx-auto" />
+                  <p className="text-sm mt-1">Arrastra para reemplazar</p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => removeImage(index)}
-                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => { e.stopPropagation(); removeImage(0); }}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4" />
               </button>
+            </>
+          ) : uploading ? (
+            <div className="text-center">
+              <Loader2 className="h-10 w-10 mx-auto animate-spin text-gray-400" />
+              <p className="text-sm text-gray-500 mt-2">Subiendo...</p>
             </div>
-          ))}
+          ) : (
+            <div className="text-center px-4">
+              <Upload className="h-10 w-10 mx-auto text-gray-300" />
+              <p className="text-sm text-gray-500 mt-2">Arrastra la imagen aquí o haz clic</p>
+              <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP</p>
+            </div>
+          )}
+          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
         </div>
-      )}
+      ) : (
+        <>
+          {images.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {images.map((url, index) => (
+                <div
+                  key={url}
+                  draggable
+                  onDragStart={(e) => handleReorderStart(e, index)}
+                  onDragOver={(e) => handleReorderOver(e, index)}
+                  onDragLeave={handleReorderLeave}
+                  onDrop={() => handleReorderDrop(index)}
+                  onDragEnd={handleReorderEnd}
+                  className={`relative group aspect-square rounded-md overflow-hidden border bg-gray-50 transition-all cursor-grab active:cursor-grabbing
+                    ${dragIndex === index ? 'opacity-50 scale-95' : ''}
+                    ${dropIndex === index && dragIndex !== index ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'}`}
+                >
+                  <img
+                    src={url}
+                    alt={`Imagen ${index + 1}`}
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-      <CldUploadWidget
-        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!}
-        onSuccess={handleSuccess}
-        options={{
-          maxFiles: mode === 'single' ? 1 : 10,
-          multiple: mode === 'multiple',
-          folder: 'smartlogix/productos',
-        }}
-      >
-        {({ open }) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={uploading}
-            onClick={() => {
-              setUploading(true);
-              open();
-            }}
+          <div
+            onDrop={handleFileDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => inputRef.current?.click()}
+            className={`border-2 rounded-lg py-6 px-4 text-center cursor-pointer transition-all
+              ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 hover:border-blue-400'}`}
           >
             {uploading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <>
+                <Loader2 className="h-8 w-8 mx-auto animate-spin text-gray-400" />
+                <p className="text-sm text-gray-500 mt-2">Subiendo imágenes...</p>
+              </>
             ) : (
-              <Upload className="h-4 w-4 mr-2" />
+              <>
+                <Upload className="h-8 w-8 mx-auto text-gray-300" />
+                <p className="text-sm text-gray-500 mt-2">
+                  Arrastra las imágenes aquí o haz clic
+                </p>
+                <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP • Puedes seleccionar varias</p>
+              </>
             )}
-            {uploading ? 'Subiendo...' : 'Subir imagen'}
-          </Button>
-        )}
-      </CldUploadWidget>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+          </div>
 
-      {mode === 'multiple' && images.length > 0 && (
-        <p className="text-xs text-gray-500">{images.length} imagen(es) seleccionada(s)</p>
+          {images.length > 0 && (
+            <p className="text-xs text-gray-500">{images.length} imagen(es) seleccionada(s)</p>
+          )}
+        </>
       )}
     </div>
   );
