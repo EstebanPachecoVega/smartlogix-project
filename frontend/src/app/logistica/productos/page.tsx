@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Eye, Pencil, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Spinner from '@/components/shared/Spinner';
 
@@ -106,6 +106,11 @@ export default function ProductosPage() {
                                         <TableCell>{prod.activo ? 'Sí' : 'No'}</TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" asChild>
+                                                    <Link href={`/logistica/productos/${prod.id}`}>
+                                                        <Eye className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
                                                 <Button variant="outline" size="sm" asChild>
                                                     <Link href={`/logistica/productos/${prod.id}/editar`}>
                                                         <Pencil className="h-4 w-4" />

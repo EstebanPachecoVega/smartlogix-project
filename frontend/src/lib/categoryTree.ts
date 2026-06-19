@@ -17,17 +17,23 @@ export function buildTree(categorias: Categoria[]): CategoriaNode[] {
 
   for (const node of map.values()) {
     if (node.padreId && map.has(node.padreId)) {
-      const parent = map.get(node.padreId)!;
-      node.nivel = parent.nivel + 1;
-      parent.children.push(node);
+      map.get(node.padreId)!.children.push(node);
     } else {
       roots.push(node);
     }
   }
 
+  const setNivel = (nodes: CategoriaNode[], nivel: number) => {
+    for (const n of nodes) {
+      n.nivel = nivel;
+      setNivel(n.children, nivel + 1);
+    }
+  };
+  setNivel(roots, 0);
+
   const sortByOrden = (nodes: CategoriaNode[]) => {
     nodes.sort((a, b) => (a.ordenVisual ?? 0) - (b.ordenVisual ?? 0));
-    for (const node of nodes) sortByOrden(node.children);
+    for (const n of nodes) sortByOrden(n.children);
   };
   sortByOrden(roots);
 
