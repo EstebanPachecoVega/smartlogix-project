@@ -1,4 +1,4 @@
-package cl.smartlogix.bff.dto.response;
+package cl.smartlogix.pedidos.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VentaPorCategoriaResponseDTO {
-    private String categoria;
+public class VentaPorProductoCantidadDTO {
+    private Long productoId;
     private Long cantidad;
 }

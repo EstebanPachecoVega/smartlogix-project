@@ -315,6 +315,19 @@ public class GatewayClient {
     }
 
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
+    public Mono<List<VentaPorProductoCantidadDTO>> getCantidadPorProducto(String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/pedidos/estadisticas/ventas-por-producto-cantidad")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToFlux(VentaPorProductoCantidadDTO.class)
+                .collectList();
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
     public Mono<List<MapaCategoriaResponseDTO>> getMapaCategorias(String jwtToken, String correlationId) {
         return gatewayWebClient
                 .get()

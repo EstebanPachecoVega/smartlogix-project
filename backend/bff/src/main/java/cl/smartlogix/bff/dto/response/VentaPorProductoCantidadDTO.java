@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VentaPorCategoriaResponseDTO {
-    private String categoria;
+public class VentaPorProductoCantidadDTO {
+    private Long productoId;
     private Long cantidad;
 }

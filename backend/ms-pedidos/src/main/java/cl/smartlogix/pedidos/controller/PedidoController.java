@@ -3,6 +3,7 @@ package cl.smartlogix.pedidos.controller;
 import cl.smartlogix.pedidos.dto.request.CrearPedidoRequestDTO;
 import cl.smartlogix.pedidos.dto.response.ComparacionAnualResponseDTO;
 import cl.smartlogix.pedidos.dto.response.PedidoResponseDTO;
+import cl.smartlogix.pedidos.dto.response.VentaPorProductoCantidadDTO;
 import cl.smartlogix.pedidos.dto.response.VentaPorProductoResponseDTO;
 import cl.smartlogix.pedidos.dto.response.VentasPlataformaResponseDTO;
 import cl.smartlogix.pedidos.entity.Pedido;
@@ -103,6 +104,11 @@ public class PedidoController {
     @GetMapping("/estadisticas/ventas-por-producto")
     public List<VentaPorProductoResponseDTO> getVentasPorProducto() {
         return detallePedidoRepository.findVentasPorProducto();
+    }
+
+    @GetMapping("/estadisticas/ventas-por-producto-cantidad")
+    public List<VentaPorProductoCantidadDTO> getCantidadPorProducto() {
+        return detallePedidoRepository.findCantidadPorProducto();
     }
 
     // Método helper — agrega esto al final de la clase

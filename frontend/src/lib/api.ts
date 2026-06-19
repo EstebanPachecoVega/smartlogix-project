@@ -169,7 +169,7 @@ export const estadisticasApi = {
     const res = await apiClient.get('/estadisticas/comparacion-anual');
     return res.data;
   },
-  ventasPorCategoria: async (): Promise<{ categoria: string; totalVentas: number }[]> => {
+  ventasPorCategoria: async (): Promise<{ categoria: string; cantidad: number }[]> => {
     const res = await apiClient.get('/estadisticas/ventas-por-categoria');
     return res.data;
   },
