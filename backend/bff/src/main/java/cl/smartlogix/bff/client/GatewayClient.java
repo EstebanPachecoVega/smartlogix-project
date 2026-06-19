@@ -4,6 +4,7 @@ import cl.smartlogix.bff.dto.request.*;
 import cl.smartlogix.bff.dto.response.*;
 import cl.smartlogix.bff.exception.DomainException;
 import cl.smartlogix.bff.exception.ResourceNotFoundException;
+import reactor.core.publisher.Flux;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -273,6 +274,59 @@ public class GatewayClient {
                 .bodyToMono(EnvioResponseDTO.class);
     }
 
+    // ==================== ESTADÍSTICAS ====================
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
+    public Mono<List<VentasPlataformaResponseDTO>> getVentasPlataforma(String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/pedidos/estadisticas/ventas-plataforma")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToFlux(VentasPlataformaResponseDTO.class)
+                .collectList();
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
+    public Mono<List<ComparacionAnualResponseDTO>> getComparacionAnual(String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/pedidos/estadisticas/comparacion-anual")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToFlux(ComparacionAnualResponseDTO.class)
+                .collectList();
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
+    public Mono<List<VentaPorProductoResponseDTO>> getVentasPorProducto(String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/pedidos/estadisticas/ventas-por-producto")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToFlux(VentaPorProductoResponseDTO.class)
+                .collectList();
+    }
+
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
+    public Mono<List<MapaCategoriaResponseDTO>> getMapaCategorias(String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .get()
+                .uri("/api/productos/mapa-categorias")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToFlux(MapaCategoriaResponseDTO.class)
+                .collectList();
+    }
+
     // ==================== FALLBACKS ====================
     private Mono<List<ProductoResponseDTO>> fallbackGetProductos(String jwt, String cid, Throwable t) {
         log.error("CB abierto getProductos: {}", t.getMessage());
@@ -372,6 +426,11 @@ public class GatewayClient {
             Throwable t) {
         log.error("CB abierto obtenerEnvioPorTracking: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Envíos no disponible"));
+    }
+
+    private <T> Mono<List<T>> fallbackEstadisticas(String jwt, String cid, Throwable t) {
+        log.error("CB abierto estadisticas: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Estadísticas no disponible"));
     }
 
     // Manejo común de errores

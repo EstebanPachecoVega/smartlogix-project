@@ -32,6 +32,7 @@ public class CrearPedidoRequestDTO {
     private String metodoEnvio;
     private Double pesoKg;
     private String dimensiones;
+    private String plataforma;
 
     @NotNull
     private List<DetalleDTO> items;

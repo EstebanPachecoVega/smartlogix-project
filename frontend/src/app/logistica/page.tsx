@@ -9,20 +9,27 @@ import { Button } from '@/components/ui/button';
 import { EstadoPedidoBadge } from '@/components/ui/EstadoPedidoBadge';
 import { EstadoEnvioBadge } from '@/components/ui/EstadoEnvioBadge';
 import {
-    Package, ShoppingCart, Truck, CheckCircle,
-    AlertCircle, Clock, TrendingUp,
+    Package, ShoppingCart, Truck,
+    TrendingUp,
 } from 'lucide-react';
 import Spinner from '@/components/shared/Spinner';
 import DistribucionEnviosChart from '@/components/logistica/DistribucionEnviosChart';
 import DistribucionPedidosChart from '@/components/logistica/DistribucionPedidosChart';
 import StockBajoChart from '@/components/logistica/StockBajoChart';
 import VentasUltimosDiasChart from '@/components/logistica/VentasUltimosDiasChart';
+import VentasPlataformaChart from '@/components/logistica/VentasPlataformaChart';
+import ComparacionAnualChart from '@/components/logistica/ComparacionAnualChart';
+import VentasPorCategoriaChart from '@/components/logistica/VentasPorCategoriaChart';
+import VentasLineChart from '@/components/logistica/VentasLineChart';
+
+type Filtro = 'semana' | 'mes' | 'año';
 
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [productos, setProductos] = useState<Producto[]>([]);
     const [pedidos, setPedidos] = useState<PedidoResponse[]>([]);
     const [envios, setEnvios] = useState<Envio[]>([]);
+    const [filtro, setFiltro] = useState<Filtro>('semana');
 
     useEffect(() => {
         Promise.all([
@@ -102,6 +109,23 @@ export default function DashboardPage() {
                 />
             </div>
 
+            {/* Filtros */}
+            <div className="flex gap-2">
+              {(['semana', 'mes', 'año'] as Filtro[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFiltro(f)}
+                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                    filtro === f
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {f === 'semana' ? 'Semana' : f === 'mes' ? 'Mes' : 'Año'}
+                </button>
+              ))}
+            </div>
+
             {/* Distribución de envíos + Distribución de pedidos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
@@ -142,6 +166,48 @@ export default function DashboardPage() {
                         <VentasUltimosDiasChart pedidos={pedidos} />
                     </CardContent>
                 </Card>
+            </div>
+
+            {/* Ventas por plataforma + Comparación anual */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Ventas por plataforma</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <VentasPlataformaChart />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Comparación anual</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ComparacionAnualChart />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Ventas por categoría + Línea de ventas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Ventas por categoría</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <VentasPorCategoriaChart />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Ventas últimos 30 días</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <VentasLineChart pedidos={pedidos} />
+                </CardContent>
+              </Card>
             </div>
 
             {/* Últimos pedidos */}

@@ -104,9 +104,11 @@ export default function CheckoutPage() {
                 codigoPostal: normalizeField(form.codigoPostal),
                 metodoEnvio: form.metodoEnvio,
             };
+            const plataforma = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'MOBILE' : 'DESKTOP';
             const payload: PedidoRequest = {
                 usuarioId: userIdNum,
                 ...normalizedForm,
+                plataforma,
                 items: items.map(i => ({
                     productoId: i.producto.id,
                     sku: i.producto.sku,

@@ -1,9 +1,14 @@
 package cl.smartlogix.pedidos.controller;
 
 import cl.smartlogix.pedidos.dto.request.CrearPedidoRequestDTO;
+import cl.smartlogix.pedidos.dto.response.ComparacionAnualResponseDTO;
 import cl.smartlogix.pedidos.dto.response.PedidoResponseDTO;
+import cl.smartlogix.pedidos.dto.response.VentaPorProductoResponseDTO;
+import cl.smartlogix.pedidos.dto.response.VentasPlataformaResponseDTO;
 import cl.smartlogix.pedidos.entity.Pedido;
 import cl.smartlogix.pedidos.mapper.PedidoMapper;
+import cl.smartlogix.pedidos.repository.DetallePedidoRepository;
+import cl.smartlogix.pedidos.repository.PedidoRepository;
 import cl.smartlogix.pedidos.service.PedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +18,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +30,8 @@ public class PedidoController {
 
     private final PedidoService pedidoService;
     private final PedidoMapper pedidoMapper;
+    private final PedidoRepository pedidoRepository;
+    private final DetallePedidoRepository detallePedidoRepository;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -76,6 +84,25 @@ public class PedidoController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para ver este pedido");
         }
         return pedidoMapper.toResponseDTO(pedido);
+    }
+
+    // ==================== ESTADÍSTICAS / AGREGACIÓN ====================
+
+    @GetMapping("/estadisticas/ventas-plataforma")
+    public List<VentasPlataformaResponseDTO> getVentasPorPlataforma() {
+        return pedidoRepository.findVentasPorPlataforma();
+    }
+
+    @GetMapping("/estadisticas/comparacion-anual")
+    public List<ComparacionAnualResponseDTO> getComparacionAnual() {
+        int anioActual = LocalDate.now().getYear();
+        int anioAnterior = anioActual - 1;
+        return pedidoRepository.findComparacionAnual(anioActual, anioAnterior);
+    }
+
+    @GetMapping("/estadisticas/ventas-por-producto")
+    public List<VentaPorProductoResponseDTO> getVentasPorProducto() {
+        return detallePedidoRepository.findVentasPorProducto();
     }
 
     // Método helper — agrega esto al final de la clase

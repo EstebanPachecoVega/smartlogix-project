@@ -1,7 +1,9 @@
 package cl.smartlogix.inventario.controller;
 
 import cl.smartlogix.inventario.dto.request.ProductoRequestDTO;
+import cl.smartlogix.inventario.dto.response.MapaCategoriaResponseDTO;
 import cl.smartlogix.inventario.dto.response.ProductoResponseDTO;
+import cl.smartlogix.inventario.repository.ProductoRepository;
 import cl.smartlogix.inventario.service.ProductoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import java.util.List;
 public class ProductoController {
 
     private final ProductoService productoService;
+    private final ProductoRepository productoRepository;
 
     // Crear un nuevo producto con validación de SKU único
     @PostMapping
@@ -76,5 +79,10 @@ public class ProductoController {
     @GetMapping("/categoria/{categoriaId}")
     public List<ProductoResponseDTO> getProductosByCategoria(@PathVariable Long categoriaId) {
         return productoService.getProductosByCategoria(categoriaId);
+    }
+
+    @GetMapping("/mapa-categorias")
+    public List<MapaCategoriaResponseDTO> getMapaCategorias() {
+        return productoRepository.findMapaCategorias();
     }
 }

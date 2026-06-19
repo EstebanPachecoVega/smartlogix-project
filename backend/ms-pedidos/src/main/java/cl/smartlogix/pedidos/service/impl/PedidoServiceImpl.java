@@ -61,6 +61,7 @@ public class PedidoServiceImpl implements PedidoService {
                 .metodoEnvio(request.getMetodoEnvio())
                 .pesoKg(request.getPesoKg())
                 .dimensiones(request.getDimensiones())
+                .plataforma(request.getPlataforma())
                 .totalCompra(0)
                 .build();
 

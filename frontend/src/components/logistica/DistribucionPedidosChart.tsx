@@ -6,31 +6,20 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
 } from '@/components/ui/chart';
 import { useMemo } from 'react';
-
-const ESTADO_COLORS: Record<string, string> = {
-  PENDIENTE: '#f59e0b',
-  CONFIRMADO: '#3b82f6',
-  EN_PREPARACION: '#8b5cf6',
-  ENVIADO: '#06b6d4',
-  ENTREGADO: '#22c55e',
-  CANCELADO: '#ef4444',
-};
-
-const ESTADO_LABELS: Record<string, string> = {
-  PENDIENTE: 'Pendiente',
-  CONFIRMADO: 'Confirmado',
-  EN_PREPARACION: 'En preparación',
-  ENVIADO: 'Enviado',
-  ENTREGADO: 'Entregado',
-  CANCELADO: 'Cancelado',
-};
+import {
+  estadoPedidoHexColor,
+  estadoPedidoTexto,
+  isEstadoPedido,
+} from '@/lib/estados';
 
 export default function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoResponse[] }) {
   const data = useMemo(() => {
     const grouped = pedidos.reduce<Record<string, number>>((acc, p) => {
-      const estado = p.estado || 'DESCONOCIDO';
+      const estado = isEstadoPedido(p.estado) ? p.estado : 'DESCONOCIDO';
       acc[estado] = (acc[estado] || 0) + 1;
       return acc;
     }, {});
@@ -39,7 +28,7 @@ export default function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoR
       .map(([estado, cantidad]) => ({
         estado,
         cantidad,
-        fill: ESTADO_COLORS[estado] || '#9ca3af',
+        fill: estadoPedidoHexColor[estado as keyof typeof estadoPedidoHexColor] || '#9ca3af',
       }))
       .sort((a, b) => b.cantidad - a.cantidad);
   }, [pedidos]);
@@ -47,7 +36,8 @@ export default function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoR
   const chartConfig = useMemo(() => {
     const config: Record<string, { label: string; color: string }> = {};
     for (const { estado, fill } of data) {
-      config[estado] = { label: ESTADO_LABELS[estado] || estado, color: fill };
+      const label = isEstadoPedido(estado) ? estadoPedidoTexto[estado] : estado;
+      config[estado] = { label, color: fill };
     }
     return config;
   }, [data]);
@@ -69,6 +59,9 @@ export default function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoR
           nameKey="estado"
           innerRadius={55}
           strokeWidth={2}
+        />
+        <ChartLegend
+          content={<ChartLegendContent nameKey="estado" />}
         />
       </PieChart>
     </ChartContainer>

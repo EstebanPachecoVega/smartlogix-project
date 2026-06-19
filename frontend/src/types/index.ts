@@ -46,6 +46,7 @@ export interface PedidoRequest {
   metodoEnvio: string;
   pesoKg?: number;
   dimensiones?: string;
+  plataforma?: string;
   items: {
     productoId: number;
     sku: string;
@@ -69,6 +70,7 @@ export interface PedidoResponse {
   ciudad?: string;
   codigoPostal?: string;
   metodoEnvio?: string;
+  plataforma?: string;
   detalles?: DetallePedido[];
 }
 

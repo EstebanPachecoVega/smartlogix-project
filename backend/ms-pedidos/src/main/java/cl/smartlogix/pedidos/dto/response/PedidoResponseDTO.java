@@ -24,6 +24,7 @@ public class PedidoResponseDTO {
     private String ciudad;
     private String codigoPostal;
     private String metodoEnvio;
+    private String plataforma;
     private List<DetalleResponseDTO> detalles;
 
     @Getter

@@ -52,6 +52,9 @@ public class Pedido {
     private String dimensiones;
     // ---------------------------------------------
 
+    @Column(name = "plataforma")
+    private String plataforma;
+
     @Builder.Default
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();

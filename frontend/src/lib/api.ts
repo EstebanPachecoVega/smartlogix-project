@@ -159,6 +159,22 @@ export const categoriasApi = {
 };
 
 // =================== PEDIDOS (vía BFF) ===================
+// =================== ESTADÍSTICAS (vía BFF) ===================
+export const estadisticasApi = {
+  ventasPlataforma: async (): Promise<{ plataforma: string; total: number }[]> => {
+    const res = await apiClient.get('/estadisticas/ventas-plataforma');
+    return res.data;
+  },
+  comparacionAnual: async (): Promise<{ mes: number; añoActual: number; añoAnterior: number }[]> => {
+    const res = await apiClient.get('/estadisticas/comparacion-anual');
+    return res.data;
+  },
+  ventasPorCategoria: async (): Promise<{ categoria: string; totalVentas: number }[]> => {
+    const res = await apiClient.get('/estadisticas/ventas-por-categoria');
+    return res.data;
+  },
+};
+
 export const pedidosApi = {
   crear: async (data: PedidoRequest, idempotencyKey: string): Promise<PedidoResponse> => {
     const res = await apiClient.post('/pedidos', data, {

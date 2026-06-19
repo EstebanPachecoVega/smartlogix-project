@@ -43,6 +43,7 @@ public class CrearPedidoRequestDTO {
 
     private Double pesoKg;
     private String dimensiones;
+    private String plataforma;
     // ---------------------------------------------
 
     @NotEmpty(message = "El pedido debe contener al menos un producto.")

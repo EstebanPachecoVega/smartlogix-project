@@ -72,6 +72,30 @@ export const estadoEnvioOpciones: EstadoEnvioOption[] = (
     Object.entries(estadoEnvioTexto) as [EstadoEnvio, string][]
 ).map(([value, label]) => ({ value, label }));
 
+// ==================== HEX COLORS FOR CHARTS ====================
+// Mirrors estadoPedidoColor but as hex values for recharts fill
+export const estadoPedidoHexColor: Record<EstadoPedido, string> = {
+    PENDIENTE: '#eab308',
+    APROBADO: '#3b82f6',
+    RECHAZADO: '#ef4444',
+    EN_CAMINO: '#a855f7',
+    ENTREGADO: '#22c55e',
+};
+
+// Mirrors estadoEnvioColor but as hex values for recharts fill
+export const estadoEnvioHexColor: Record<EstadoEnvio, string> = {
+    PENDIENTE: '#6b7280',
+    PREPARANDO: '#3b82f6',
+    ENVIADO: '#a855f7',
+    EN_TRANSITO: '#6366f1',
+    EN_REPARTO: '#eab308',
+    ENTREGADO: '#22c55e',
+    INTENTO_FALLIDO: '#ef4444',
+    RETRASADO: '#f97316',
+    DEVUELTO: '#f43f5e',
+    CANCELADO: '#18181b',
+};
+
 // Helper: castea un string a EstadoEnvio de forma segura
 export function isEstadoEnvio(s: string): s is EstadoEnvio {
     return s in estadoEnvioTexto;

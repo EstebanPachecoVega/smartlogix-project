@@ -1,5 +1,6 @@
 package cl.smartlogix.inventario.repository;
 
+import cl.smartlogix.inventario.dto.response.MapaCategoriaResponseDTO;
 import cl.smartlogix.inventario.entity.Producto;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -46,6 +47,15 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
         @Query("SELECT p FROM Producto p WHERE p.categoria.id = :categoriaId OR p.categoria.padre.id = :padreId")
         List<Producto> buscarPorCategoriaOPadre(@Param("categoriaId") Long categoriaId, @Param("padreId") Long padreId);
+
+        @Query("""
+            SELECT new cl.smartlogix.inventario.dto.response.MapaCategoriaResponseDTO(
+                p.id, c.nombre
+            )
+            FROM Producto p
+            LEFT JOIN p.categoria c
+        """)
+        List<MapaCategoriaResponseDTO> findMapaCategorias();
 
         @Query("SELECT p FROM Producto p LEFT JOIN FETCH p.categoria")
         List<Producto> findAll();
