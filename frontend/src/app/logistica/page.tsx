@@ -13,6 +13,10 @@ import {
     AlertCircle, Clock, TrendingUp,
 } from 'lucide-react';
 import Spinner from '@/components/shared/Spinner';
+import DistribucionEnviosChart from '@/components/logistica/DistribucionEnviosChart';
+import DistribucionPedidosChart from '@/components/logistica/DistribucionPedidosChart';
+import StockBajoChart from '@/components/logistica/StockBajoChart';
+import VentasUltimosDiasChart from '@/components/logistica/VentasUltimosDiasChart';
 
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
@@ -98,48 +102,44 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* Distribución de envíos + Resumen rápido */}
+            {/* Distribución de envíos + Distribución de pedidos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Envíos por estado</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {Object.keys(enviosPorEstado).length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No hay envíos registrados.</p>
-                        ) : (
-                            <ul className="space-y-2.5">
-                                {Object.entries(enviosPorEstado).map(([estado, cantidad]) => (
-                                    <li key={estado} className="flex items-center justify-between">
-                                        <EstadoEnvioBadge estado={estado} />
-                                        <span className="text-sm font-semibold tabular-nums">{cantidad}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
+                        <DistribucionEnviosChart envios={envios} />
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Resumen rápido</CardTitle>
+                        <CardTitle className="text-base">Pedidos por estado</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        <SummaryRow
-                            icon={<CheckCircle className="h-4 w-4 text-green-500" />}
-                            label="Pedidos completados"
-                            value={pedidosEntregados}
-                        />
-                        <SummaryRow
-                            icon={<Clock className="h-4 w-4 text-yellow-500" />}
-                            label="Pendientes / en curso"
-                            value={totalPedidos - pedidosEntregados}
-                        />
-                        <SummaryRow
-                            icon={<AlertCircle className="h-4 w-4 text-red-500" />}
-                            label="Envíos con problemas"
-                            value={enviosProblemas}
-                        />
+                    <CardContent>
+                        <DistribucionPedidosChart pedidos={pedidos} />
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Stock bajo + Ventas últimos días */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Productos con menor stock</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <StockBajoChart productos={productos} />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Ventas últimos 7 días</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <VentasUltimosDiasChart pedidos={pedidos} />
                     </CardContent>
                 </Card>
             </div>
