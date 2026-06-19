@@ -29,7 +29,7 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
 
   if (!currentImage) {
     return (
-      <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="aspect-square bg-transparent rounded-lg flex items-center justify-center">
         <ImageIcon className="h-16 w-16 text-gray-300" />
       </div>
     );
@@ -58,7 +58,7 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
           ))}
         </div>
       )}
-      <div className="flex-1 aspect-square bg-gray-100 rounded-lg overflow-hidden">
+      <div className="flex-1 aspect-square bg-transparent rounded-lg overflow-hidden">
         <img
           src={currentImage}
           alt={`${nombre} - imagen ${selectedIndex + 1}`}

@@ -25,7 +25,6 @@ public class ProductoRequestDTO {
 
     private String descripcion;
 
-    @NotNull(message = "El ID de la categoría es obligatorio")
     private Long categoriaId;
 
     @NotNull(message = "El precio es obligatorio")

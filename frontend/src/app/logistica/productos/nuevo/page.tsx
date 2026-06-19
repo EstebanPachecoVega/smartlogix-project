@@ -56,10 +56,6 @@ export default function NuevoProductoPage() {
         e.preventDefault();
         setError(null);
 
-        if (!form.categoriaId) {
-            setError('Debe seleccionar una categoría');
-            return;
-        }
         if (form.precio < 0 || form.cantidad < 0) {
             setError('Precio y stock deben ser valores positivos');
             return;
@@ -144,15 +140,16 @@ export default function NuevoProductoPage() {
                         </div>
 
                         <div>
-                            <Label htmlFor="categoria">Categoría *</Label>
+                            <Label htmlFor="categoria">Categoría</Label>
                             <Select
                                 value={form.categoriaId?.toString() || ''}
-                                onValueChange={(value) => setForm({ ...form, categoriaId: parseInt(value) })}
+                                onValueChange={(value) => setForm({ ...form, categoriaId: value === '__none__' ? undefined : parseInt(value) })}
                             >
                                 <SelectTrigger id="categoria">
-                                    <SelectValue placeholder="Seleccione una categoría" />
+                                    <SelectValue placeholder="Sin categoría" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="__none__">Sin categoría</SelectItem>
                                     {categorias.map((cat) => (
                                         <SelectItem key={cat.id} value={cat.id.toString()}>
                                             {cat.nombre}
@@ -160,6 +157,7 @@ export default function NuevoProductoPage() {
                                     ))}
                                 </SelectContent>
                             </Select>
+                            <p className="text-xs text-gray-500 mt-1">Selecciona una categoría o déjalo vacío.</p>
                         </div>
 
                         <div>

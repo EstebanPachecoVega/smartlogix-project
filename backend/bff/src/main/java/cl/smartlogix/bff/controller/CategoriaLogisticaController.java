@@ -2,6 +2,7 @@ package cl.smartlogix.bff.controller;
 
 import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.dto.request.CategoriaRequestDTO;
+import cl.smartlogix.bff.dto.request.ReordenarCategoriaDTO;
 import cl.smartlogix.bff.dto.response.CategoriaResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -59,6 +60,15 @@ public class CategoriaLogisticaController {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.eliminarCategoria(id, jwt, MDC.get("correlationId"));
+    }
+
+    @PatchMapping("/reordenar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> reordenar(@RequestBody List<ReordenarCategoriaDTO> ordenes,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+        validateBearerToken(authorization);
+        String jwt = extractJwt(authorization);
+        return gatewayClient.reordenarCategorias(ordenes, jwt, MDC.get("correlationId"));
     }
 
     private void validateBearerToken(String authorization) {

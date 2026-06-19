@@ -1,6 +1,7 @@
 package cl.smartlogix.inventario.controller;
 
 import cl.smartlogix.inventario.dto.request.CategoriaRequestDTO;
+import cl.smartlogix.inventario.dto.request.ReordenarCategoriaDTO;
 import cl.smartlogix.inventario.dto.response.CategoriaResponseDTO;
 import cl.smartlogix.inventario.service.CategoriaService;
 import jakarta.validation.Valid;
@@ -52,5 +53,11 @@ public class CategoriaController {
     @GetMapping("/principales")
     public List<CategoriaResponseDTO> getCategoriasPrincipales() {
         return categoriaService.getCategoriasPrincipales();
+    }
+
+    @PatchMapping("/reordenar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reordenar(@Valid @RequestBody List<ReordenarCategoriaDTO> ordenes) {
+        categoriaService.reordenar(ordenes);
     }
 }

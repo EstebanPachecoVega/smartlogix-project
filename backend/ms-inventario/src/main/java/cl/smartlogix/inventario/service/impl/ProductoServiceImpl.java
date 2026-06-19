@@ -36,10 +36,20 @@ public class ProductoServiceImpl implements ProductoService {
         if (request.getSku() != null && productoRepository.existsBySku(request.getSku())) {
             throw new DuplicateResourceException("El SKU '" + request.getSku() + "' ya está registrado");
         }
+        if (productoRepository.existsByNombre(request.getNombre())) {
+            throw new DuplicateResourceException("El nombre '" + request.getNombre() + "' ya está registrado");
+        }
+        if (productoRepository.existsBySlug(request.getSlug())) {
+            throw new DuplicateResourceException("El slug '" + request.getSlug() + "' ya está registrado");
+        }
         Producto producto = productoMapper.toEntity(request);
-        Categoria categoriaReal = categoriaRepository.findById(request.getCategoriaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + request.getCategoriaId()));
-        producto.setCategoria(categoriaReal);
+        if (request.getCategoriaId() != null) {
+            Categoria categoriaReal = categoriaRepository.findById(request.getCategoriaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + request.getCategoriaId()));
+            producto.setCategoria(categoriaReal);
+        } else {
+            producto.setCategoria(null);
+        }
         Producto productoGuardado = productoRepository.save(producto);
         
         // Sincronizar en Redis
@@ -58,10 +68,20 @@ public class ProductoServiceImpl implements ProductoService {
         if (!producto.getSku().equals(request.getSku()) && productoRepository.existsBySku(request.getSku())) {
             throw new DuplicateResourceException("El SKU ya está registrado en otro producto");
         }
+        if (!producto.getNombre().equals(request.getNombre()) && productoRepository.existsByNombre(request.getNombre())) {
+            throw new DuplicateResourceException("El nombre '" + request.getNombre() + "' ya está registrado en otro producto");
+        }
+        if (!producto.getSlug().equals(request.getSlug()) && productoRepository.existsBySlug(request.getSlug())) {
+            throw new DuplicateResourceException("El slug '" + request.getSlug() + "' ya está registrado en otro producto");
+        }
         productoMapper.updateEntity(producto, request);
-        Categoria categoriaReal = categoriaRepository.findById(request.getCategoriaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + request.getCategoriaId()));
-        producto.setCategoria(categoriaReal);
+        if (request.getCategoriaId() != null) {
+            Categoria categoriaReal = categoriaRepository.findById(request.getCategoriaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + request.getCategoriaId()));
+            producto.setCategoria(categoriaReal);
+        } else {
+            producto.setCategoria(null);
+        }
         Producto productoGuardado = productoRepository.save(producto);
         
         // Actualizar Redis con el nuevo stock

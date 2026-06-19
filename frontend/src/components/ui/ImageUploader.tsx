@@ -179,7 +179,7 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
                   onDragLeave={handleReorderLeave}
                   onDrop={() => handleReorderDrop(index)}
                   onDragEnd={handleReorderEnd}
-                  className={`relative group aspect-square rounded-md overflow-hidden border bg-gray-50 transition-all cursor-grab active:cursor-grabbing
+                  className={`relative group aspect-square rounded-md overflow-hidden border bg-transparent transition-all cursor-grab active:cursor-grabbing
                     ${dragIndex === index ? 'opacity-50 scale-95' : ''}
                     ${dropIndex === index && dragIndex !== index ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'}`}
                 >

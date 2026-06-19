@@ -156,6 +156,19 @@ public class GatewayClient {
                 .bodyToMono(Void.class);
     }
 
+    @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackReordenarCategorias")
+    public Mono<Void> reordenarCategorias(List<ReordenarCategoriaDTO> ordenes, String jwtToken, String correlationId) {
+        return gatewayWebClient
+                .patch()
+                .uri("/api/categorias/reordenar")
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("X-Correlation-Id", correlationId)
+                .bodyValue(ordenes)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(Void.class);
+    }
+
     // ==================== PEDIDOS ====================
     public Mono<PedidoResponseDTO> crearPedido(CrearPedidoRequestDTO request, String jwtToken, String idempotencyKey,
             String correlationId) {
@@ -307,6 +320,12 @@ public class GatewayClient {
 
     private Mono<Void> fallbackEliminarCategoria(Long id, String jwt, String cid, Throwable t) {
         log.error("CB abierto eliminarCategoria: {}", t.getMessage());
+        return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Categorías no disponible"));
+    }
+
+    private Mono<Void> fallbackReordenarCategorias(List<ReordenarCategoriaDTO> ordenes, String jwt, String cid,
+            Throwable t) {
+        log.error("CB abierto reordenarCategorias: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Categorías no disponible"));
     }
 

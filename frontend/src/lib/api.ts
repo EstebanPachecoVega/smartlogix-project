@@ -153,6 +153,9 @@ export const categoriasApi = {
   eliminar: async (id: number): Promise<void> => {
     await apiClient.delete(`/logistica/categorias/${id}`);
   },
+  reordenar: async (ordenes: { id: number; ordenVisual: number }[]): Promise<void> => {
+    await apiClient.patch('/logistica/categorias/reordenar', ordenes);
+  },
 };
 
 // =================== PEDIDOS (vía BFF) ===================

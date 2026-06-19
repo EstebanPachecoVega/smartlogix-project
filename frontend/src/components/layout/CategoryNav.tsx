@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { categoriasPublicApi } from '@/lib/api';
-import { buildCategoryTree, CategoryNode } from '@/lib/categoryTree';
+import { buildCategoryTree, CategoriaNode } from '@/lib/categoryTree';
 import { ChevronDown } from 'lucide-react';
 
 function CategoryColumn({
@@ -11,49 +11,49 @@ function CategoryColumn({
   activeSlug,
   router,
 }: {
-  node: CategoryNode;
+  node: CategoriaNode;
   activeSlug: string | null;
   router: ReturnType<typeof useRouter>;
 }) {
   return (
     <div>
       <button
-        onClick={() => router.push(`/?cat=${node.category.slug}`)}
+        onClick={() => router.push(`/?cat=${node.slug}`)}
         className={`block w-full text-left font-semibold text-sm mb-2 transition-colors ${
-          activeSlug === node.category.slug
+          activeSlug === node.slug
             ? 'text-blue-600'
             : 'text-gray-800 hover:text-blue-600'
         }`}
       >
-        {node.category.nombre}
+        {node.nombre}
       </button>
       {node.children.length > 0 && (
         <ul className="space-y-1">
           {node.children.map((child) => (
-            <li key={child.category.id}>
+            <li key={child.id}>
               <button
-                onClick={() => router.push(`/?cat=${child.category.slug}`)}
+                onClick={() => router.push(`/?cat=${child.slug}`)}
                 className={`block w-full text-left text-sm transition-colors ${
-                  activeSlug === child.category.slug
+                  activeSlug === child.slug
                     ? 'text-blue-600 font-medium'
                     : 'text-gray-600 hover:text-blue-600'
                 }`}
               >
-                {child.category.nombre}
+                {child.nombre}
               </button>
               {child.children.length > 0 && (
                 <ul className="pl-3 mt-0.5 space-y-0.5">
                   {child.children.map((grandchild) => (
-                    <li key={grandchild.category.id}>
+                    <li key={grandchild.id}>
                       <button
-                        onClick={() => router.push(`/?cat=${grandchild.category.slug}`)}
+                        onClick={() => router.push(`/?cat=${grandchild.slug}`)}
                         className={`block w-full text-left text-xs transition-colors ${
-                          activeSlug === grandchild.category.slug
+                          activeSlug === grandchild.slug
                             ? 'text-blue-600 font-medium'
                             : 'text-gray-500 hover:text-blue-600'
                         }`}
                       >
-                        {grandchild.category.nombre}
+                        {grandchild.nombre}
                       </button>
                     </li>
                   ))}
@@ -72,7 +72,7 @@ function MegaMenu({
   activeSlug,
   router,
 }: {
-  node: CategoryNode;
+  node: CategoriaNode;
   activeSlug: string | null;
   router: ReturnType<typeof useRouter>;
 }) {
@@ -86,7 +86,7 @@ function MegaMenu({
       >
         {children.map((child) => (
           <CategoryColumn
-            key={child.category.id}
+            key={child.id}
             node={child}
             activeSlug={activeSlug}
             router={router}
@@ -98,7 +98,7 @@ function MegaMenu({
 }
 
 export default function CategoryNav() {
-  const [tree, setTree] = useState<CategoryNode[]>([]);
+  const [tree, setTree] = useState<CategoriaNode[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [isTouch, setIsTouch] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined as any);
@@ -144,23 +144,23 @@ export default function CategoryNav() {
         <ul className="flex items-center justify-center gap-0.5 py-2 flex-wrap">
           {tree.map((node) => {
             const hasChildren = node.children.length > 0;
-            const isActive = activeSlug === node.category.slug;
-            const isOpen = openId === node.category.id;
+            const isActive = activeSlug === node.slug;
+            const isOpen = openId === node.id;
 
             return (
               <li
-                key={node.category.id}
+                key={node.id}
                 className="relative"
-                onMouseEnter={!isTouch ? () => { cancelClose(); setOpenId(node.category.id); } : undefined}
+                onMouseEnter={!isTouch ? () => { cancelClose(); setOpenId(node.id); } : undefined}
                 onMouseLeave={!isTouch ? scheduleClose : undefined}
               >
                 <button
                   onClick={() => {
                     if (isTouch && hasChildren) {
                       cancelClose();
-                      setOpenId(isOpen ? null : node.category.id);
+                      setOpenId(isOpen ? null : node.id);
                     } else {
-                      router.push(`/?cat=${node.category.slug}`);
+                      router.push(`/?cat=${node.slug}`);
                     }
                   }}
                   className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap transition-colors flex items-center gap-1 ${
@@ -168,9 +168,9 @@ export default function CategoryNav() {
                       ? 'text-blue-600 bg-blue-50 font-medium'
                       : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                   }`}
-                >
-                  {node.category.nombre}
-                  {hasChildren && (
+                  >
+                    {node.nombre}
+                    {hasChildren && (
                     <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   )}
                 </button>

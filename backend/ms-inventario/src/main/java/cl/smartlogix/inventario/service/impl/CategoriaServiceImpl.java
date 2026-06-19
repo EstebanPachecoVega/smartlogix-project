@@ -1,8 +1,10 @@
 package cl.smartlogix.inventario.service.impl;
 
 import cl.smartlogix.inventario.dto.request.CategoriaRequestDTO;
+import cl.smartlogix.inventario.dto.request.ReordenarCategoriaDTO;
 import cl.smartlogix.inventario.dto.response.CategoriaResponseDTO;
 import cl.smartlogix.inventario.entity.Categoria;
+import cl.smartlogix.inventario.entity.Producto;
 import cl.smartlogix.inventario.exception.DomainException;
 import cl.smartlogix.inventario.exception.DuplicateResourceException;
 import cl.smartlogix.inventario.exception.ResourceNotFoundException;
@@ -89,10 +91,20 @@ public class CategoriaServiceImpl implements CategoriaService {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         List<Long> idsRamaCompleta = obtenerIdsRamaCompleta(categoria);
-        boolean existenProductos = productoRepository.existsByCategoriaIdIn(idsRamaCompleta);
-        if (existenProductos) {
+        List<Producto> productosAsociados = productoRepository.findByCategoriaIdIn(idsRamaCompleta);
+        if (!productosAsociados.isEmpty()) {
+            int total = productosAsociados.size();
+            String nombres = productosAsociados.stream()
+                    .limit(5)
+                    .map(Producto::getNombre)
+                    .collect(Collectors.joining(", "));
+            String resto = total > 5 ? " y " + (total - 5) + " más" : "";
             throw new DomainException(
-                    "No se puede eliminar la categoría porque contiene productos (directamente o en sus subcategorías).");
+                    "No se puede eliminar la categoría \"" + categoria.getNombre()
+                            + "\" porque " + total + " producto" + (total == 1 ? " está" : "s están")
+                            + " asociado" + (total == 1 ? "" : "s") + ": "
+                            + nombres + resto
+                            + ". Primero reasigna o elimina esos productos.");
         }
         categoriaRepository.delete(categoria);
         log.info("Categoría ID: {} eliminada exitosamente junto con subcategorías vacías", id);
@@ -134,6 +146,19 @@ public class CategoriaServiceImpl implements CategoriaService {
         return categoriaRepository.findByPadreIsNullOrderByOrdenVisualAsc().stream()
                 .map(categoriaMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    // Reordenamiento batch de categorías (actualiza ordenVisual de cada una)
+    @Override
+    @Transactional
+    public void reordenar(List<ReordenarCategoriaDTO> ordenes) {
+        for (ReordenarCategoriaDTO dto : ordenes) {
+            Categoria categoria = categoriaRepository.findById(dto.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + dto.getId()));
+            categoria.setOrdenVisual(dto.getOrdenVisual());
+            categoriaRepository.save(categoria);
+        }
+        log.info("Reordenadas {} categorías", ordenes.size());
     }
 
     // Validación de ciclos jerárquicos para evitar inconsistencias en la estructura

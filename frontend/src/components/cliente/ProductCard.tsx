@@ -25,7 +25,7 @@ export default function ProductCard({ producto }: { producto: Producto }) {
   return (
     <Card className="overflow-hidden flex flex-col h-full group">
       <Link href={`/productos/${slug}`} className="block" draggable={false}>
-        <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+        <div className="aspect-[4/3] bg-transparent relative overflow-hidden">
           {producto.imagenPrincipal && !imgError ? (
             <img
               src={producto.imagenPrincipal}
