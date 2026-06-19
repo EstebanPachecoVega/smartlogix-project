@@ -198,16 +198,16 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
                                             <TableCell>{sub.activo ? 'Sí' : 'No'}</TableCell>
                                             <TableCell>
                                                 <div className="flex gap-2">
-                                                    <Button variant="outline" size="sm" asChild>
-                                                        <Link href={`/logistica/categorias/${sub.id}`}>
-                                                            <Eye className="h-4 w-4" />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button variant="outline" size="sm" asChild>
-                                                        <Link href={`/logistica/categorias/${sub.id}/editar`}>
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Link>
-                                                    </Button>
+                                                <Button variant="outline" size="sm" asChild>
+                                                    <Link href={`/logistica/categorias/${sub.id}`} aria-label="Ver subcategoría">
+                                                        <Eye className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                                <Button variant="outline" size="sm" asChild>
+                                                    <Link href={`/logistica/categorias/${sub.id}/editar`} aria-label="Editar subcategoría">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

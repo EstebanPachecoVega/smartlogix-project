@@ -107,12 +107,12 @@ export default function ProductosPage() {
                                         <TableCell>
                                             <div className="flex gap-2">
                                                 <Button variant="outline" size="sm" asChild>
-                                                    <Link href={`/logistica/productos/${prod.id}`}>
+                                                    <Link href={`/logistica/productos/${prod.id}`} aria-label="Ver detalle">
                                                         <Eye className="h-4 w-4" />
                                                     </Link>
                                                 </Button>
                                                 <Button variant="outline" size="sm" asChild>
-                                                    <Link href={`/logistica/productos/${prod.id}/editar`}>
+                                                    <Link href={`/logistica/productos/${prod.id}/editar`} aria-label="Editar producto">
                                                         <Pencil className="h-4 w-4" />
                                                     </Link>
                                                 </Button>

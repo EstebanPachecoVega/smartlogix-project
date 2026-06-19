@@ -4,6 +4,7 @@ import { Producto } from '@/types';
 import { useCarritoStore } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -23,16 +24,18 @@ export default function ProductCard({ producto }: { producto: Producto }) {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <Card className="overflow-hidden flex flex-col h-full group">
+    <Card className="overflow-hidden flex flex-col h-full group py-0 gap-0">
       <Link href={`/productos/${slug}`} className="block" draggable={false}>
         <div className="aspect-[4/3] bg-transparent relative overflow-hidden">
           {producto.imagenPrincipal && !imgError ? (
-            <img
+            <Image
               src={producto.imagenPrincipal}
               alt={producto.nombre}
+              fill
+              sizes="(max-width: 768px) 50vw, 25vw"
               draggable={false}
               onError={() => setImgError(true)}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="object-contain group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">

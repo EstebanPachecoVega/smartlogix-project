@@ -107,7 +107,7 @@ export default function ProductCarousel({ productos, title }: ProductCarouselPro
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
-          className="flex gap-4 overflow-x-auto scrollbar-hide select-none [&_img]:pointer-events-none pb-2 cursor-grab active:cursor-grabbing"
+          className="flex gap-4 overflow-x-auto scrollbar-hide select-none [&_img]:pointer-events-none py-2 cursor-grab active:cursor-grabbing"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {productos.map((prod) => (

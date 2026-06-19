@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
 
 interface ImageGalleryProps {
@@ -44,26 +45,30 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
               key={url}
               type="button"
               onClick={() => setSelectedIndex(i)}
-              className={`shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-md overflow-hidden border-2 transition-colors ${
+              className={`shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-md overflow-hidden border-2 transition-colors relative ${
                 i === selectedIndex ? 'border-blue-500' : 'border-transparent hover:border-gray-300'
               }`}
             >
-              <img
+              <Image
                 src={url}
                 alt={`${nombre} - miniatura ${i + 1}`}
+                fill
+                sizes="64px"
                 onError={() => handleImgError(url)}
-                className="w-full h-full object-cover"
+                className="object-cover"
               />
             </button>
           ))}
         </div>
       )}
-      <div className="flex-1 aspect-square bg-transparent rounded-lg overflow-hidden">
-        <img
+      <div className="flex-1 aspect-square bg-transparent rounded-lg overflow-hidden relative">
+        <Image
           src={currentImage}
           alt={`${nombre} - imagen ${selectedIndex + 1}`}
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
           onError={() => handleImgError(currentImage)}
-          className="w-full h-full object-cover"
+          className="object-contain"
         />
       </div>
     </div>

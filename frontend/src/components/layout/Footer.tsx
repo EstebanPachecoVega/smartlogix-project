@@ -108,7 +108,7 @@ export default function Footer() {
             </div>
 
             <div className="border-t border-gray-800">
-                <div className="container mx-auto px-4 py-4 text-center text-sm text-gray-500">
+                <div className="container mx-auto px-4 py-4 text-center text-sm text-gray-400">
                     &copy; {new Date().getFullYear()} SmartLogix. Todos los derechos reservados.
                 </div>
             </div>

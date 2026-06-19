@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { X, Upload, Loader2 } from 'lucide-react';
 
 interface ImageUploaderProps {
@@ -133,10 +134,12 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
         >
           {images.length > 0 ? (
             <>
-              <img
+              <Image
                 src={images[0]}
                 alt="Imagen principal"
-                className="w-full h-full object-cover pointer-events-none"
+                fill
+                sizes="400px"
+                className="object-cover pointer-events-none"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="text-center text-white">
@@ -183,10 +186,12 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
                     ${dragIndex === index ? 'opacity-50 scale-95' : ''}
                     ${dropIndex === index && dragIndex !== index ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'}`}
                 >
-                  <img
+                  <Image
                     src={url}
                     alt={`Imagen ${index + 1}`}
-                    className="w-full h-full object-cover pointer-events-none"
+                    fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover pointer-events-none"
                   />
                   <button
                     type="button"

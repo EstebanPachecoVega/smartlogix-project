@@ -160,12 +160,12 @@ export default function CategoriasPage() {
                 <TableCell>
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/logistica/categorias/${node.id}`}>
+                            <Link href={`/logistica/categorias/${node.id}`} aria-label="Ver categoría">
                                 <Eye className="h-4 w-4" />
                             </Link>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/logistica/categorias/${node.id}/editar`}>
+                            <Link href={`/logistica/categorias/${node.id}/editar`} aria-label="Editar categoría">
                                 <Pencil className="h-4 w-4" />
                             </Link>
                         </Button>
@@ -230,12 +230,12 @@ export default function CategoriasPage() {
                 <TableCell>
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/logistica/categorias/${node.id}`}>
+                            <Link href={`/logistica/categorias/${node.id}`} aria-label="Ver categoría">
                                 <Eye className="h-4 w-4" />
                             </Link>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/logistica/categorias/${node.id}/editar`}>
+                            <Link href={`/logistica/categorias/${node.id}/editar`} aria-label="Editar categoría">
                                 <Pencil className="h-4 w-4" />
                             </Link>
                         </Button>
