@@ -105,7 +105,7 @@ export default function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoR
                 nameKey="estado"
                 innerRadius={55}
                 strokeWidth={2}
-                animationDuration={500}
+                animationDuration={0}
               />
               <ChartLegend
                 content={<ChartLegendContent nameKey="estado" />}

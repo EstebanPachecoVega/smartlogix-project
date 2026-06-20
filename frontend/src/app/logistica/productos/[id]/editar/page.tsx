@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { CategoryCombobox } from '@/components/ui/Categorycombobox';
 import ImageUploader from '@/components/ui/ImageUploader';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -193,25 +193,18 @@ export default function EditarProductoPage({ params }: EditPageProps) {
                             />
                         </div>
 
-                        <div>
-                            <Label htmlFor="categoria">Categoría</Label>
-                            <Select
-                                value={form.categoriaId?.toString() || ''}
-                                onValueChange={(value) => setForm({ ...form, categoriaId: value === '__none__' ? undefined : parseInt(value) })}
-                            >
-                                <SelectTrigger id="categoria">
-                                    <SelectValue placeholder="Sin categoría" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="__none__">Sin categoría</SelectItem>
-                                    {categorias.map((cat) => (
-                                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                                            {cat.nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-xs text-gray-500 mt-1">Selecciona una categoría o déjalo vacío.</p>
+                        <div className="space-y-1.5">
+                            <Label>Categoría</Label>
+                            <CategoryCombobox
+                                categorias={categorias}
+                                value={form.categoriaId}
+                                onChange={(id) => setForm({ ...form, categoriaId: id })}
+                            />
+                            {categorias.length > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                    Escribe para filtrar entre las {categorias.length} categorías.
+                                </p>
+                            )}
                         </div>
 
                         <div>

@@ -117,14 +117,42 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.app-container {
+  overflow-y: auto;
+  max-height: 100dvh;
+  scrollbar-gutter: stable;
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+}
+
+body[data-scroll-locked] .app-container,
+body[style*="pointer-events"] .app-container {
+  pointer-events: auto;
+}
+
+.recharts-responsive-container,
+.recharts-wrapper,
+.recharts-surface {
+  touch-action: pan-y pinch-zoom !important;
+}
+
+.recharts-tooltip-wrapper {
+  pointer-events: none !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    @apply font-sans;
+    overflow: clip;
+    height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans overflow-x-hidden;
+    height: 100%;
   }
 }

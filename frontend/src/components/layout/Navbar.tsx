@@ -48,7 +48,7 @@ export default function Navbar() {
         : session?.user?.email?.charAt(0).toUpperCase() || 'U';
 
     const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('app-container')?.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const UserMenu = () => (
@@ -132,7 +132,7 @@ export default function Navbar() {
     );
 
     return (
-        <header className="sticky top-0 z-50 bg-background border-b">
+        <header className="fixed top-0 right-0 left-0 z-50 bg-background border-b">
             {isLogistica ? (
                 /* ── Layout logistica: logo alineado con sidebar ── */
                 <div className="h-16 flex items-center">

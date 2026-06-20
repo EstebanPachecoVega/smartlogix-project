@@ -115,7 +115,7 @@ export default function VentasPorCategoriaChart({ pedidos, productos }: { pedido
                 fill="var(--color-cantidad)"
                 radius={[4, 4, 0, 0]}
                 barSize={20}
-                animationDuration={500}
+                animationDuration={0}
               />
             </BarChart>
           </ChartContainer>

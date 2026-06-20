@@ -42,10 +42,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <JsonLdOrganization />
           <JsonLdWebSite />
-          <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <div id="app-container" className="app-container flex flex-col min-h-screen pt-16">
             <Toaster position="top-right"/>
-            <Navbar />
-            <main className="container mx-auto px-4 py-8 flex-1">{children}</main>
+            <main className="container mx-auto px-4 pb-8 flex-1">{children}</main>
             <Footer />
           </div>
         </Providers>

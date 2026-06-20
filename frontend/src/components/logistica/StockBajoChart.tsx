@@ -43,7 +43,7 @@ export default function StockBajoChart({ productos }: { productos: Producto[] })
           radius={4}
           barSize={16}
           label={false}
-          animationDuration={500}
+          animationDuration={0}
         />
       </BarChart>
     </ChartContainer>

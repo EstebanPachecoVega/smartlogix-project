@@ -154,7 +154,7 @@ export default function VentasPlataformaChart({ pedidos }: { pedidos: PedidoResp
                 strokeWidth={2}
                 dot={{ fill: COLOR_MAP[d.plataforma] || '#6b7280', r: 4 }}
                 activeDot={{ r: 6 }}
-                animationDuration={500}
+                animationDuration={0}
               />
             ))}
           </AreaChart>

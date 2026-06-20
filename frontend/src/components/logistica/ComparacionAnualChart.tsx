@@ -139,7 +139,7 @@ export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResp
                 strokeWidth={2}
                 dot={{ fill: '#3b82f6', r: 3 }}
                 activeDot={{ r: 5 }}
-                animationDuration={500}
+                animationDuration={0}
               />
               <Area
                 type="monotone"
@@ -150,7 +150,7 @@ export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResp
                 strokeDasharray="4 3"
                 dot={{ fill: '#94a3b8', r: 3 }}
                 activeDot={{ r: 5 }}
-                animationDuration={500}
+                animationDuration={0}
               />
               <ChartLegend content={<ChartLegendContent />} />
             </AreaChart>

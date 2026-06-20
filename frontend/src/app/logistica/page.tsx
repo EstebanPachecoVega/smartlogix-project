@@ -106,48 +106,16 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* Distribución de envíos + Distribución de pedidos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Envíos por estado</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <DistribucionEnviosChart envios={envios} />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Pedidos por estado</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <DistribucionPedidosChart pedidos={pedidos} />
-                    </CardContent>
-                </Card>
+                <DistribucionEnviosChart envios={envios} />
+                <DistribucionPedidosChart pedidos={pedidos} />
             </div>
 
             <VentasLineChart pedidos={pedidos} />
 
-            {/* Ventas por plataforma */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Ventas por plataforma</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <VentasPlataformaChart pedidos={pedidos} />
-              </CardContent>
-            </Card>
+            <VentasPlataformaChart pedidos={pedidos} />
 
-            {/* Comparación anual */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Comparación anual</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ComparacionAnualChart pedidos={pedidos} />
-              </CardContent>
-            </Card>
+            <ComparacionAnualChart pedidos={pedidos} />
 
             <VentasPorCategoriaChart pedidos={pedidos} productos={productos} />
 

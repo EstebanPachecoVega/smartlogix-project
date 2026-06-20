@@ -173,7 +173,7 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
                   stroke="var(--color-mobile)"
                   strokeWidth={2}
                   dot={false}
-                  animationDuration={500}
+                  animationDuration={0}
                 />
               )}
               {(activeChart === 'all' || activeChart === 'desktop') && (
@@ -183,7 +183,7 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
                   stroke="var(--color-desktop)"
                   strokeWidth={2}
                   dot={false}
-                  animationDuration={500}
+                  animationDuration={0}
                 />
               )}
             </LineChart>
