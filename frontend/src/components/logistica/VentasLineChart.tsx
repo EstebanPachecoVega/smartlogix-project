@@ -90,7 +90,7 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Tendencia de ventas</CardTitle>
-            <Select value={dias} onValueChange={setDias}>
+            <Select value={dias} onValueChange={(v: string | null) => setDias(v ?? '')}>
               <SelectTrigger className="w-[130px] h-8 text-xs" aria-label="Seleccionar rango">
                 <SelectValue />
               </SelectTrigger>

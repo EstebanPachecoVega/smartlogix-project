@@ -52,20 +52,22 @@ export default function Navbar() {
     const UserMenu = () => (
         <>
             {session ? (
-                <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="flex items-center gap-1.5 px-2">
-                            <Avatar className="h-8 w-8">
-                                <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
-                                    {userInitials}
-                                </AvatarFallback>
-                            </Avatar>
-                            <span className="hidden md:inline text-sm font-medium">
-                                {session.user?.name?.split(' ')[0] ||
-                                    session.user?.email?.split('@')[0]}
-                            </span>
-                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                        </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        render={
+                            <Button variant="ghost" className="flex items-center gap-1.5 px-2" />
+                        }
+                    >
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
+                                {userInitials}
+                            </AvatarFallback>
+                        </Avatar>
+                        <span className="hidden md:inline text-sm font-medium">
+                            {session.user?.name?.split(' ')[0] ||
+                                session.user?.email?.split('@')[0]}
+                        </span>
+                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end" className="w-56">
@@ -79,27 +81,27 @@ export default function Navbar() {
 
                         {!isGestor && (
                             <>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/dashboard/perfil" className="cursor-pointer">
-                                        <User className="mr-2 h-4 w-4" />
-                                        Mi perfil
-                                    </Link>
+                                <DropdownMenuItem
+                                    render={<Link href="/dashboard/perfil" className="cursor-pointer flex items-center gap-2" />}
+                                >
+                                    <User className="size-4 shrink-0" />
+                                    Mi perfil
                                 </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/dashboard/pedidos" className="cursor-pointer">
-                                        <Package className="mr-2 h-4 w-4" />
-                                        Mis pedidos
-                                    </Link>
+                                <DropdownMenuItem
+                                    render={<Link href="/dashboard/pedidos" className="cursor-pointer flex items-center gap-2" />}
+                                >
+                                    <Package className="size-4 shrink-0" />
+                                    Mis pedidos
                                 </DropdownMenuItem>
                             </>
                         )}
 
                         {isGestor && (
-                            <DropdownMenuItem asChild>
-                                <Link href="/logistica" className="cursor-pointer">
-                                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                                    Panel Logística
-                                </Link>
+                            <DropdownMenuItem
+                                render={<Link href="/logistica" className="cursor-pointer flex items-center gap-2" />}
+                            >
+                                <LayoutDashboard className="size-4 shrink-0" />
+                                Panel Logística
                             </DropdownMenuItem>
                         )}
 
@@ -109,7 +111,7 @@ export default function Navbar() {
                             onClick={handleLogout}
                             className="cursor-pointer text-destructive focus:text-destructive"
                         >
-                            <LogOut className="mr-2 h-4 w-4" />
+                            <LogOut className="size-4 shrink-0" />
                             Cerrar sesión
                         </DropdownMenuItem>
                     </DropdownMenuContent>

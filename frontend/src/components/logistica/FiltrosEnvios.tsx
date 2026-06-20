@@ -25,7 +25,7 @@ export default function FiltrosEnvios() {
 
             <Select
                 value={filtroEstado ?? TODOS}
-                onValueChange={(value) => setFiltroEstado(value === TODOS ? null : value)}
+                onValueChange={(value: string | null) => setFiltroEstado(value === TODOS ? null : value)}
             >
                 <SelectTrigger className="w-48">
                     <SelectValue placeholder="Todos los estados" />

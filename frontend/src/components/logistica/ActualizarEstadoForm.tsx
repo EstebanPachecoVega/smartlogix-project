@@ -49,7 +49,7 @@ export default function ActualizarEstadoForm({ envioId, estadoActual, onSuccess 
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-3">
-      <Select value={nuevoEstado} onValueChange={setNuevoEstado} disabled={loading}>
+      <Select value={nuevoEstado} onValueChange={(v: string | null) => setNuevoEstado(v ?? '')} disabled={loading}>
         <SelectTrigger className="w-52">
           <SelectValue />
         </SelectTrigger>

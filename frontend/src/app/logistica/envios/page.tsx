@@ -59,7 +59,7 @@ export default function EnviosLogisticaPage() {
                 <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Filtrar por estado:
                 </label>
-                <Select value={filtroEstado} onValueChange={setFiltroEstado}>
+                <Select value={filtroEstado} onValueChange={(v: string | null) => setFiltroEstado(v ?? TODOS)}>
                     <SelectTrigger className="w-48">
                         <SelectValue placeholder="Todos los estados" />
                     </SelectTrigger>

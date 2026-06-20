@@ -21,12 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const RANGES = [
-  { value: '7', label: '7 días' },
-  { value: '14', label: '14 días' },
-  { value: '30', label: '30 días' },
-];
+import { RANGES } from '@/lib/filtro';
 
 export default function VentasUltimosDiasChart({ pedidos }: { pedidos: PedidoResponse[] }) {
   const [dias, setDias] = useState('7');
@@ -68,7 +63,7 @@ export default function VentasUltimosDiasChart({ pedidos }: { pedidos: PedidoRes
     <Card>
       <CardHeader className="flex flex-row items-center gap-2 space-y-0 py-4">
         <CardTitle className="text-base flex-1">Ventas por día</CardTitle>
-        <Select value={dias} onValueChange={setDias}>
+        <Select value={dias} onValueChange={(v: string | null) => setDias(v ?? '')}>
           <SelectTrigger className="w-[110px] h-8 text-xs" aria-label="Seleccionar rango">
             <SelectValue />
           </SelectTrigger>

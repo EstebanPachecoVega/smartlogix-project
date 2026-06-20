@@ -29,16 +29,7 @@ import {
   estadoEnvioTexto,
   isEstadoEnvio,
 } from '@/lib/estados';
-import { filterByDate } from '@/lib/filtro';
-
-const RANGES_ENVIOS = [
-  { value: '7', label: '7 días' },
-  { value: '30', label: '30 días' },
-  { value: '90', label: '3 meses' },
-  { value: '180', label: '6 meses' },
-  { value: '365', label: '12 meses' },
-  { value: 'all', label: 'Todos los tiempos' },
-];
+import { filterByDate, RANGES } from '@/lib/filtro';
 
 export default function DistribucionEnviosChart({ envios }: { envios: Envio[] }) {
   const [dias, setDias] = React.useState('all');
@@ -73,12 +64,12 @@ export default function DistribucionEnviosChart({ envios }: { envios: Envio[] })
     <Card>
       <CardHeader className="flex flex-row items-center justify-between py-4">
         <CardTitle className="text-base">Envíos por estado</CardTitle>
-        <Select value={dias} onValueChange={setDias}>
+        <Select value={dias} onValueChange={(v: string | null) => setDias(v ?? '')}>
           <SelectTrigger className="w-[150px] h-8 text-xs" aria-label="Seleccionar rango">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {RANGES_ENVIOS.map((r) => (
+            {RANGES.map((r) => (
               <SelectItem key={r.value} value={r.value} className="text-xs">
                 {r.label}
               </SelectItem>

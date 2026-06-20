@@ -76,7 +76,7 @@ export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResp
     <Card>
       <CardHeader className="flex flex-row items-center justify-between py-4">
         <CardTitle className="text-base">Comparación anual</CardTitle>
-        <Select value={dias} onValueChange={setDias}>
+        <Select value={dias} onValueChange={(v: string | null) => setDias(v ?? '')}>
           <SelectTrigger className="w-[130px] h-8 text-xs" aria-label="Seleccionar rango">
             <SelectValue />
           </SelectTrigger>

@@ -99,7 +99,7 @@ export default function DetalleEnvioPage() {
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground mb-1.5">Cambiar a:</p>
-                            <Select value={nuevoEstado} onValueChange={setNuevoEstado}>
+                            <Select value={nuevoEstado} onValueChange={(v: string | null) => setNuevoEstado(v ?? '')}>
                                 <SelectTrigger className="w-52">
                                     <SelectValue>
                                         {isEstadoEnvio(nuevoEstado)
