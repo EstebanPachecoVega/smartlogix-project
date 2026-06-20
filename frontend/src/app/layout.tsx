@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import type { Metadata } from 'next';
 import Providers from './providers';
 import Navbar from '@/components/layout/Navbar';
+import PublicCategoryNav from '@/components/layout/PublicCategoryNav';
 import Footer from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/sonner';
 import JsonLdOrganization from '@/components/seo/JsonLdOrganization';
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <div id="app-container" className="app-container flex flex-col min-h-screen pt-16">
             <Toaster position="top-right"/>
+            <PublicCategoryNav />
             <main className="container mx-auto px-4 pb-8 flex-1">{children}</main>
             <Footer />
           </div>

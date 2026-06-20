@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Suspense } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import {
     ShoppingCart, LogOut, User, ChevronDown,
@@ -20,7 +19,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import SearchBar from './SearchBar';
-import CategoryNav from './CategoryNav';
 
 export default function Navbar() {
     const router = useRouter();
@@ -48,7 +46,7 @@ export default function Navbar() {
         : session?.user?.email?.charAt(0).toUpperCase() || 'U';
 
     const scrollToTop = () => {
-        document.getElementById('app-container')?.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const UserMenu = () => (
@@ -187,11 +185,6 @@ export default function Navbar() {
                 </div>
             )}
 
-            {!isLogistica && (
-                <Suspense fallback={null}>
-                    <CategoryNav />
-                </Suspense>
-            )}
         </header>
     );
 }

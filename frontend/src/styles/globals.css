@@ -118,11 +118,13 @@
 }
 
 .app-container {
-  overflow-y: auto;
-  max-height: 100dvh;
   scrollbar-gutter: stable;
   overflow-anchor: none;
-  overscroll-behavior: contain;
+}
+
+body[data-scroll-locked],
+html:has(body[data-scroll-locked]) {
+  overflow-y: auto !important;
 }
 
 body[data-scroll-locked] .app-container,
@@ -147,12 +149,10 @@ body[style*="pointer-events"] .app-container {
 
   html {
     @apply font-sans;
-    overflow: clip;
-    height: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
-    height: 100%;
+    overflow-x: hidden;
   }
 }

@@ -47,7 +47,7 @@ export default function HeroSlider() {
 
   return (
     <section
-      className="relative overflow-hidden -mt-8"
+      className="relative overflow-hidden"
       style={{ width: '100dvw', marginLeft: 'calc(-50dvw + 50%)' }}
     >
       <div
