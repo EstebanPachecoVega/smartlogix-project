@@ -3,7 +3,7 @@ import SidebarLogistica from '@/components/logistica/Sidebar';
 export default function LogisticaLayout({ children }: { children: React.ReactNode }) {
   return (
     // overflow-x-hidden en el wrapper garantiza que nada se desborde horizontalmente
-    <div className="flex min-h-[calc(100vh-4rem)] overflow-x-hidden">
+    <div className="flex min-h-0 flex-1 overflow-x-hidden">
 
       {/*
         Spacer invisible solo en desktop.
@@ -21,7 +21,7 @@ export default function LogisticaLayout({ children }: { children: React.ReactNod
         shrink y desbordarse. w-0 + flex-1 garantiza que el main ocupe
         exactamente el espacio que queda después del spacer.
       */}
-      <main className="flex-1 min-w-0 w-0 p-4 sm:p-6">
+      <main className="flex-1 min-w-0 p-4 sm:p-6">
         {children}
       </main>
 

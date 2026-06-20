@@ -1,19 +1,20 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { PedidoResponse } from '@/types';
-import { Line, LineChart, CartesianGrid, XAxis } from 'recharts';
+import * as React from 'react';
+import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig,
 } from '@/components/ui/chart';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -21,99 +22,170 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PedidoResponse } from '@/types';
+import { filterByDate, RANGES } from '@/lib/filtro';
 
-const RANGES = [
-  { value: '7', label: '7 días' },
-  { value: '30', label: '30 días' },
-  { value: '90', label: '90 días' },
-];
+const chartConfig = {
+  mobile: { label: 'Mobile', color: '#3b82f6' },
+  desktop: { label: 'Desktop', color: '#22c55e' },
+} satisfies ChartConfig;
+
+type ActiveKey = 'all' | 'mobile' | 'desktop';
 
 export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[] }) {
-  const [dias, setDias] = useState('30');
+  const [dias, setDias] = React.useState('30');
+  const [activeChart, setActiveChart] = React.useState<ActiveKey>('all');
 
-  const data = useMemo(() => {
-    const map = new Map<string, number>();
+  const total = React.useMemo(() => {
+    const filtrados = filterByDate(pedidos, 'fechaPedido', dias);
+    let mobile = 0;
+    let desktop = 0;
+    for (const p of filtrados) {
+      if (p.plataforma === 'MOBILE') mobile += p.totalCompra;
+      else if (p.plataforma === 'DESKTOP') desktop += p.totalCompra;
+    }
+    return {
+      all: Math.round(mobile + desktop),
+      mobile: Math.round(mobile),
+      desktop: Math.round(desktop),
+    };
+  }, [pedidos, dias]);
+
+  const data = React.useMemo(() => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const numDias = parseInt(dias, 10);
 
+    const map = new Map<string, { mobile: number; desktop: number }>();
     for (let i = numDias; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const key = d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
-      map.set(key, 0);
+      const key = d.toISOString().slice(0, 10);
+      map.set(key, { mobile: 0, desktop: 0 });
     }
 
     for (const p of pedidos) {
       if (!p.fechaPedido) continue;
-      const d = new Date(p.fechaPedido);
-      const diffDays = Math.round((today.getTime() - d.getTime()) / 86400000);
-      if (diffDays < 0 || diffDays > numDias) continue;
-      const key = d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
-      map.set(key, (map.get(key) || 0) + p.totalCompra);
+      const d = new Date(p.fechaPedido.split('T')[0] + 'T12:00:00');
+      d.setHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10);
+      const entry = map.get(key);
+      if (!entry) continue;
+      if (p.plataforma === 'MOBILE') entry.mobile += p.totalCompra;
+      else if (p.plataforma === 'DESKTOP') entry.desktop += p.totalCompra;
     }
 
-    return Array.from(map.entries()).map(([dia, venta]) => ({
-      dia,
-      venta: Math.round(venta),
+    return Array.from(map.entries()).map(([date, { mobile, desktop }]) => ({
+      date,
+      mobile: Math.round(mobile),
+      desktop: Math.round(desktop),
     }));
   }, [pedidos, dias]);
 
-  const chartConfig = {
-    venta: { label: 'Ventas', color: '#3b82f6' },
-  };
+  const empty = data.every((d) => d.mobile === 0 && d.desktop === 0);
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-2 space-y-0 py-4">
-        <CardTitle className="text-base flex-1">Tendencia de ventas</CardTitle>
-        <Select value={dias} onValueChange={setDias}>
-          <SelectTrigger className="w-[110px] h-8 text-xs" aria-label="Seleccionar rango">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {RANGES.map((r) => (
-              <SelectItem key={r.value} value={r.value} className="text-xs">
-                {r.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <CardHeader className="flex flex-col items-stretch border-b p-0! sm:flex-row">
+        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Tendencia de ventas</CardTitle>
+            <Select value={dias} onValueChange={setDias}>
+              <SelectTrigger className="w-[130px] h-8 text-xs" aria-label="Seleccionar rango">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RANGES.map((r) => (
+                  <SelectItem key={r.value} value={r.value} className="text-xs">
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <CardDescription>Comparativa Mobile vs Desktop</CardDescription>
+        </div>
+        <div className="flex">
+          {(['all', 'mobile', 'desktop'] as const).map((key) => (
+            <button
+              key={key}
+              data-active={activeChart === key}
+              className="flex flex-1 flex-col justify-center gap-1 border-t px-4 py-3 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-6 sm:py-4"
+              onClick={() => setActiveChart(key)}
+            >
+              <span className="text-xs text-muted-foreground">
+                {key === 'all' ? 'Ambas' : chartConfig[key].label}
+              </span>
+              <span className="text-base leading-none font-bold sm:text-xl tabular-nums">
+                ${total[key].toLocaleString('es-CL')}
+              </span>
+            </button>
+          ))}
+        </div>
       </CardHeader>
-      <CardContent>
-        {data.every((d) => d.venta === 0) ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">No hay ventas en los últimos {dias} días.</p>
+      <CardContent className="px-2 sm:p-6">
+        {empty ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">No hay ventas en el período seleccionado.</p>
         ) : (
-          <ChartContainer config={chartConfig} className="min-h-[220px]">
-            <LineChart data={data}>
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
+            <LineChart
+              accessibilityLayer
+              data={data}
+              margin={{ left: 12, right: 12 }}
+            >
               <CartesianGrid vertical={false} />
               <XAxis
-                dataKey="dia"
+                dataKey="date"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tick={{ fontSize: 10 }}
-                interval="preserveStartEnd"
+                minTickGap={32}
+                tickFormatter={(value: string) => {
+                  const date = new Date(value + 'T12:00:00');
+                  return date.toLocaleDateString('es-CL', {
+                    month: 'short',
+                    day: 'numeric',
+                  });
+                }}
               />
               <ChartTooltip
-                cursor={false}
                 content={
                   <ChartTooltipContent
-                    formatter={(value) => (
-                      <span className="font-mono font-medium tabular-nums text-foreground">
-                        ${Number(value ?? 0).toLocaleString('es-CL')}
-                      </span>
-                    )}
+                    className="w-[150px]"
+                    nameKey="views"
+                    labelFormatter={(value: string) => {
+                      return new Date(value + 'T12:00:00').toLocaleDateString('es-CL', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      });
+                    }}
                   />
                 }
               />
-              <Line
-                type="monotone"
-                dataKey="venta"
-                stroke="var(--color-venta)"
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: '#3b82f6' }}
-              />
+              {(activeChart === 'all' || activeChart === 'mobile') && (
+                <Line
+                  dataKey="mobile"
+                  type="monotone"
+                  stroke="var(--color-mobile)"
+                  strokeWidth={2}
+                  dot={false}
+                  animationDuration={500}
+                />
+              )}
+              {(activeChart === 'all' || activeChart === 'desktop') && (
+                <Line
+                  dataKey="desktop"
+                  type="monotone"
+                  stroke="var(--color-desktop)"
+                  strokeWidth={2}
+                  dot={false}
+                  animationDuration={500}
+                />
+              )}
             </LineChart>
           </ChartContainer>
         )}

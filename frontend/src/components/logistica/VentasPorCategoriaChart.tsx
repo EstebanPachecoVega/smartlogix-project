@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import {
   ChartContainer,
@@ -13,55 +13,91 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { estadisticasApi } from '@/lib/api';
-import Spinner from '@/components/shared/Spinner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Producto, PedidoResponse } from '@/types';
+import { filterByDate, RANGES } from '@/lib/filtro';
 
 interface DataPoint {
   categoria: string;
   cantidad: number;
 }
 
-export default function VentasPorCategoriaChart() {
-  const [data, setData] = useState<DataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function VentasPorCategoriaChart({ pedidos, productos }: { pedidos: PedidoResponse[]; productos: Producto[] }) {
+  const [dias, setDias] = React.useState('30');
 
-  useEffect(() => {
-    estadisticasApi.ventasPorCategoria()
-      .then(setData)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const data = React.useMemo(() => {
+    const productoMap = new Map<number, string>();
+    for (const p of productos) {
+      productoMap.set(p.id, p.categoriaNombre || 'Sin categoría');
+    }
+
+    const filtrados = filterByDate(pedidos, 'fechaPedido', dias);
+    const grouped = new Map<string, number>();
+
+    for (const pedido of filtrados) {
+      if (!pedido.detalles) continue;
+      for (const detalle of pedido.detalles) {
+        const cat = productoMap.get(detalle.productoId) || 'Sin categoría';
+        grouped.set(cat, (grouped.get(cat) || 0) + detalle.cantidad);
+      }
+    }
+
+    return Array.from(grouped.entries())
+      .map(([categoria, cantidad]) => ({ categoria, cantidad }))
+      .sort((a, b) => b.cantidad - a.cantidad);
+  }, [pedidos, productos, dias]);
 
   const chartConfig = {
     cantidad: { label: 'Unidades vendidas', color: '#3b82f6' },
   };
 
-  if (loading) return <Spinner />;
-
   const empty = data.length === 0 || data.every((d) => d.cantidad === 0);
 
   return (
     <Card>
-      <CardHeader className="py-4">
+      <CardHeader className="flex flex-row items-center justify-between py-4">
         <CardTitle className="text-base">Unidades vendidas por categoría</CardTitle>
+        <Select value={dias} onValueChange={setDias}>
+          <SelectTrigger className="w-[130px] h-8 text-xs" aria-label="Seleccionar rango">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RANGES.map((r) => (
+              <SelectItem key={r.value} value={r.value} className="text-xs">
+                {r.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
         {empty ? (
           <p className="text-sm text-muted-foreground py-8 text-center">No hay ventas registradas.</p>
         ) : (
-          <ChartContainer config={chartConfig} className="min-h-[350px] w-full">
-            <BarChart data={data} layout="vertical" margin={{ left: 0, right: 16 }}>
-              <CartesianGrid horizontal={false} />
-              <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
-              <YAxis
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
+            <BarChart
+              data={data}
+              margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
+              accessibilityLayer
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
                 dataKey="categoria"
                 type="category"
                 tickLine={false}
                 axisLine={false}
-                tickMargin={8}
                 tick={{ fontSize: 12 }}
-                width={140}
               />
+              <YAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
               <ChartTooltip
                 cursor={false}
                 content={
@@ -77,8 +113,9 @@ export default function VentasPorCategoriaChart() {
               <Bar
                 dataKey="cantidad"
                 fill="var(--color-cantidad)"
-                radius={[0, 4, 4, 0]}
+                radius={[4, 4, 0, 0]}
                 barSize={20}
+                animationDuration={500}
               />
             </BarChart>
           </ChartContainer>

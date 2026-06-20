@@ -29,7 +29,7 @@ export default function StockBajoChart({ productos }: { productos: Producto[] })
   }
 
   return (
-    <ChartContainer config={chartConfig} className="min-h-[220px]">
+    <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
       <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0 }}>
         <CartesianGrid horizontal={false} />
         <XAxis type="number" hide />
@@ -43,6 +43,7 @@ export default function StockBajoChart({ productos }: { productos: Producto[] })
           radius={4}
           barSize={16}
           label={false}
+          animationDuration={500}
         />
       </BarChart>
     </ChartContainer>

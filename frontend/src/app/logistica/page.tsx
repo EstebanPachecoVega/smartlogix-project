@@ -16,7 +16,7 @@ import Spinner from '@/components/shared/Spinner';
 import DistribucionEnviosChart from '@/components/logistica/DistribucionEnviosChart';
 import DistribucionPedidosChart from '@/components/logistica/DistribucionPedidosChart';
 import StockBajoChart from '@/components/logistica/StockBajoChart';
-import VentasUltimosDiasChart from '@/components/logistica/VentasUltimosDiasChart';
+
 import VentasPlataformaChart from '@/components/logistica/VentasPlataformaChart';
 import ComparacionAnualChart from '@/components/logistica/ComparacionAnualChart';
 import VentasPorCategoriaChart from '@/components/logistica/VentasPorCategoriaChart';
@@ -127,47 +127,39 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
-            {/* Stock bajo + Ventas últimos días */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Productos con menor stock</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <StockBajoChart productos={productos} />
-                    </CardContent>
-                </Card>
+            <VentasLineChart pedidos={pedidos} />
 
-                <VentasUltimosDiasChart pedidos={pedidos} />
-            </div>
+            {/* Ventas por plataforma */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Ventas por plataforma</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <VentasPlataformaChart pedidos={pedidos} />
+              </CardContent>
+            </Card>
 
-            {/* Ventas por plataforma + Comparación anual */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Ventas por plataforma</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <VentasPlataformaChart />
-                </CardContent>
-              </Card>
+            {/* Comparación anual */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Comparación anual</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ComparacionAnualChart pedidos={pedidos} />
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Comparación anual</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ComparacionAnualChart />
-                </CardContent>
-              </Card>
-            </div>
+            <VentasPorCategoriaChart pedidos={pedidos} productos={productos} />
 
-            {/* Ventas por categoría + Línea de ventas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <VentasPorCategoriaChart />
-
-              <VentasLineChart pedidos={pedidos} />
-            </div>
+            {/* Productos con menor stock */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Productos con menor stock</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <StockBajoChart productos={productos} />
+              </CardContent>
+            </Card>
 
             {/* Últimos pedidos */}
             <Card>
