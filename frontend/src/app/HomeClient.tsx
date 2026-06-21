@@ -202,7 +202,7 @@ export default function HomeContent() {
               <div className="flex-1 min-w-0">
                 {filteredProductos.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500">No se encontraron productos</p>
+                    <p className="text-muted-foreground">No se encontraron productos</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

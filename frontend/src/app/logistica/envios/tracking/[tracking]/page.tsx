@@ -11,7 +11,7 @@ import Spinner from '@/components/shared/Spinner';
 import { EstadoPedidoBadge } from '@/components/ui/EstadoPedidoBadge';
 
 const estadoColor: Record<string, string> = {
-    PENDIENTE: 'bg-gray-500',
+    PENDIENTE: 'bg-muted-foreground',
     PREPARANDO: 'bg-blue-500',
     ENVIADO: 'bg-purple-500',
     EN_TRANSITO: 'bg-indigo-500',
@@ -52,7 +52,7 @@ export default function BuscarPorTrackingPage() {
                     <p><strong>Destinatario:</strong> {envio.destinatario}</p>
                     <p><strong>Estado:</strong><EstadoPedidoBadge estado={envio.estadoEnvio}/></p>
                     <Link href={`/logistica/envios/${envio.id}`}>
-                        <span className="text-blue-600 hover:underline cursor-pointer">Ver detalle completo</span>
+                        <span className="text-primary hover:underline cursor-pointer">Ver detalle completo</span>
                     </Link>
                 </CardContent>
             </Card>

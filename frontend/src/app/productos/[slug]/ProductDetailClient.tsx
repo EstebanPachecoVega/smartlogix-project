@@ -84,21 +84,21 @@ export default function ProductDetailClient() {
 
           <div className="space-y-4 sticky top-24 self-start">
             <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide">{producto.categoriaNombre || 'Producto'}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">{producto.categoriaNombre || 'Producto'}</p>
               <h1 className="text-xl font-bold mt-1">{producto.nombre}</h1>
               {producto.sku && (
-                <p className="text-xs text-gray-400 mt-1">SKU: {producto.sku}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">SKU: {producto.sku}</p>
               )}
             </div>
 
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-foreground">
               ${producto.precio.toLocaleString()}
             </p>
 
             {producto.descripcion && (
               <div>
                 <h3 className="font-semibold text-sm mb-1">Descripción</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{producto.descripcion}</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">{producto.descripcion}</p>
               </div>
             )}
 
@@ -112,7 +112,7 @@ export default function ProductDetailClient() {
             {producto.cantidad > 0 && (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600">Cantidad:</label>
+                  <label className="text-sm text-muted-foreground">Cantidad:</label>
                   <Input
                     type="number"
                     min={1}

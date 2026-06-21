@@ -39,7 +39,7 @@ export default function ProblemasPage() {
                 </CardHeader>
                 <CardContent>
                     {envios.length === 0 ? (
-                        <p className="text-gray-500">No hay envíos con problemas</p>
+                        <p className="text-muted-foreground">No hay envíos con problemas</p>
                     ) : (
                         <Table>
                             <TableHeader>
@@ -62,7 +62,7 @@ export default function ProblemasPage() {
                                         <TableCell>{new Date(envio.fechaCreacion).toLocaleDateString()}</TableCell>
                                         <TableCell>
                                             <Link href={`/logistica/envios/${envio.id}`}>
-                                                <span className="text-blue-600 hover:underline cursor-pointer">Ver detalle</span>
+                                                <span className="text-primary hover:underline cursor-pointer">Ver detalle</span>
                                             </Link>
                                         </TableCell>
                                     </TableRow>

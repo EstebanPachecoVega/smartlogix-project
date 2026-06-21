@@ -13,7 +13,7 @@ export default function QuienesSomosPage() {
       <Breadcrumbs items={[{ label: 'Inicio', href: '/' }, { label: 'Quiénes somos' }]} />
       <article>
         <div className="flex items-center gap-3 mb-6">
-          <Info className="h-6 w-6 text-blue-600" />
+          <Info className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Quiénes somos</h1>
         </div>
         <div className="prose prose-gray max-w-none space-y-4">

@@ -31,7 +31,7 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
   if (!currentImage) {
     return (
       <div className="aspect-square bg-transparent rounded-lg flex items-center justify-center">
-        <ImageIcon className="h-16 w-16 text-gray-300" />
+        <ImageIcon className="h-16 w-16 text-muted-foreground/40" />
       </div>
     );
   }
@@ -46,7 +46,7 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
               type="button"
               onClick={() => setSelectedIndex(i)}
               className={`shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-md overflow-hidden border-2 transition-colors relative ${
-                i === selectedIndex ? 'border-blue-500' : 'border-transparent hover:border-gray-300'
+                i === selectedIndex ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'
               }`}
             >
               <Image

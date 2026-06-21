@@ -44,7 +44,7 @@ export default function CarritoPage() {
                                 )}
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold truncate">{item.producto.nombre}</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <p className="text-sm text-muted-foreground">
                                         ${item.producto.precio.toLocaleString()} c/u
                                     </p>
                                 </div>

@@ -143,7 +143,7 @@ export default function EditarProductoPage({ params }: EditPageProps) {
                 </Button>
                 <h1 className="text-2xl font-bold">Editar Producto</h1>
                 {producto && (
-                    <span className="text-sm text-gray-500">{producto.sku}</span>
+                    <span className="text-sm text-muted-foreground">{producto.sku}</span>
                 )}
             </div>
 
@@ -189,7 +189,7 @@ export default function EditarProductoPage({ params }: EditPageProps) {
                                 id="slug"
                                 value={form.slug}
                                 disabled
-                                className="bg-gray-100"
+                                className="bg-muted"
                             />
                         </div>
 

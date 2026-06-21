@@ -107,28 +107,28 @@ export default function DetalleProductoPage({ params }: DetailPageProps) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div>
-                            <span className="text-sm text-gray-500">SKU</span>
+                            <span className="text-sm text-muted-foreground">SKU</span>
                             <p className="font-medium font-mono text-sm">{producto.sku}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Nombre</span>
+                            <span className="text-sm text-muted-foreground">Nombre</span>
                             <p className="font-medium">{producto.nombre}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Slug</span>
+                            <span className="text-sm text-muted-foreground">Slug</span>
                             <p className="font-medium font-mono text-sm">{producto.slug || '—'}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Descripción</span>
+                            <span className="text-sm text-muted-foreground">Descripción</span>
                             <p className="font-medium whitespace-pre-wrap">{producto.descripcion || '—'}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Categoría</span>
+                            <span className="text-sm text-muted-foreground">Categoría</span>
                             <p className="font-medium">
                                 {producto.categoriaNombre ? (
                                     <Link
                                         href={`/logistica/categorias/${producto.categoriaId}`}
-                                        className="text-blue-600 hover:underline"
+                                        className="text-primary hover:underline"
                                     >
                                         {producto.categoriaNombre}
                                     </Link>
@@ -146,11 +146,11 @@ export default function DetalleProductoPage({ params }: DetailPageProps) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div>
-                            <span className="text-sm text-gray-500">Precio</span>
+                            <span className="text-sm text-muted-foreground">Precio</span>
                             <p className="font-medium text-lg">${producto.precio.toLocaleString()}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Stock</span>
+                            <span className="text-sm text-muted-foreground">Stock</span>
                             <p className="font-medium">{producto.cantidad} unidades</p>
                         </div>
                     </CardContent>
@@ -164,20 +164,20 @@ export default function DetalleProductoPage({ params }: DetailPageProps) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500">Activo</span>
+                            <span className="text-sm text-muted-foreground">Activo</span>
                             <span className={`text-sm font-medium ${producto.activo ? 'text-green-600' : 'text-red-600'}`}>
                                 {producto.activo ? 'Sí' : 'No'}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500">Destacado</span>
-                            <span className={`text-sm font-medium ${producto.destacado ? 'text-green-600' : 'text-gray-400'}`}>
+                            <span className="text-sm text-muted-foreground">Destacado</span>
+                            <span className={`text-sm font-medium ${producto.destacado ? 'text-green-600' : 'text-muted-foreground/70'}`}>
                                 {producto.destacado ? 'Sí' : 'No'}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500">Novedad</span>
-                            <span className={`text-sm font-medium ${producto.novedad ? 'text-green-600' : 'text-gray-400'}`}>
+                            <span className="text-sm text-muted-foreground">Novedad</span>
+                            <span className={`text-sm font-medium ${producto.novedad ? 'text-green-600' : 'text-muted-foreground/70'}`}>
                                 {producto.novedad ? 'Sí' : 'No'}
                             </span>
                         </div>
@@ -200,7 +200,7 @@ export default function DetalleProductoPage({ params }: DetailPageProps) {
                                 />
                             </div>
                         ) : (
-                            <div className="w-full aspect-video bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-sm">
+                            <div className="w-full aspect-video bg-muted rounded-md flex items-center justify-center text-muted-foreground/70 text-sm">
                                 Sin imagen
                             </div>
                         )}
@@ -232,7 +232,7 @@ export default function DetalleProductoPage({ params }: DetailPageProps) {
             )}
 
             {(producto.fechaCreacion || producto.fechaActualizacion) && (
-                <div className="flex gap-6 text-sm text-gray-500">
+                <div className="flex gap-6 text-sm text-muted-foreground">
                     {producto.fechaCreacion && (
                         <span>Creado: {new Date(producto.fechaCreacion).toLocaleDateString('es-CL', {
                             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',

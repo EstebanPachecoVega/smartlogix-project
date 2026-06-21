@@ -129,7 +129,7 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
           onDragLeave={handleDragLeave}
           onClick={() => inputRef.current?.click()}
           className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer group
-            ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 hover:border-blue-400'}
+            ${dragOver ? 'border-primary bg-accent' : 'border-dashed border-border hover:border-primary/60'}
             ${images.length > 0 ? '' : 'flex items-center justify-center'}`}
         >
           {images.length > 0 ? (
@@ -157,14 +157,14 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
             </>
           ) : uploading ? (
             <div className="text-center">
-              <Loader2 className="h-10 w-10 mx-auto animate-spin text-gray-400" />
-              <p className="text-sm text-gray-500 mt-2">Subiendo...</p>
+              <Loader2 className="h-10 w-10 mx-auto animate-spin text-muted-foreground/70" />
+              <p className="text-sm text-muted-foreground mt-2">Subiendo...</p>
             </div>
           ) : (
             <div className="text-center px-4">
-              <Upload className="h-10 w-10 mx-auto text-gray-300" />
-              <p className="text-sm text-gray-500 mt-2">Arrastra la imagen aquí o haz clic</p>
-              <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP</p>
+              <Upload className="h-10 w-10 mx-auto text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground mt-2">Arrastra la imagen aquí o haz clic</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">JPG, PNG, WebP</p>
             </div>
           )}
           <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
@@ -184,7 +184,7 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
                   onDragEnd={handleReorderEnd}
                   className={`relative group aspect-square rounded-md overflow-hidden border bg-transparent transition-all cursor-grab active:cursor-grabbing
                     ${dragIndex === index ? 'opacity-50 scale-95' : ''}
-                    ${dropIndex === index && dragIndex !== index ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'}`}
+                    ${dropIndex === index && dragIndex !== index ? 'border-primary ring-2 ring-primary/30' : 'border-border'}`}
                 >
                   <Image
                     src={url}
@@ -211,20 +211,20 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
             onDragLeave={handleDragLeave}
             onClick={() => inputRef.current?.click()}
             className={`border-2 rounded-lg py-6 px-4 text-center cursor-pointer transition-all
-              ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 hover:border-blue-400'}`}
+              ${dragOver ? 'border-primary bg-accent' : 'border-dashed border-border hover:border-primary/60'}`}
           >
             {uploading ? (
               <>
-                <Loader2 className="h-8 w-8 mx-auto animate-spin text-gray-400" />
-                <p className="text-sm text-gray-500 mt-2">Subiendo imágenes...</p>
+                <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground/70" />
+                <p className="text-sm text-muted-foreground mt-2">Subiendo imágenes...</p>
               </>
             ) : (
               <>
-                <Upload className="h-8 w-8 mx-auto text-gray-300" />
-                <p className="text-sm text-gray-500 mt-2">
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground mt-2">
                   Arrastra las imágenes aquí o haz clic
                 </p>
-                <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP • Puedes seleccionar varias</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">JPG, PNG, WebP • Puedes seleccionar varias</p>
               </>
             )}
             <input
@@ -238,7 +238,7 @@ export default function ImageUploader({ mode, value, onChange, label }: ImageUpl
           </div>
 
           {images.length > 0 && (
-            <p className="text-xs text-gray-500">{images.length} imagen(es) seleccionada(s)</p>
+            <p className="text-xs text-muted-foreground">{images.length} imagen(es) seleccionada(s)</p>
           )}
         </>
       )}

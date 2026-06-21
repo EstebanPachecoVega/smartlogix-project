@@ -16,7 +16,7 @@ export default function CarritoResumen() {
         <div key={item.producto.id} className="flex justify-between items-center border-b pb-2">
           <div className="flex-1">
             <p className="font-semibold">{item.producto.nombre}</p>
-            <p className="text-sm text-gray-600">${item.producto.precio.toLocaleString()} c/u</p>
+            <p className="text-sm text-muted-foreground">${item.producto.precio.toLocaleString()} c/u</p>
           </div>
           <div className="flex items-center gap-2">
             <Input

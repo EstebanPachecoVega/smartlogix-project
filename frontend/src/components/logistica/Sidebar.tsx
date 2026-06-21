@@ -100,7 +100,7 @@ export default function SidebarLogistica() {
       <div className="border-t px-2 py-4 space-y-1">
         <div className="flex items-center gap-3 px-3 py-2">
           <Avatar className="h-9 w-9 shrink-0">
-            <AvatarFallback className="bg-blue-100 text-blue-800 text-xs font-semibold">
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
               {userInitials}
             </AvatarFallback>
           </Avatar>
@@ -108,7 +108,7 @@ export default function SidebarLogistica() {
             <p className="text-sm font-semibold truncate">{nombreCompleto}</p>
             <p className="text-xs text-muted-foreground truncate">{emailCensurado}</p>
             {rolTexto && (
-              <p className="text-xs text-blue-600 font-medium mt-0.5">{rolTexto}</p>
+              <p className="text-xs text-primary font-medium mt-0.5">{rolTexto}</p>
             )}
           </div>
         </div>

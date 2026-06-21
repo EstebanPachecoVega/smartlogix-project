@@ -112,23 +112,23 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div>
-                            <span className="text-sm text-gray-500">Nombre</span>
+                            <span className="text-sm text-muted-foreground">Nombre</span>
                             <p className="font-medium">{categoria.nombre}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Slug</span>
+                            <span className="text-sm text-muted-foreground">Slug</span>
                             <p className="font-medium font-mono text-sm">{categoria.slug}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Descripción</span>
+                            <span className="text-sm text-muted-foreground">Descripción</span>
                             <p className="font-medium">{categoria.descripcion || '—'}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Orden visual</span>
+                            <span className="text-sm text-muted-foreground">Orden visual</span>
                             <p className="font-medium">{categoria.ordenVisual ?? '—'}</p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Estado</span>
+                            <span className="text-sm text-muted-foreground">Estado</span>
                             <p className="font-medium">{categoria.activo ? 'Activa' : 'Inactiva'}</p>
                         </div>
                     </CardContent>
@@ -140,12 +140,12 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div>
-                            <span className="text-sm text-gray-500">Categoría padre</span>
+                            <span className="text-sm text-muted-foreground">Categoría padre</span>
                             <p className="font-medium">
                                 {categoria.padreNombre ? (
                                     <Link
                                         href={`/logistica/categorias/${categoria.padreId}`}
-                                        className="text-blue-600 hover:underline"
+                                        className="text-primary hover:underline"
                                     >
                                         {categoria.padreNombre}
                                     </Link>
@@ -155,7 +155,7 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
                             </p>
                         </div>
                         <div>
-                            <span className="text-sm text-gray-500">Subcategorías</span>
+                            <span className="text-sm text-muted-foreground">Subcategorías</span>
                             <p className="font-medium">{subcategorias.length}</p>
                         </div>
                     </CardContent>
@@ -174,7 +174,7 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
 
                 {subcategorias.length === 0 ? (
                     <Card>
-                        <CardContent className="py-8 text-center text-gray-500">
+                        <CardContent className="py-8 text-center text-muted-foreground">
                             No tiene subcategorías.
                         </CardContent>
                     </Card>
@@ -220,7 +220,7 @@ export default function DetalleCategoriaPage({ params }: DetailPageProps) {
             </div>
 
             {categoria.fechaCreacion && (
-                <div className="flex gap-6 text-sm text-gray-500">
+                <div className="flex gap-6 text-sm text-muted-foreground">
                     <span>Creada: {new Date(categoria.fechaCreacion).toLocaleDateString('es-CL', {
                         year: 'numeric', month: 'long', day: 'numeric',
                     })}</span>

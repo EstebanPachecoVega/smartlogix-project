@@ -38,7 +38,7 @@ export default function ProductCard({ producto }: { producto: Producto }) {
               className="object-contain group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground/40">
               <ImageIcon className="h-12 w-12" />
             </div>
           )}
@@ -49,12 +49,12 @@ export default function ProductCard({ producto }: { producto: Producto }) {
         <div className="p-3 pb-0 flex-1">
           <CardTitle className="text-sm font-semibold truncate">{producto.nombre}</CardTitle>
           {producto.descripcion && (
-            <p className="text-gray-500 text-xs mt-1 line-clamp-2">{producto.descripcion}</p>
+            <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{producto.descripcion}</p>
           )}
         </div>
         <CardContent className="p-3 pb-0">
           <p className="text-lg font-bold">${producto.precio.toLocaleString()}</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-muted-foreground/70 mt-0.5">
             {producto.cantidad > 0 ? `Stock: ${producto.cantidad}` : 'Sin stock'}
           </p>
         </CardContent>

@@ -133,14 +133,14 @@ export default function CategoriasPage() {
             >
                 <TableCell>
                     <div className="flex items-center gap-1" style={{ paddingLeft: `${node.nivel * 1.5}rem` }}>
-                        <span className="text-gray-400 cursor-grab active:cursor-grabbing shrink-0">
+                        <span className="text-muted-foreground/70 cursor-grab active:cursor-grabbing shrink-0">
                             <GripVertical className="h-4 w-4" />
                         </span>
                         {hasChildren ? (
                             <button
                                 type="button"
                                 onClick={() => toggleExpand(node.id)}
-                                className="shrink-0 text-gray-500 hover:text-gray-700"
+                                className="shrink-0 text-muted-foreground hover:text-foreground"
                             >
                                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                             </button>
@@ -203,14 +203,14 @@ export default function CategoriasPage() {
             >
                 <TableCell>
                     <div className="flex items-center gap-1" style={{ paddingLeft: `${node.nivel * 1.5}rem` }}>
-                        <span className="text-gray-400 cursor-grab active:cursor-grabbing shrink-0">
+                        <span className="text-muted-foreground/70 cursor-grab active:cursor-grabbing shrink-0">
                             <GripVertical className="h-4 w-4" />
                         </span>
                         {hasChildren ? (
                             <button
                                 type="button"
                                 onClick={() => toggleExpand(node.id)}
-                                className="shrink-0 text-gray-500 hover:text-gray-700"
+                                className="shrink-0 text-muted-foreground hover:text-foreground"
                             >
                                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                             </button>
@@ -288,7 +288,7 @@ export default function CategoriasPage() {
                         <TableBody>
                             {tree.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                                         No hay categorías. Crea la primera.
                                     </TableCell>
                                 </TableRow>

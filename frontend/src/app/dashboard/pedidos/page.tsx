@@ -66,7 +66,7 @@ function PedidosContent() {
 
             {pedidos.length === 0 ? (
                 <div className="text-center py-12">
-                    <p className="text-gray-500">No tienes pedidos aún</p>
+                    <p className="text-muted-foreground">No tienes pedidos aún</p>
                     <Link href="/">
                         <Button className="mt-4" variant="outline">
                             Ir al catálogo
@@ -82,7 +82,7 @@ function PedidosContent() {
                                     <CardTitle className="text-lg">
                                         Pedido #{pedido.numeroOrden}
                                     </CardTitle>
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                         Fecha: {pedido.fechaPedido ? new Date(pedido.fechaPedido).toLocaleDateString() : 'Fecha no disponible'}
                                     </p>
                                 </div>

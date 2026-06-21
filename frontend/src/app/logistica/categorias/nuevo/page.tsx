@@ -105,13 +105,13 @@ export default function NuevaCategoriaPage() {
                 type="button"
                 onClick={() => selectPadre(node.id)}
                 className={`w-full flex items-center gap-1 px-2 py-1.5 rounded-md text-left text-sm transition-colors
-                    ${selected ? 'bg-blue-100 text-blue-700 font-medium' : 'hover:bg-gray-100'}`}
+                    ${selected ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent'}`}
                 style={{ paddingLeft: `${node.nivel * 1.5 + 0.5}rem` }}
             >
                 {hasChildren ? (
                     <span
                         onClick={(e) => { e.stopPropagation(); toggleTreeExpand(node.id); }}
-                        className="shrink-0 text-gray-500 hover:text-gray-700"
+                        className="shrink-0 text-muted-foreground hover:text-foreground"
                     >
                         {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                     </span>
@@ -183,7 +183,7 @@ export default function NuevaCategoriaPage() {
                                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
                                 placeholder="categoria-ejemplo"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Se genera automáticamente desde el nombre. Cámbialo solo si es necesario.</p>
+                            <p className="text-xs text-muted-foreground mt-1">Se genera automáticamente desde el nombre. Cámbialo solo si es necesario.</p>
                         </div>
 
                         <div>
@@ -220,19 +220,19 @@ export default function NuevaCategoriaPage() {
                             </div>
 
                             {selectedPadreNombre && (
-                                <div className="mb-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md px-3 py-1.5">
+                                <div className="mb-2 text-sm text-primary bg-primary/10 border border-primary/20 rounded-md px-3 py-1.5">
                                     Padre seleccionado: <strong>{selectedPadreNombre}</strong>
                                 </div>
                             )}
 
-                            <div className="border rounded-md max-h-60 overflow-y-auto p-1 bg-white">
+                            <div className="border rounded-md max-h-60 overflow-y-auto p-1 bg-card">
                                 <button
                                     type="button"
                                     onClick={() => selectPadre(undefined)}
                                     className={`w-full flex items-center px-2 py-1.5 rounded-md text-left text-sm transition-colors
-                                        ${!form.padreId ? 'bg-blue-100 text-blue-700 font-medium' : 'hover:bg-gray-100'}`}
+                                        ${!form.padreId ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent'}`}
                                 >
-                                    <span className="text-gray-500 mr-1">—</span>
+                                    <span className="text-muted-foreground mr-1">—</span>
                                     <span>Ninguna (raíz)</span>
                                     {!form.padreId && <span className="ml-auto text-xs">Seleccionado</span>}
                                 </button>
@@ -242,7 +242,7 @@ export default function NuevaCategoriaPage() {
                                     </div>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Haz clic en una categoría para asignarla como padre. La nueva categoría aparecerá como subcategoría de la seleccionada.</p>
+                            <p className="text-xs text-muted-foreground mt-1">Haz clic en una categoría para asignarla como padre. La nueva categoría aparecerá como subcategoría de la seleccionada.</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -255,7 +255,7 @@ export default function NuevaCategoriaPage() {
                         <div className="flex items-center justify-between rounded-md border p-3">
                             <div>
                                 <Label htmlFor="activo" className="text-sm font-medium">Activo</Label>
-                                <p className="text-xs text-gray-500">Las categorías inactivas no se muestran en el sitio público</p>
+                                <p className="text-xs text-muted-foreground">Las categorías inactivas no se muestran en el sitio público</p>
                             </div>
                             <Switch
                                 id="activo"

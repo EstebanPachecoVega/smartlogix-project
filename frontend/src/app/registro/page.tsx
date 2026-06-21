@@ -105,7 +105,7 @@ export default function RegistroPage() {
           <CardContent className="py-8">
             <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">Cuenta creada exitosamente</h2>
-            <p className="text-gray-500">Redirigiendo al inicio de sesión...</p>
+            <p className="text-muted-foreground">Redirigiendo al inicio de sesión...</p>
           </CardContent>
         </Card>
       </div>
@@ -187,7 +187,7 @@ export default function RegistroPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -195,7 +195,7 @@ export default function RegistroPage() {
               </div>
               {form.password.length > 0 && (
                 <div className="mt-1.5 space-y-1">
-                  <div className={`flex items-center gap-1.5 text-xs ${passwordLength ? 'text-green-600' : 'text-gray-400'}`}>
+                  <div className={`flex items-center gap-1.5 text-xs ${passwordLength ? 'text-green-600' : 'text-muted-foreground/70'}`}>
                     {passwordLength ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                     <span>Al menos 6 caracteres</span>
                   </div>
@@ -220,7 +220,7 @@ export default function RegistroPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground"
                   tabIndex={-1}
                 >
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -248,9 +248,9 @@ export default function RegistroPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
+          <div className="mt-6 text-center text-sm text-muted-foreground">
             ¿Ya tienes cuenta?{" "}
-            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link href="/login" className="text-primary hover:text-primary/80 font-medium">
               Iniciar sesión
             </Link>
           </div>

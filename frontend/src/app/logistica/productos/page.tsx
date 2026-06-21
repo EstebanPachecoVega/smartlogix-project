@@ -91,7 +91,7 @@ export default function ProductosPage() {
                         <TableBody>
                             {productos.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                         No hay productos registrados.
                                     </TableCell>
                                 </TableRow>

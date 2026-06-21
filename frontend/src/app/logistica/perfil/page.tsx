@@ -100,7 +100,7 @@ export default function PerfilGestorPage() {
                         />
                         <div>
                             <Label>Rol</Label>
-                            <p className="text-sm font-medium text-blue-600">{rolTexto}</p>
+                            <p className="text-sm font-medium text-primary">{rolTexto}</p>
                         </div>
                         {isEditing && (
                             <div className="flex gap-4 pt-2">

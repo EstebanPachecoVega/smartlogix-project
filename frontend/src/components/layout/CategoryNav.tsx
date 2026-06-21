@@ -21,8 +21,8 @@ function CategoryColumn({
         onClick={() => router.push(`/?cat=${node.slug}`)}
         className={`block w-full text-left font-semibold text-sm mb-2 transition-colors ${
           activeSlug === node.slug
-            ? 'text-blue-600'
-            : 'text-gray-800 hover:text-blue-600'
+            ? 'text-primary'
+            : 'text-foreground hover:text-primary'
         }`}
       >
         {node.nombre}
@@ -35,8 +35,8 @@ function CategoryColumn({
                 onClick={() => router.push(`/?cat=${child.slug}`)}
                 className={`block w-full text-left text-sm transition-colors ${
                   activeSlug === child.slug
-                    ? 'text-blue-600 font-medium'
-                    : 'text-gray-600 hover:text-blue-600'
+                    ? 'text-primary font-medium'
+                    : 'text-muted-foreground hover:text-primary'
                 }`}
               >
                 {child.nombre}
@@ -49,8 +49,8 @@ function CategoryColumn({
                         onClick={() => router.push(`/?cat=${grandchild.slug}`)}
                         className={`block w-full text-left text-xs transition-colors ${
                           activeSlug === grandchild.slug
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-500 hover:text-blue-600'
+                            ? 'text-primary font-medium'
+                            : 'text-muted-foreground/70 hover:text-primary'
                         }`}
                       >
                         {grandchild.nombre}
@@ -79,7 +79,7 @@ function MegaMenu({
   const children = node.children;
 
   return (
-    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-white border rounded-lg shadow-xl z-50 p-4 sm:p-6 w-[800px] max-w-[90vw]">
+    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-popover border border-border rounded-lg shadow-xl z-50 p-4 sm:p-6 w-[800px] max-w-[90vw]">
       <div
         className="grid gap-4 sm:gap-6"
         style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}
@@ -139,7 +139,7 @@ export default function CategoryNav() {
   if (tree.length === 0) return null;
 
   return (
-    <nav ref={navRef} className="bg-white">
+    <nav ref={navRef} className="bg-background border-b border-border">
       <div className="container mx-auto px-4">
         <ul className="flex items-center justify-center gap-0.5 py-2 flex-wrap">
           {tree.map((node) => {
@@ -165,8 +165,8 @@ export default function CategoryNav() {
                   }}
                   className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap transition-colors flex items-center gap-1 ${
                     isActive
-                      ? 'text-blue-600 bg-blue-50 font-medium'
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                      ? 'text-primary bg-primary/10 font-medium'
+                      : 'text-muted-foreground hover:text-primary hover:bg-accent'
                   }`}
                   >
                     {node.nombre}

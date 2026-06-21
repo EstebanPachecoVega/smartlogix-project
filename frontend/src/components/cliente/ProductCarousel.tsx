@@ -89,14 +89,14 @@ export default function ProductCarousel({ productos, title }: ProductCarouselPro
       <div className="relative px-1">
         <button
           onClick={() => scrollBy('left')}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-colors cursor-pointer"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background shadow-md rounded-full p-2 transition-colors cursor-pointer border border-border"
           aria-label="Anterior"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           onClick={() => scrollBy('right')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md rounded-full p-2 transition-colors cursor-pointer"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background shadow-md rounded-full p-2 transition-colors cursor-pointer border border-border"
           aria-label="Siguiente"
         >
           <ChevronRight className="h-5 w-5" />

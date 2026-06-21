@@ -43,8 +43,8 @@ export default function ProfileNameFields({
             </div>
             <div>
                 <Label>Correo electrónico</Label>
-                <p className="text-sm text-gray-500 mt-1">{censorEmail(email)}</p>
-                <p className="text-xs text-gray-400">El correo no puede ser modificado directamente.</p>
+                <p className="text-sm text-muted-foreground mt-1">{censorEmail(email)}</p>
+                <p className="text-xs text-muted-foreground/70">El correo no puede ser modificado directamente.</p>
             </div>
         </>
     );

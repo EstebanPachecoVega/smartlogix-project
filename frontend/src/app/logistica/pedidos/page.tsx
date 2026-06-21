@@ -65,7 +65,7 @@ export default function PedidosLogisticaPage() {
                   <TableCell>${pedido.totalCompra.toLocaleString()}</TableCell>
                   <TableCell>
                     <Link href={`/logistica/pedidos/${pedido.id}`}>
-                      <span className="text-blue-600 hover:underline cursor-pointer">Ver detalle</span>
+                      <span className="text-primary hover:underline cursor-pointer">Ver detalle</span>
                     </Link>
                   </TableCell>
                 </TableRow>

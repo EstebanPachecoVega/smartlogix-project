@@ -136,13 +136,13 @@ export default function EditarCategoriaPage({ params }: EditPageProps) {
                 type="button"
                 onClick={() => selectPadre(node.id)}
                 className={`w-full flex items-center gap-1 px-2 py-1.5 rounded-md text-left text-sm transition-colors
-                    ${selected ? 'bg-blue-100 text-blue-700 font-medium' : 'hover:bg-gray-100'}`}
+                    ${selected ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent'}`}
                 style={{ paddingLeft: `${node.nivel * 1.5 + 0.5}rem` }}
             >
                 {hasChildren ? (
                     <span
                         onClick={(e) => { e.stopPropagation(); toggleTreeExpand(node.id); }}
-                        className="shrink-0 text-gray-500 hover:text-gray-700"
+                        className="shrink-0 text-muted-foreground hover:text-foreground"
                     >
                         {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                     </span>
@@ -197,7 +197,7 @@ export default function EditarCategoriaPage({ params }: EditPageProps) {
                 </Button>
                 <h1 className="text-2xl font-bold">Editar Categoría</h1>
                 {categoria && (
-                    <span className="text-sm text-gray-500">{categoria.nombre}</span>
+                    <span className="text-sm text-muted-foreground">{categoria.nombre}</span>
                 )}
             </div>
 
@@ -233,7 +233,7 @@ export default function EditarCategoriaPage({ params }: EditPageProps) {
                                 value={form.slug}
                                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
                             />
-                            <p className="text-xs text-gray-500 mt-1">Rara vez necesitas cambiarlo manualmente.</p>
+                            <p className="text-xs text-muted-foreground mt-1">Rara vez necesitas cambiarlo manualmente.</p>
                         </div>
 
                         <div>
@@ -269,19 +269,19 @@ export default function EditarCategoriaPage({ params }: EditPageProps) {
                             </div>
 
                             {selectedPadreNombre && (
-                                <div className="mb-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md px-3 py-1.5">
+                                <div className="mb-2 text-sm text-primary bg-primary/10 border border-primary/20 rounded-md px-3 py-1.5">
                                     Padre seleccionado: <strong>{selectedPadreNombre}</strong>
                                 </div>
                             )}
 
-                            <div className="border rounded-md max-h-60 overflow-y-auto p-1 bg-white">
+                            <div className="border rounded-md max-h-60 overflow-y-auto p-1 bg-card">
                                 <button
                                     type="button"
                                     onClick={() => selectPadre(undefined)}
                                     className={`w-full flex items-center px-2 py-1.5 rounded-md text-left text-sm transition-colors
-                                        ${!form.padreId ? 'bg-blue-100 text-blue-700 font-medium' : 'hover:bg-gray-100'}`}
+                                        ${!form.padreId ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent'}`}
                                 >
-                                    <span className="text-gray-500 mr-1">—</span>
+                                    <span className="text-muted-foreground mr-1">—</span>
                                     <span>Ninguna (raíz)</span>
                                     {!form.padreId && <span className="ml-auto text-xs">Seleccionado</span>}
                                 </button>
@@ -291,7 +291,7 @@ export default function EditarCategoriaPage({ params }: EditPageProps) {
                                     </div>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 Selecciona la categoría padre. La categoría actual y sus descendientes no aparecen en la lista.
                             </p>
                         </div>
@@ -306,7 +306,7 @@ export default function EditarCategoriaPage({ params }: EditPageProps) {
                         <div className="flex items-center justify-between rounded-md border p-3">
                             <div>
                                 <Label htmlFor="activo" className="text-sm font-medium">Activo</Label>
-                                <p className="text-xs text-gray-500">Las categorías inactivas no se muestran en el sitio público</p>
+                                <p className="text-xs text-muted-foreground">Las categorías inactivas no se muestran en el sitio público</p>
                             </div>
                             <Switch
                                 id="activo"
