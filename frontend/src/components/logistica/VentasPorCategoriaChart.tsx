@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
@@ -23,10 +23,17 @@ import {
 import { Producto, PedidoResponse } from '@/types';
 import { filterByDate, RANGES } from '@/lib/filtro';
 
-interface DataPoint {
-  categoria: string;
-  cantidad: number;
-}
+const COLORS = [
+  '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6',
+  '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16',
+  '#06b6d4', '#e11d48', '#a855f7', '#eab308', '#64748b',
+];
+
+const TOP_N = 15;
+
+const chartConfig = {
+  cantidad: { label: 'Unidades vendidas', color: '#3b82f6' },
+};
 
 export default function VentasPorCategoriaChart({ pedidos, productos }: { pedidos: PedidoResponse[]; productos: Producto[] }) {
   const [dias, setDias] = React.useState('30');
@@ -48,16 +55,23 @@ export default function VentasPorCategoriaChart({ pedidos, productos }: { pedido
       }
     }
 
-    return Array.from(grouped.entries())
+    const sorted = Array.from(grouped.entries())
       .map(([categoria, cantidad]) => ({ categoria, cantidad }))
       .sort((a, b) => b.cantidad - a.cantidad);
+
+    if (sorted.length > TOP_N) {
+      const top = sorted.slice(0, TOP_N);
+      const others = sorted.slice(TOP_N).reduce((sum, d) => sum + d.cantidad, 0);
+      if (others > 0) {
+        top.push({ categoria: 'Otras', cantidad: others });
+      }
+      return top;
+    }
+    return sorted;
   }, [pedidos, productos, dias]);
 
-  const chartConfig = {
-    cantidad: { label: 'Unidades vendidas', color: '#3b82f6' },
-  };
-
   const empty = data.length === 0 || data.every((d) => d.cantidad === 0);
+  const chartHeight = Math.max(250, data.length * 32 + 40);
 
   return (
     <Card>
@@ -82,22 +96,26 @@ export default function VentasPorCategoriaChart({ pedidos, productos }: { pedido
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="aspect-auto h-[250px] w-full"
+            className="w-full"
+            style={{ height: chartHeight }}
           >
             <BarChart
               data={data}
+              layout="vertical"
               margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
               accessibilityLayer
+              barCategoryGap="20%"
             >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="categoria"
+              <CartesianGrid horizontal={false} />
+              <YAxis
                 type="category"
+                dataKey="categoria"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11 }}
+                width={140}
               />
-              <YAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+              <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
               <ChartTooltip
                 cursor={false}
                 content={
@@ -110,13 +128,11 @@ export default function VentasPorCategoriaChart({ pedidos, productos }: { pedido
                   />
                 }
               />
-              <Bar
-                dataKey="cantidad"
-                fill="var(--color-cantidad)"
-                radius={[4, 4, 0, 0]}
-                barSize={20}
-                animationDuration={0}
-              />
+              <Bar dataKey="cantidad" radius={[0, 4, 4, 0]} barSize={20} animationDuration={0}>
+                {data.map((entry, index) => (
+                  <Cell key={entry.categoria} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ChartContainer>
         )}

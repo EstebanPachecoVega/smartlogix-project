@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
@@ -23,15 +23,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PedidoResponse } from '@/types';
-import { filterByDate, RANGES } from '@/lib/filtro';
 
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-interface DataPoint {
-  mes: string;
-  añoActual: number;
-  añoAnterior: number;
-}
+const MONTH_OPTIONS = [
+  { value: '', label: 'Todos los meses' },
+  ...MONTHS.map((label, i) => ({ value: String(i + 1), label })),
+];
 
 const chartConfig = {
   añoActual: { label: 'Año actual', color: '#3b82f6' },
@@ -39,51 +37,76 @@ const chartConfig = {
 };
 
 export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResponse[] }) {
-  const [dias, setDias] = React.useState('30');
+  const [selectedMonth, setSelectedMonth] = React.useState('');
+
+  const currentYear = new Date().getFullYear();
+  const previousYear = currentYear - 1;
+  const isDaily = selectedMonth !== '';
+  const monthNum = isDaily ? parseInt(selectedMonth, 10) : 0;
 
   const data = React.useMemo(() => {
-    const filtrados = filterByDate(pedidos, 'fechaPedido', dias);
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const previousYear = currentYear - 1;
-
-    const grouped = new Map<string, { current: number; previous: number }>();
-    for (let m = 1; m <= 12; m++) {
-      grouped.set(m.toString(), { current: 0, previous: 0 });
+    if (!isDaily) {
+      const grouped = new Map<string, { current: number; previous: number }>();
+      for (let m = 1; m <= 12; m++) {
+        grouped.set(m.toString(), { current: 0, previous: 0 });
+      }
+      for (const p of pedidos) {
+        if (!p.fechaPedido) continue;
+        const d = new Date(p.fechaPedido.split('T')[0] + 'T12:00:00');
+        const m = d.getMonth() + 1;
+        const y = d.getFullYear();
+        const entry = grouped.get(m.toString());
+        if (!entry) continue;
+        if (y === currentYear) entry.current += p.totalCompra;
+        else if (y === previousYear) entry.previous += p.totalCompra;
+      }
+      return Array.from(grouped.entries()).map(([mesNum, { current, previous }]) => ({
+        label: MONTHS[parseInt(mesNum, 10) - 1] || '',
+        añoActual: Math.round(current),
+        añoAnterior: Math.round(previous),
+      }));
     }
 
-    for (const p of filtrados) {
+    const lastDay = new Date(currentYear, monthNum, 0).getDate();
+    const dayMap = new Map<number, { current: number; previous: number }>();
+    for (let d = 1; d <= lastDay; d++) {
+      dayMap.set(d, { current: 0, previous: 0 });
+    }
+    for (const p of pedidos) {
       if (!p.fechaPedido) continue;
       const d = new Date(p.fechaPedido.split('T')[0] + 'T12:00:00');
       const m = d.getMonth() + 1;
       const y = d.getFullYear();
-      const entry = grouped.get(m.toString());
+      const day = d.getDate();
+      if (m !== monthNum) continue;
+      const entry = dayMap.get(day);
       if (!entry) continue;
       if (y === currentYear) entry.current += p.totalCompra;
       else if (y === previousYear) entry.previous += p.totalCompra;
     }
-
-    return Array.from(grouped.entries()).map(([mesNum, { current, previous }]) => ({
-      mes: MONTHS[parseInt(mesNum, 10) - 1] || '',
+    return Array.from(dayMap.entries()).map(([dia, { current, previous }]) => ({
+      label: String(dia),
       añoActual: Math.round(current),
       añoAnterior: Math.round(previous),
     }));
-  }, [pedidos, dias]);
+  }, [pedidos, selectedMonth, currentYear, previousYear, isDaily, monthNum]);
 
   const empty = data.every((d) => d.añoActual === 0 && d.añoAnterior === 0);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between py-4">
-        <CardTitle className="text-base">Comparación anual</CardTitle>
-        <Select value={dias} onValueChange={(v: string | null) => setDias(v ?? '')}>
-          <SelectTrigger className="w-[130px] h-8 text-xs" aria-label="Seleccionar rango">
-            <SelectValue />
+        <CardTitle className="text-base">
+          {isDaily ? `Detalle diario — ${MONTHS[monthNum - 1]}` : 'Comparación anual'}
+        </CardTitle>
+        <Select value={selectedMonth} onValueChange={(v: string | null) => setSelectedMonth(v ?? '')}>
+          <SelectTrigger className="w-[150px] h-8 text-xs" aria-label="Seleccionar mes">
+            <SelectValue placeholder="Todos los meses" />
           </SelectTrigger>
           <SelectContent>
-            {RANGES.map((r) => (
-              <SelectItem key={r.value} value={r.value} className="text-xs">
-                {r.label}
+            {MONTH_OPTIONS.map((m) => (
+              <SelectItem key={m.value} value={m.value} className="text-xs">
+                {m.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -97,10 +120,7 @@ export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResp
             config={chartConfig}
             className="aspect-auto h-[250px] w-full"
           >
-            <AreaChart
-              data={data}
-              margin={{ left: 12, right: 12 }}
-            >
+            <AreaChart data={data} margin={{ left: 12, right: 12 }}>
               <defs>
                 <linearGradient id="grad-actual" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
@@ -113,11 +133,18 @@ export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResp
               </defs>
               <CartesianGrid vertical={false} />
               <XAxis
-                dataKey="mes"
+                dataKey="label"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
+                tick={{ fontSize: isDaily ? 10 : 11 }}
+                interval={isDaily ? 0 : undefined}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
                 tick={{ fontSize: 11 }}
+                tickFormatter={(value: number) => value.toLocaleString('es-CL')}
               />
               <ChartTooltip
                 cursor={false}

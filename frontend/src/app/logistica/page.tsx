@@ -16,8 +16,6 @@ import Spinner from '@/components/shared/Spinner';
 import DistribucionEnviosChart from '@/components/logistica/DistribucionEnviosChart';
 import DistribucionPedidosChart from '@/components/logistica/DistribucionPedidosChart';
 import StockBajoChart from '@/components/logistica/StockBajoChart';
-
-import VentasPlataformaChart from '@/components/logistica/VentasPlataformaChart';
 import ComparacionAnualChart from '@/components/logistica/ComparacionAnualChart';
 import VentasPorCategoriaChart from '@/components/logistica/VentasPorCategoriaChart';
 import VentasLineChart from '@/components/logistica/VentasLineChart';
@@ -112,8 +110,6 @@ export default function DashboardPage() {
             </div>
 
             <VentasLineChart pedidos={pedidos} />
-
-            <VentasPlataformaChart pedidos={pedidos} />
 
             <ComparacionAnualChart pedidos={pedidos} />
 

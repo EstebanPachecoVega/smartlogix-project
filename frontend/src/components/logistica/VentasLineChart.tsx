@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import {
   Card,
   CardContent,
@@ -134,7 +134,6 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
             <LineChart
               accessibilityLayer
               data={data}
-              margin={{ left: 12, right: 12 }}
             >
               <CartesianGrid vertical={false} />
               <XAxis
@@ -142,7 +141,11 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                minTickGap={32}
+                minTickGap={16}
+                angle={-30}
+                textAnchor="end"
+                height={60}
+                tick={{ fontSize: 10 }}
                 tickFormatter={(value: string) => {
                   const date = new Date(value + 'T12:00:00');
                   return date.toLocaleDateString('es-CL', {
@@ -150,6 +153,12 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
                     day: 'numeric',
                   });
                 }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11 }}
+                tickFormatter={(value: number) => value.toLocaleString('es-CL')}
               />
               <ChartTooltip
                 content={
