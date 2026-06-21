@@ -7,6 +7,7 @@ import {
     ShoppingCart, LogOut, User, ChevronDown,
     Package, LayoutDashboard,
 } from 'lucide-react';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTotalItems } from '@/store/carritoStore';
 import { Button } from '@/components/ui/button';
 import {
@@ -144,7 +145,8 @@ export default function Navbar() {
                             SmartLogix
                         </Link>
                     </div>
-                    <div className="flex items-center justify-end flex-1 px-4 gap-3">
+                    <div className="flex items-center justify-end flex-1 px-4 gap-1">
+                        <ThemeToggle />
                         <UserMenu />
                     </div>
                 </div>
@@ -166,6 +168,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                        <ThemeToggle />
                         {!isGestor && (
                             <Button
                                 variant="outline"

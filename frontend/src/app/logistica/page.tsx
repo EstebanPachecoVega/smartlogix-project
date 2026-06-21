@@ -73,7 +73,7 @@ export default function DashboardPage() {
 
     // Render 
     return (
-        <div className="space-y-8 pb-8">
+        <div className="space-y-8 pb-8 animate-in fade-in duration-700">
             <h1 className="text-2xl font-bold">Dashboard Logística</h1>
 
             {/* Tarjetas de métricas */}

@@ -128,7 +128,7 @@ export default function VentasPorCategoriaChart({ pedidos, productos }: { pedido
                   />
                 }
               />
-              <Bar dataKey="cantidad" radius={[0, 4, 4, 0]} barSize={20} animationDuration={0}>
+              <Bar dataKey="cantidad" radius={[0, 4, 4, 0]} barSize={20}>
                 {data.map((entry, index) => (
                   <Cell key={entry.categoria} fill={COLORS[index % COLORS.length]} />
                 ))}
