@@ -1,0 +1,38 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST_TEST:localhost}
+    port: ${RABBITMQ_PORT_TEST:5672}
+    username: guest
+    password: guest
+  data:
+    redis:
+      host: ${REDIS_HOST_TEST:localhost}
+      port: ${REDIS_PORT_TEST:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 5
+          max-idle: 3
+          min-idle: 1
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      redis:
+        sliding-window-size: 3
+        failure-rate-threshold: 80
+        wait-duration-in-open-state: 1s
+        permitted-number-of-calls-in-half-open-state: 1
+
+logging:
+  level:
+    cl.smartlogix: DEBUG
+    org.springframework.amqp: WARN

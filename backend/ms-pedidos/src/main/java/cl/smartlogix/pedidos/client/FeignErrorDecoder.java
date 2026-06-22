@@ -24,10 +24,19 @@ public class FeignErrorDecoder implements ErrorDecoder {
     public Exception decode(String methodKey, Response response) {
         String correlationId = MDC.get("correlationId");
         try {
+            if (response.body() == null) {
+                return defaultDecoder.decode(methodKey, response);
+            }
             String body = new String(response.body().asInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            if (body.isBlank()) {
+                return defaultDecoder.decode(methodKey, response);
+            }
             var problemDetail = mapper.readValue(body, org.springframework.http.ProblemDetail.class);
             String detail = problemDetail.getDetail();
-            int status = problemDetail.getStatus();
+            Integer status = problemDetail.getStatus();
+            if (status == null) {
+                return defaultDecoder.decode(methodKey, response);
+            }
 
             if (status == HttpStatus.NOT_FOUND.value()) {
                 return new ResourceNotFoundException(detail != null ? detail : "Recurso no encontrado");
