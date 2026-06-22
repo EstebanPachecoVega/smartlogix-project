@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div id="app-container" className="app-container flex flex-col min-h-screen pt-16">
             <Toaster position="top-right"/>
             <PublicCategoryNav />
-            <main className="container mx-auto px-4 pb-8 flex-1">{children}</main>
+            <main className="container mx-auto px-4 pb-8 flex-1 pt-4">{children}</main>
             <Footer />
           </div>
         </Providers>

@@ -6,7 +6,7 @@ import CategoryNav from './CategoryNav';
 
 export default function PublicCategoryNav() {
   const pathname = usePathname();
-  if (pathname.startsWith('/logistica')) return null;
+  if (pathname.startsWith('/logistica') || pathname.startsWith('/dashboard')) return null;
   return (
     <Suspense fallback={null}>
       <CategoryNav />
