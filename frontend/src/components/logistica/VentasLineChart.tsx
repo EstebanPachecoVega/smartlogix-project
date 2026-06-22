@@ -159,6 +159,10 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
                 axisLine={false}
                 tick={{ fontSize: 11 }}
                 tickFormatter={(value: number) => value.toLocaleString('es-CL')}
+                domain={[0, (dataMax: number) => {
+                  const padded = Math.round(dataMax * 1.15);
+                  return padded === 0 ? 100 : padded;
+                }]}
               />
               <ChartTooltip
                 content={
