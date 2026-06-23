@@ -161,4 +161,54 @@ class ProductoMapperImplTest {
         assertEquals("original", entity.getSlug());
         assertEquals(10, entity.getCantidad());
     }
+
+    @Test
+    void updateEntity_allFields() {
+        Producto entity = Producto.builder()
+                .id(1L)
+                .sku("SKU-001")
+                .nombre("Original")
+                .slug("original")
+                .descripcion("Original desc")
+                .precio(5000)
+                .cantidad(10)
+                .destacado(false)
+                .novedad(false)
+                .build();
+
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setNombre("Actualizado");
+        dto.setDescripcion("Nueva desc");
+        dto.setCantidad(20);
+        dto.setDestacado(true);
+        dto.setNovedad(true);
+
+        mapper.updateEntity(entity, dto);
+
+        assertEquals("Actualizado", entity.getNombre());
+        assertEquals("Nueva desc", entity.getDescripcion());
+        assertEquals(20, entity.getCantidad());
+        assertTrue(entity.getDestacado());
+        assertTrue(entity.getNovedad());
+        assertEquals("SKU-001", entity.getSku());
+    }
+
+    @Test
+    void updateEntity_nullNombre_skipsNombre() {
+        Producto entity = Producto.builder()
+                .id(1L)
+                .sku("SKU-001")
+                .nombre("Original")
+                .slug("original")
+                .precio(5000)
+                .cantidad(10)
+                .build();
+
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+
+        mapper.updateEntity(entity, dto);
+
+        assertEquals("Original", entity.getNombre());
+        assertEquals(5000, entity.getPrecio());
+    }
 }

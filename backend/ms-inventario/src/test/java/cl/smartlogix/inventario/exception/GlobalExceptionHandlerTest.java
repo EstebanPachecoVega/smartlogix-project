@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.util.Map;
 
@@ -92,9 +93,19 @@ class GlobalExceptionHandlerTest {
         ProblemDetail pd = handler.handleValidation(ex, request);
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), pd.getStatus());
-        assertEquals("Error de validacion", pd.getTitle());
+        assertEquals("Error de validación", pd.getTitle());
         assertNotNull(pd.getProperties().get("errors"));
         assertInstanceOf(Map.class, pd.getProperties().get("errors"));
     }
 
+    @Test
+    void handleHandlerMethodValidation_returns400() {
+        HandlerMethodValidationException ex = org.mockito.Mockito.mock(HandlerMethodValidationException.class);
+        when(request.getRequestURI()).thenReturn("/api/parametros");
+
+        ProblemDetail pd = handler.handleHandlerMethodValidation(ex, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), pd.getStatus());
+        assertEquals("Error de validación en parámetros", pd.getTitle());
+    }
 }

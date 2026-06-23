@@ -278,4 +278,141 @@ class ProductoServiceImplTest {
 
         assertThat(result).isEmpty();
     }
+
+    @Test
+    void createProducto_sinCategoria_setCategoriaNull() {
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setSku("SKU-NOCAT");
+        request.setNombre("Sin Categoria");
+        request.setSlug("sin-categoria");
+
+        when(productoRepository.existsBySku("SKU-NOCAT")).thenReturn(false);
+        when(productoRepository.existsByNombre("Sin Categoria")).thenReturn(false);
+        when(productoRepository.existsBySlug("sin-categoria")).thenReturn(false);
+
+        Producto producto = new Producto();
+        producto.setId(5L);
+        producto.setCantidad(10);
+        when(productoMapper.toEntity(request)).thenReturn(producto);
+        when(productoRepository.save(producto)).thenReturn(producto);
+
+        ProductoResponseDTO expectedDto = new ProductoResponseDTO();
+        when(productoMapper.toResponseDTO(producto)).thenReturn(expectedDto);
+
+        ProductoResponseDTO result = productoService.createProducto(request);
+
+        assertThat(result).isEqualTo(expectedDto);
+        assertThat(producto.getCategoria()).isNull();
+    }
+
+    @Test
+    void updateProducto_skuDuplicado_lanzaException() {
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setSku("SKU-002");
+        request.setNombre("Producto Original");
+        request.setSlug("producto-original");
+
+        Producto productoExistente = new Producto();
+        productoExistente.setId(1L);
+        productoExistente.setSku("SKU-001");
+        productoExistente.setNombre("Producto Original");
+        productoExistente.setSlug("producto-original");
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoExistente));
+        when(productoRepository.existsBySku("SKU-002")).thenReturn(true);
+
+        assertThatThrownBy(() -> productoService.updateProducto(1L, request))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("SKU");
+    }
+
+    @Test
+    void updateProducto_nombreDuplicado_lanzaException() {
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setSku("SKU-001");
+        request.setNombre("Nombre Duplicado");
+        request.setSlug("producto-original");
+
+        Producto productoExistente = new Producto();
+        productoExistente.setId(1L);
+        productoExistente.setSku("SKU-001");
+        productoExistente.setNombre("Producto Original");
+        productoExistente.setSlug("producto-original");
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoExistente));
+        when(productoRepository.existsByNombre("Nombre Duplicado")).thenReturn(true);
+
+        assertThatThrownBy(() -> productoService.updateProducto(1L, request))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("nombre");
+    }
+
+    @Test
+    void updateProducto_slugDuplicado_lanzaException() {
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setSku("SKU-001");
+        request.setNombre("Producto Original");
+        request.setSlug("slug-duplicado");
+
+        Producto productoExistente = new Producto();
+        productoExistente.setId(1L);
+        productoExistente.setSku("SKU-001");
+        productoExistente.setNombre("Producto Original");
+        productoExistente.setSlug("producto-original");
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoExistente));
+        when(productoRepository.existsBySlug("slug-duplicado")).thenReturn(true);
+
+        assertThatThrownBy(() -> productoService.updateProducto(1L, request))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("slug");
+    }
+
+    @Test
+    void updateProducto_categoriaNoExiste_lanzaResourceNotFoundException() {
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setSku("SKU-001");
+        request.setNombre("Producto Original");
+        request.setSlug("producto-original");
+        request.setCategoriaId(999L);
+
+        Producto productoExistente = new Producto();
+        productoExistente.setId(1L);
+        productoExistente.setSku("SKU-001");
+        productoExistente.setNombre("Producto Original");
+        productoExistente.setSlug("producto-original");
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoExistente));
+        when(categoriaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productoService.updateProducto(1L, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Categoría");
+    }
+
+    @Test
+    void getProductoBySlug_ok() {
+        Producto producto = new Producto();
+        producto.setId(1L);
+        when(productoRepository.findBySlug("producto-test")).thenReturn(Optional.of(producto));
+        ProductoResponseDTO expectedDto = new ProductoResponseDTO();
+        when(productoMapper.toResponseDTO(producto)).thenReturn(expectedDto);
+
+        ProductoResponseDTO result = productoService.getProductoBySlug("producto-test");
+
+        assertThat(result).isEqualTo(expectedDto);
+    }
+
+    @Test
+    void getProductoBySku_ok() {
+        Producto producto = new Producto();
+        producto.setId(1L);
+        when(productoRepository.findBySku("SKU-001")).thenReturn(Optional.of(producto));
+        ProductoResponseDTO expectedDto = new ProductoResponseDTO();
+        when(productoMapper.toResponseDTO(producto)).thenReturn(expectedDto);
+
+        ProductoResponseDTO result = productoService.getProductoBySku("SKU-001");
+
+        assertThat(result).isEqualTo(expectedDto);
+    }
 }

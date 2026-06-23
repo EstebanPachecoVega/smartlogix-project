@@ -8,6 +8,7 @@ import cl.smartlogix.inventario.repository.CategoriaRepository;
 import cl.smartlogix.inventario.repository.ProductoRepository;
 import cl.smartlogix.inventario.service.RedisStockService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("docker")
 class InventarioRabbitMQTest extends AbstractIntegrationTest {
 
     @Autowired

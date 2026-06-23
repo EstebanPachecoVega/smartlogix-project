@@ -144,6 +144,20 @@ class InventarioServiceImplTest {
     }
 
     @Test
+    void confirmarReserva_redisNoExiste_logWarn() {
+        List<ReservarStockRequestDTO> items = List.of(
+                new ReservarStockRequestDTO(1L, 5)
+        );
+        when(productoRepository.restarStockAtomico(1L, 5)).thenReturn(1);
+        when(redisStockService.confirmarReserva("res-1", 1L)).thenReturn(null);
+
+        inventarioService.confirmarReserva("res-1", items);
+
+        verify(productoRepository).restarStockAtomico(1L, 5);
+        verify(redisStockService).confirmarReserva("res-1", 1L);
+    }
+
+    @Test
     void liberarStock_cantidadInvalida_lanzaDomainException() {
         assertThatThrownBy(() -> inventarioService.liberarStock(1L, -1, "res-1"))
                 .isInstanceOf(DomainException.class)

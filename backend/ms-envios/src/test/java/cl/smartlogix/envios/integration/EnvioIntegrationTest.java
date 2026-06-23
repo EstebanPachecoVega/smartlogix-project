@@ -6,6 +6,7 @@ import cl.smartlogix.envios.entity.Envio;
 import cl.smartlogix.envios.entity.EstadoEnvio;
 import cl.smartlogix.envios.repository.EnvioRepository;
 import cl.smartlogix.envios.service.EnvioService;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("docker")
 class EnvioIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired

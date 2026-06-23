@@ -281,4 +281,175 @@ class CategoriaServiceImplTest {
         assertThatThrownBy(() -> categoriaService.reordenar(ordenes))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
+
+    @Test
+    void updateCategoria_nombreDuplicado_lanzaDuplicateResourceException() {
+        CategoriaRequestDTO request = new CategoriaRequestDTO();
+        request.setNombre("Nuevo nombre");
+        request.setSlug("slug-original");
+
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Nombre original");
+        categoria.setSlug("slug-original");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(categoriaRepository.existsByNombreAndIdNot("Nuevo nombre", 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoriaService.updateCategoria(1L, request))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("nombre");
+    }
+
+    @Test
+    void updateCategoria_slugDuplicado_lanzaDuplicateResourceException() {
+        CategoriaRequestDTO request = new CategoriaRequestDTO();
+        request.setNombre("Nombre original");
+        request.setSlug("nuevo-slug");
+
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Nombre original");
+        categoria.setSlug("slug-original");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(categoriaRepository.existsBySlugAndIdNot("nuevo-slug", 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoriaService.updateCategoria(1L, request))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("slug");
+    }
+
+    @Test
+    void updateCategoria_padreNoExiste_lanzaResourceNotFoundException() {
+        CategoriaRequestDTO request = new CategoriaRequestDTO();
+        request.setNombre("Nombre original");
+        request.setSlug("slug-original");
+        request.setPadreId(999L);
+
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Nombre original");
+        categoria.setSlug("slug-original");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+
+        assertThatThrownBy(() -> categoriaService.updateCategoria(1L, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("categoría padre");
+    }
+
+    @Test
+    void updateCategoria_cicloAncestral_lanzaDomainException() {
+        Categoria padre = new Categoria();
+        padre.setId(1L);
+        padre.setNombre("Padre");
+        padre.setSlug("padre");
+        padre.setPadre(null);
+
+        Categoria subCategoria = new Categoria();
+        subCategoria.setId(2L);
+        subCategoria.setNombre("Sub");
+        subCategoria.setSlug("sub");
+        subCategoria.setPadre(padre);
+
+        CategoriaRequestDTO request = new CategoriaRequestDTO();
+        request.setNombre("Original");
+        request.setSlug("original");
+        request.setPadreId(2L);
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(padre));
+        when(categoriaRepository.existsByNombreAndIdNot("Original", 1L)).thenReturn(false);
+        when(categoriaRepository.existsBySlugAndIdNot("original", 1L)).thenReturn(false);
+        when(categoriaRepository.findById(2L)).thenReturn(Optional.of(subCategoria));
+
+        assertThatThrownBy(() -> categoriaService.updateCategoria(1L, request))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Ciclo detectado");
+    }
+
+    @Test
+    void updateCategoria_conPadreValido_ok() {
+        Categoria padre = new Categoria();
+        padre.setId(2L);
+        padre.setPadre(null);
+
+        CategoriaRequestDTO request = new CategoriaRequestDTO();
+        request.setNombre("Nuevo nombre");
+        request.setSlug("nuevo-slug");
+        request.setPadreId(2L);
+
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Nombre original");
+        categoria.setSlug("slug-original");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(categoriaRepository.existsByNombreAndIdNot("Nuevo nombre", 1L)).thenReturn(false);
+        when(categoriaRepository.existsBySlugAndIdNot("nuevo-slug", 1L)).thenReturn(false);
+        when(categoriaRepository.findById(2L)).thenReturn(Optional.of(padre));
+        when(categoriaRepository.save(categoria)).thenReturn(categoria);
+
+        CategoriaResponseDTO expectedDto = new CategoriaResponseDTO();
+        when(categoriaMapper.toResponseDTO(categoria)).thenReturn(expectedDto);
+
+        CategoriaResponseDTO result = categoriaService.updateCategoria(1L, request);
+
+        assertThat(result).isEqualTo(expectedDto);
+    }
+
+    @Test
+    void createCategoria_conPadre_ok() {
+        CategoriaRequestDTO request = new CategoriaRequestDTO();
+        request.setNombre("Subcategoría");
+        request.setSlug("subcategoria");
+        request.setPadreId(1L);
+
+        when(categoriaRepository.existsByNombre("Subcategoría")).thenReturn(false);
+        when(categoriaRepository.existsBySlug("subcategoria")).thenReturn(false);
+        when(categoriaRepository.existsById(1L)).thenReturn(true);
+
+        Categoria categoria = new Categoria();
+        when(categoriaMapper.toEntity(request)).thenReturn(categoria);
+        when(categoriaRepository.save(categoria)).thenReturn(categoria);
+
+        CategoriaResponseDTO expectedDto = new CategoriaResponseDTO();
+        when(categoriaMapper.toResponseDTO(categoria)).thenReturn(expectedDto);
+
+        CategoriaResponseDTO result = categoriaService.createCategoria(request);
+
+        assertThat(result).isEqualTo(expectedDto);
+    }
+
+    @Test
+    void getCategoriaBySlug_ok() {
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        when(categoriaRepository.findBySlug("electronica")).thenReturn(Optional.of(categoria));
+        CategoriaResponseDTO expectedDto = new CategoriaResponseDTO();
+        when(categoriaMapper.toResponseDTO(categoria)).thenReturn(expectedDto);
+
+        CategoriaResponseDTO result = categoriaService.getCategoriaBySlug("electronica");
+
+        assertThat(result).isEqualTo(expectedDto);
+    }
+
+    @Test
+    void deleteCategoria_conSubcategoriasSinProductos_ok() {
+        Categoria subCategoria = new Categoria();
+        subCategoria.setId(2L);
+        subCategoria.setSubcategorias(null);
+
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Electrónica");
+        categoria.setSubcategorias(List.of(subCategoria));
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(productoRepository.findByCategoriaIdIn(anyList())).thenReturn(List.of());
+
+        categoriaService.deleteCategoria(1L);
+
+        verify(categoriaRepository).delete(categoria);
+    }
 }

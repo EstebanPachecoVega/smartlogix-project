@@ -84,6 +84,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
@@ -159,7 +164,7 @@
 									<limits>
 										<limit>
 											<counter>INSTRUCTION</counter>
-											<value>COVERED_RATIO</value>
+											<value>COVEREDRATIO</value>
 											<minimum>0.90</minimum>
 										</limit>
 									</limits>

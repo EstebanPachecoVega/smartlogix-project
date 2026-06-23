@@ -98,4 +98,46 @@ class CategoriaMapperImplTest {
 
         assertEquals("original", entity.getSlug());
     }
+
+    @Test
+    void updateEntity_nullNombre_skipsNombre() {
+        Categoria entity = new Categoria();
+        entity.setId(1L);
+        entity.setNombre("Original");
+        entity.setSlug("original");
+
+        CategoriaRequestDTO dto = new CategoriaRequestDTO();
+        dto.setSlug("nuevo-slug");
+
+        mapper.updateEntity(entity, dto);
+
+        assertEquals("Original", entity.getNombre());
+        assertEquals("nuevo-slug", entity.getSlug());
+    }
+
+    @Test
+    void updateEntity_allFieldsSet() {
+        Categoria entity = new Categoria();
+        entity.setId(1L);
+        entity.setNombre("Original");
+        entity.setSlug("original");
+        entity.setDescripcion("Desc original");
+        entity.setOrdenVisual(1);
+        entity.setActivo(false);
+
+        CategoriaRequestDTO dto = new CategoriaRequestDTO();
+        dto.setNombre("Actualizado");
+        dto.setSlug("actualizado");
+        dto.setDescripcion("Nueva desc");
+        dto.setOrdenVisual(5);
+        dto.setActivo(true);
+
+        mapper.updateEntity(entity, dto);
+
+        assertEquals("Actualizado", entity.getNombre());
+        assertEquals("actualizado", entity.getSlug());
+        assertEquals("Nueva desc", entity.getDescripcion());
+        assertEquals(5, entity.getOrdenVisual());
+        assertTrue(entity.getActivo());
+    }
 }

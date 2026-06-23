@@ -22,6 +22,7 @@ public class CorrelationIdFilter implements GlobalFilter, Ordered {
         }
         final String finalCorrelationId = correlationId;
         MDC.put("correlationId", finalCorrelationId);
+        exchange.getResponse().getHeaders().set(CORRELATION_ID_HEADER, finalCorrelationId);
         ServerWebExchange mutatedExchange = exchange.mutate()
                 .request(r -> r.header(CORRELATION_ID_HEADER, finalCorrelationId))
                 .build();
