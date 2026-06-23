@@ -92,8 +92,9 @@ class GlobalExceptionHandlerTest {
         ProblemDetail pd = handler.handleValidation(ex, request);
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), pd.getStatus());
-        assertEquals("Error de validación", pd.getTitle());
+        assertEquals("Error de validacion", pd.getTitle());
         assertNotNull(pd.getProperties().get("errors"));
         assertInstanceOf(Map.class, pd.getProperties().get("errors"));
     }
+
 }
