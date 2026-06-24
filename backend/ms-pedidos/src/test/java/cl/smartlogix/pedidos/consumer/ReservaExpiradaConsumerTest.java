@@ -72,6 +72,28 @@ class ReservaExpiradaConsumerTest {
     }
 
     @Test
+    void handleReservaExpirada_conCorrelationId_mdcSet() {
+        ReservaExpiradaEvent event = new ReservaExpiradaEvent("1");
+        MessageProperties props = new MessageProperties();
+        props.setHeader("X-Correlation-Id", "test-correlation-id");
+        when(message.getMessageProperties()).thenReturn(props);
+
+        Pedido pedido = Pedido.builder()
+                .id(1L).numeroOrden("ORD-001").estado(EstadoPedido.PENDIENTE)
+                .detalles(List.of(
+                        DetallePedido.builder().productoId(10L).cantidad(2).build()
+                ))
+                .build();
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+
+        consumer.handleReservaExpirada(event, message);
+
+        verify(pedidoRepository).save(argThat(p -> p.getEstado() == EstadoPedido.RECHAZADO));
+        verify(inventarioClient).cancelarReserva(any(CancelarReservaRequestDTO.class));
+    }
+
+    @Test
     void handleReservaExpirada_pedidoNoEncontrado_manejaError() {
         ReservaExpiradaEvent event = new ReservaExpiradaEvent("999");
         MessageProperties props = new MessageProperties();

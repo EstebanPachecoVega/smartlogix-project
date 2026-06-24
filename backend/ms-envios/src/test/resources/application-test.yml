@@ -1,24 +1,6 @@
 spring:
   autoconfigure:
     exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-    open-in-view: false
-  rabbitmq:
-    host: ${RABBITMQ_HOST_TEST:localhost}
-    port: ${RABBITMQ_PORT_TEST:5672}
-    username: guest
-    password: guest
-    listener:
-      simple:
-        retry:
-          enabled: false
-        default-requeue-rejected: false
-
-logging:
-  level:
-    cl.smartlogix: DEBUG
-    org.springframework.amqp: WARN
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration

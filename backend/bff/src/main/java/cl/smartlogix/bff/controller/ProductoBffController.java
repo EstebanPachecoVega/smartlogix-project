@@ -20,7 +20,7 @@ public class ProductoBffController {
 
     @GetMapping
     public Mono<List<ProductoResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.getProductos(jwt, MDC.get("correlationId"));

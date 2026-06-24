@@ -179,6 +179,48 @@ class CategoriaServiceImplTest {
     }
 
     @Test
+    void deleteCategoria_con6Productos_lanzaDomainException_conResto() {
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Electrónica");
+
+        List<Producto> productos = java.util.stream.IntStream.rangeClosed(1, 7)
+                .mapToObj(i -> {
+                    Producto p = new Producto();
+                    p.setNombre("Producto " + i);
+                    return p;
+                })
+                .toList();
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(productoRepository.findByCategoriaIdIn(anyList())).thenReturn(productos);
+
+        assertThatThrownBy(() -> categoriaService.deleteCategoria(1L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("y 2 más")
+                .hasMessageContaining("7 productos están")
+                .hasMessageContaining("asociados");
+    }
+
+    @Test
+    void deleteCategoria_con2Productos_lanzaDomainException_plural() {
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Test");
+
+        Producto p1 = new Producto(); p1.setNombre("P1");
+        Producto p2 = new Producto(); p2.setNombre("P2");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(productoRepository.findByCategoriaIdIn(anyList())).thenReturn(List.of(p1, p2));
+
+        assertThatThrownBy(() -> categoriaService.deleteCategoria(1L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("2 productos están")
+                .hasMessageContaining("asociados");
+    }
+
+    @Test
     void deleteCategoria_conProductos_lanzaDomainException() {
         Categoria categoria = new Categoria();
         categoria.setId(1L);
@@ -340,6 +382,38 @@ class CategoriaServiceImplTest {
     }
 
     @Test
+    void updateCategoria_ciclo3Niveles_lanzaDomainException() {
+        Categoria abuelo = new Categoria();
+        abuelo.setId(1L);
+        abuelo.setNombre("Abuelo");
+        abuelo.setSlug("abuelo");
+
+        Categoria padre = new Categoria();
+        padre.setId(2L);
+        padre.setNombre("Padre");
+        padre.setSlug("padre");
+        padre.setPadre(abuelo);
+
+        Categoria hijo = new Categoria();
+        hijo.setId(3L);
+        hijo.setNombre("Hijo");
+        hijo.setSlug("hijo");
+        hijo.setPadre(padre);
+
+        CategoriaRequestDTO request = new CategoriaRequestDTO();
+        request.setNombre("Abuelo");
+        request.setSlug("abuelo");
+        request.setPadreId(3L);
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(abuelo));
+        when(categoriaRepository.findById(3L)).thenReturn(Optional.of(hijo));
+
+        assertThatThrownBy(() -> categoriaService.updateCategoria(1L, request))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Ciclo detectado");
+    }
+
+    @Test
     void updateCategoria_cicloAncestral_lanzaDomainException() {
         Categoria padre = new Categoria();
         padre.setId(1L);
@@ -396,6 +470,14 @@ class CategoriaServiceImplTest {
         CategoriaResponseDTO result = categoriaService.updateCategoria(1L, request);
 
         assertThat(result).isEqualTo(expectedDto);
+    }
+
+    @Test
+    void validarCicloJerarquico_nuevoPadreNull_retornaSinError() throws Exception {
+        java.lang.reflect.Method method = CategoriaServiceImpl.class
+                .getDeclaredMethod("validarCicloJerarquico", Long.class, Categoria.class);
+        method.setAccessible(true);
+        method.invoke(categoriaService, 1L, (Object) null);
     }
 
     @Test

@@ -230,6 +230,28 @@ class RedisStockServiceTest {
     }
 
     @Test
+    void reservar_sessionCallback_execVacio_retornaFalse() {
+        when(redisTemplate.hasKey("reserva:res-1:1")).thenReturn(false);
+        doAnswer(invocation -> {
+            SessionCallback<Boolean> cb = invocation.getArgument(0);
+            return cb.execute(redisOps);
+        }).when(redisTemplate).execute(any(SessionCallback.class));
+        doNothing().when(redisOps).watch(anyString());
+        when(redisOps.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("stock:1")).thenReturn("10");
+        doNothing().when(redisOps).multi();
+        when(valueOps.decrement(anyString(), anyLong())).thenReturn(1L);
+        doNothing().when(valueOps).set(anyString(), anyInt(), anyLong(), any());
+        when(redisOps.exec()).thenReturn(List.of());
+
+        Boolean result = redisStockService.reservar("res-1", 1L, 5, 10);
+
+        assertThat(result).isFalse();
+        verify(redisOps).multi();
+        verify(redisOps).exec();
+    }
+
+    @Test
     void reservar_sessionCallback_conflictoOptimista_retornaFalse() {
         when(redisTemplate.hasKey("reserva:res-1:1")).thenReturn(false);
         doAnswer(invocation -> {

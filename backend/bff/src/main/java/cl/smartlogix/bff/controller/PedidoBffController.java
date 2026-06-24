@@ -23,7 +23,7 @@ public class PedidoBffController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<PedidoResponseDTO> crear(@Valid @RequestBody CrearPedidoRequestDTO request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
@@ -32,7 +32,7 @@ public class PedidoBffController {
 
     @GetMapping
     public Mono<List<PedidoResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.listarPedidos(jwt, MDC.get("correlationId"));
@@ -40,7 +40,7 @@ public class PedidoBffController {
 
     @GetMapping("/{id}")
     public Mono<PedidoResponseDTO> obtener(@PathVariable Long id,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.obtenerPedido(id, jwt, MDC.get("correlationId"));

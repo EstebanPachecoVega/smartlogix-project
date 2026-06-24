@@ -123,6 +123,34 @@ class ProductoServiceImplTest {
     }
 
     @Test
+    void createProducto_skuNull_ok() {
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setNombre("Producto Test");
+        request.setSlug("producto-test");
+        request.setCategoriaId(1L);
+
+        when(productoRepository.existsByNombre("Producto Test")).thenReturn(false);
+        when(productoRepository.existsBySlug("producto-test")).thenReturn(false);
+
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+
+        Producto producto = new Producto();
+        producto.setId(10L);
+        producto.setCantidad(50);
+        when(productoMapper.toEntity(request)).thenReturn(producto);
+        when(productoRepository.save(producto)).thenReturn(producto);
+
+        ProductoResponseDTO expectedDto = new ProductoResponseDTO();
+        when(productoMapper.toResponseDTO(producto)).thenReturn(expectedDto);
+
+        productoService.createProducto(request);
+
+        verify(redisStockService).inicializarStock(10L, 50);
+    }
+
+    @Test
     void createProducto_categoriaNoExiste_lanzaResourceNotFoundException() {
         ProductoRequestDTO request = new ProductoRequestDTO();
         request.setSku("SKU-001");
@@ -154,6 +182,39 @@ class ProductoServiceImplTest {
         productoExistente.setSlug("producto-original");
         productoExistente.setCantidad(30);
 
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(productoExistente));
+        when(productoRepository.existsBySku("SKU-002")).thenReturn(false);
+        when(productoRepository.existsByNombre("Producto Actualizado")).thenReturn(false);
+        when(productoRepository.existsBySlug("producto-actualizado")).thenReturn(false);
+        when(productoRepository.save(productoExistente)).thenReturn(productoExistente);
+
+        ProductoResponseDTO expectedDto = new ProductoResponseDTO();
+        when(productoMapper.toResponseDTO(productoExistente)).thenReturn(expectedDto);
+
+        ProductoResponseDTO result = productoService.updateProducto(1L, request);
+
+        assertThat(result).isEqualTo(expectedDto);
+        verify(redisStockService).inicializarStock(1L, 30);
+    }
+
+    @Test
+    void updateProducto_conCategoria_ok() {
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setSku("SKU-002");
+        request.setNombre("Producto Actualizado");
+        request.setSlug("producto-actualizado");
+        request.setCategoriaId(1L);
+
+        Producto productoExistente = new Producto();
+        productoExistente.setId(1L);
+        productoExistente.setSku("SKU-001");
+        productoExistente.setNombre("Producto Original");
+        productoExistente.setSlug("producto-original");
+        productoExistente.setCantidad(30);
+
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
         when(productoRepository.findById(1L)).thenReturn(Optional.of(productoExistente));
         when(productoRepository.existsBySku("SKU-002")).thenReturn(false);
         when(productoRepository.existsByNombre("Producto Actualizado")).thenReturn(false);
@@ -275,6 +336,15 @@ class ProductoServiceImplTest {
         when(productoRepository.filtrarProductos(null, null, null, null, null, null, null)).thenReturn(List.of());
 
         List<ProductoResponseDTO> result = productoService.getProductosFiltrados(null, null, null, null, null, null, null);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getProductosFiltrados_nombreVacio_trataComoNull() {
+        when(productoRepository.filtrarProductos(null, null, null, null, null, null, null)).thenReturn(List.of());
+
+        List<ProductoResponseDTO> result = productoService.getProductosFiltrados("", null, null, null, null, null, null);
 
         assertThat(result).isEmpty();
     }

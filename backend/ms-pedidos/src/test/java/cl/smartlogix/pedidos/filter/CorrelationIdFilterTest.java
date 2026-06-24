@@ -57,6 +57,22 @@ class CorrelationIdFilterTest {
     }
 
     @Test
+    void doFilter_generatesNewCorrelationIdWhenBlank() throws Exception {
+        when(request.getHeader("X-Correlation-Id")).thenReturn("");
+
+        final String[] captured = {null};
+        doAnswer(invocation -> {
+            captured[0] = MDC.get("correlationId");
+            return null;
+        }).when(chain).doFilter(request, response);
+
+        filter.doFilter(request, response, chain);
+
+        assertNotNull(captured[0]);
+        verify(chain).doFilter(request, response);
+    }
+
+    @Test
     void doFilter_cleansMdcAfterRequest() throws Exception {
         when(request.getHeader("X-Correlation-Id")).thenReturn("test-id");
 

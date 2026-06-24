@@ -83,6 +83,34 @@ class PedidoControllerTest {
         return ctx;
     }
 
+    private static SecurityContext userContextRealmAccessSinRoles() {
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "RS256")
+                .claim("sub", "user123")
+                .claim("realm_access", Map.of())
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .build();
+        JwtAuthenticationToken auth = new JwtAuthenticationToken(jwt, List.of(() -> "ROLE_user"));
+        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+        ctx.setAuthentication(auth);
+        return ctx;
+    }
+
+    private static SecurityContext userContextRealmAccessSinGestor() {
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "RS256")
+                .claim("sub", "user123")
+                .claim("realm_access", Map.of("roles", List.of("user")))
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .build();
+        JwtAuthenticationToken auth = new JwtAuthenticationToken(jwt, List.of(() -> "ROLE_user"));
+        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+        ctx.setAuthentication(auth);
+        return ctx;
+    }
+
     @Test
     void crearPedido_201() throws Exception {
         CrearPedidoRequestDTO request = crearRequestValido();
@@ -252,6 +280,103 @@ class PedidoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].cantidad").value(10));
+    }
+
+    // ---------- FORBIDDEN when non-gestor accesses another user's pedido ----------
+
+    @Test
+    void obtenerPedidoPorId_otroUsuario_forbidden() throws Exception {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("otro-user");
+
+        when(pedidoService.obtenerPedidoPorId(1L)).thenReturn(pedido);
+
+        mockMvc.perform(get("/api/pedidos/1")
+                        .with(securityContext(userContext())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void obtenerPedidoPorNumeroOrden_otroUsuario_forbidden() throws Exception {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("otro-user");
+
+        when(pedidoService.obtenerPedidoPorNumeroOrden("ORD-001")).thenReturn(pedido);
+
+        mockMvc.perform(get("/api/pedidos/orden/ORD-001")
+                        .with(securityContext(userContext())))
+                .andExpect(status().isForbidden());
+    }
+
+    // ---------- esGestor branch coverage ----------
+
+    @Test
+    void obtenerPedidoPorId_realmAccessSinRoles_esGestorFalse() throws Exception {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("otro-user");
+
+        when(pedidoService.obtenerPedidoPorId(1L)).thenReturn(pedido);
+
+        mockMvc.perform(get("/api/pedidos/1")
+                        .with(securityContext(userContextRealmAccessSinRoles())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void obtenerPedidoPorId_realmAccessSinGestor_esGestorFalse() throws Exception {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("otro-user");
+
+        when(pedidoService.obtenerPedidoPorId(1L)).thenReturn(pedido);
+
+        mockMvc.perform(get("/api/pedidos/1")
+                        .with(securityContext(userContextRealmAccessSinGestor())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void obtenerPedidoPorId_comoUsuarioPropio_200() throws Exception {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("user123");
+        PedidoResponseDTO dto = new PedidoResponseDTO();
+        dto.setId(1L);
+
+        when(pedidoService.obtenerPedidoPorId(1L)).thenReturn(pedido);
+        when(pedidoMapper.toResponseDTO(pedido)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/pedidos/1")
+                        .with(securityContext(userContext())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void obtenerPedidoPorNumeroOrden_comoGestor_200() throws Exception {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("otro-user");
+        PedidoResponseDTO dto = new PedidoResponseDTO();
+        dto.setId(1L);
+
+        when(pedidoService.obtenerPedidoPorNumeroOrden("ORD-001")).thenReturn(pedido);
+        when(pedidoMapper.toResponseDTO(pedido)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/pedidos/orden/ORD-001")
+                        .with(securityContext(gestorContext())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void obtenerPedidoPorId_comoGestor_sobrePedidoAjeno_ok() throws Exception {
+        Pedido pedido = new Pedido();
+        pedido.setUsuarioId("otro-user");
+        PedidoResponseDTO dto = new PedidoResponseDTO();
+        dto.setId(1L);
+
+        when(pedidoService.obtenerPedidoPorId(1L)).thenReturn(pedido);
+        when(pedidoMapper.toResponseDTO(pedido)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/pedidos/1")
+                        .with(securityContext(gestorContext())))
+                .andExpect(status().isOk());
     }
 
     private CrearPedidoRequestDTO crearRequestValido() {

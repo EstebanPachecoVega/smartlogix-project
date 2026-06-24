@@ -93,4 +93,11 @@ class ProductoLogisticaControllerTest {
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
+
+    @Test
+    void listar_withoutAuth_returnsUnauthorized() {
+        webTestClient.get().uri("/bff/logistica/productos")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
 }

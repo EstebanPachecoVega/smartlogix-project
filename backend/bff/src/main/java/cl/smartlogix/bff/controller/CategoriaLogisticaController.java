@@ -22,7 +22,7 @@ public class CategoriaLogisticaController {
 
     @GetMapping
     public Mono<List<CategoriaResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.listarCategorias(jwt, MDC.get("correlationId"));
@@ -30,7 +30,7 @@ public class CategoriaLogisticaController {
 
     @GetMapping("/{id}")
     public Mono<CategoriaResponseDTO> obtener(@PathVariable Long id,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.obtenerCategoria(id, jwt, MDC.get("correlationId"));
@@ -39,7 +39,7 @@ public class CategoriaLogisticaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<CategoriaResponseDTO> crear(@RequestBody CategoriaRequestDTO request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.crearCategoria(request, jwt, MDC.get("correlationId"));
@@ -47,7 +47,7 @@ public class CategoriaLogisticaController {
 
     @PutMapping("/{id}")
     public Mono<CategoriaResponseDTO> actualizar(@PathVariable Long id, @RequestBody CategoriaRequestDTO request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.actualizarCategoria(id, request, jwt, MDC.get("correlationId"));
@@ -56,7 +56,7 @@ public class CategoriaLogisticaController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> eliminar(@PathVariable Long id,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.eliminarCategoria(id, jwt, MDC.get("correlationId"));
@@ -65,7 +65,7 @@ public class CategoriaLogisticaController {
     @PatchMapping("/reordenar")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> reordenar(@RequestBody List<ReordenarCategoriaDTO> ordenes,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.reordenarCategorias(ordenes, jwt, MDC.get("correlationId"));

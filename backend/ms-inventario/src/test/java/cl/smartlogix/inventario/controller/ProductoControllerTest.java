@@ -243,6 +243,72 @@ class ProductoControllerTest {
     }
 
     @Test
+    void filtrados_soloCategoriaId() throws Exception {
+        ProductoResponseDTO p = new ProductoResponseDTO();
+        p.setId(1L);
+        when(productoService.getProductosFiltrados(eq(null), eq(1L), eq(null), eq(null), eq(null), eq(null), eq(null)))
+                .thenReturn(List.of(p));
+        mockMvc.perform(get("/api/productos").param("categoriaId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void filtrados_soloConStock() throws Exception {
+        ProductoResponseDTO p = new ProductoResponseDTO();
+        p.setId(1L);
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(true), eq(null), eq(null), eq(null), eq(null)))
+                .thenReturn(List.of(p));
+        mockMvc.perform(get("/api/productos").param("conStock", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void filtrados_soloPrecioMin() throws Exception {
+        ProductoResponseDTO p = new ProductoResponseDTO();
+        p.setId(1L);
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(100), eq(null), eq(null), eq(null)))
+                .thenReturn(List.of(p));
+        mockMvc.perform(get("/api/productos").param("precioMin", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void filtrados_soloPrecioMax() throws Exception {
+        ProductoResponseDTO p = new ProductoResponseDTO();
+        p.setId(1L);
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(500), eq(null), eq(null)))
+                .thenReturn(List.of(p));
+        mockMvc.perform(get("/api/productos").param("precioMax", "500"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void filtrados_soloDestacado() throws Exception {
+        ProductoResponseDTO p = new ProductoResponseDTO();
+        p.setId(1L);
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(null), eq(true), eq(null)))
+                .thenReturn(List.of(p));
+        mockMvc.perform(get("/api/productos").param("destacado", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void filtrados_soloNovedad() throws Exception {
+        ProductoResponseDTO p = new ProductoResponseDTO();
+        p.setId(1L);
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(true)))
+                .thenReturn(List.of(p));
+        mockMvc.perform(get("/api/productos").param("novedad", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
     void getProductosFiltrados_conParametros() throws Exception {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);

@@ -36,4 +36,18 @@ class ProductoBffControllerTest {
                 .expectStatus().isOk();
     }
 
+    @Test
+    void listar_withoutAuth_returnsUnauthorized() {
+        webTestClient.get().uri("/bff/productos")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    void listar_withInvalidAuth_returnsUnauthorized() {
+        webTestClient.get().uri("/bff/productos")
+                .header("Authorization", "InvalidToken")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
 }

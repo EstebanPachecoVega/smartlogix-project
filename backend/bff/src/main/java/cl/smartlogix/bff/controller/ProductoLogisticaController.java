@@ -21,7 +21,7 @@ public class ProductoLogisticaController {
 
     @GetMapping
     public Mono<List<ProductoResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.getProductos(jwt, MDC.get("correlationId"));
@@ -30,7 +30,7 @@ public class ProductoLogisticaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<ProductoResponseDTO> crear(@RequestBody ProductoRequestDTO request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.crearProducto(request, jwt, MDC.get("correlationId"));
@@ -38,7 +38,7 @@ public class ProductoLogisticaController {
 
     @GetMapping("/{id}")
     public Mono<ProductoResponseDTO> obtener(@PathVariable Long id,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.obtenerProducto(id, jwt, MDC.get("correlationId"));
@@ -46,7 +46,7 @@ public class ProductoLogisticaController {
 
     @PutMapping("/{id}")
     public Mono<ProductoResponseDTO> actualizar(@PathVariable Long id, @RequestBody ProductoRequestDTO request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.actualizarProducto(id, request, jwt, MDC.get("correlationId"));
@@ -55,7 +55,7 @@ public class ProductoLogisticaController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> eliminar(@PathVariable Long id,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.eliminarProducto(id, jwt, MDC.get("correlationId"));

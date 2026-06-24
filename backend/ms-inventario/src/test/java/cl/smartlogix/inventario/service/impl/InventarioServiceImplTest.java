@@ -53,6 +53,19 @@ class InventarioServiceImplTest {
     }
 
     @Test
+    void reservarStockLote_conReservaIdBlank_generaUUID() {
+        List<ReservarStockRequestDTO> items = List.of(
+                new ReservarStockRequestDTO(1L, 5)
+        );
+        when(redisStockService.reservar(anyString(), eq(1L), eq(5), anyInt())).thenReturn(true);
+
+        String reservaId = inventarioService.reservarStockLote(items, "");
+
+        assertThat(reservaId).isNotBlank();
+        assertThat(reservaId).doesNotContain("reserva-fija");
+    }
+
+    @Test
     void reservarStockLote_conReservaIdExistente() {
         List<ReservarStockRequestDTO> items = List.of(
                 new ReservarStockRequestDTO(1L, 2)
@@ -158,6 +171,13 @@ class InventarioServiceImplTest {
     }
 
     @Test
+    void liberarStock_cantidadNull_lanzaDomainException() {
+        assertThatThrownBy(() -> inventarioService.liberarStock(1L, null, "res-1"))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("debe ser mayor a cero");
+    }
+
+    @Test
     void liberarStock_cantidadInvalida_lanzaDomainException() {
         assertThatThrownBy(() -> inventarioService.liberarStock(1L, -1, "res-1"))
                 .isInstanceOf(DomainException.class)
@@ -166,6 +186,34 @@ class InventarioServiceImplTest {
         assertThatThrownBy(() -> inventarioService.liberarStock(1L, 0, "res-1"))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("debe ser mayor a cero");
+    }
+
+    @Test
+    void liberarStock_conReservaIdBlank_skipCancelar() {
+        when(productoRepository.adicionarStockAtomico(1L, 10)).thenReturn(1);
+        Producto producto = new Producto();
+        producto.setId(1L);
+        producto.setCantidad(100);
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
+
+        inventarioService.liberarStock(1L, 10, "");
+
+        verify(redisStockService, never()).cancelarReserva(anyString(), anyLong());
+        verify(redisStockService).inicializarStock(1L, 100);
+    }
+
+    @Test
+    void liberarStock_filas0_productoExiste_noLanzaExcepcion() {
+        when(productoRepository.adicionarStockAtomico(1L, 10)).thenReturn(0);
+        when(productoRepository.existsById(1L)).thenReturn(true);
+        Producto producto = new Producto();
+        producto.setId(1L);
+        producto.setCantidad(50);
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
+
+        inventarioService.liberarStock(1L, 10, null);
+
+        verify(redisStockService).inicializarStock(1L, 50);
     }
 
     @Test
@@ -205,5 +253,69 @@ class InventarioServiceImplTest {
 
         verify(redisStockService, never()).cancelarReserva(anyString(), anyLong());
         verify(redisStockService).inicializarStock(1L, 100);
+    }
+
+    @Test
+    void sincronizarStockInicial_llamaInicializarParaCadaProducto() {
+        Producto p1 = new Producto();
+        p1.setId(1L);
+        p1.setCantidad(10);
+        Producto p2 = new Producto();
+        p2.setId(2L);
+        p2.setCantidad(20);
+        when(productoRepository.findAll()).thenReturn(List.of(p1, p2));
+
+        inventarioService.sincronizarStockInicial();
+
+        verify(redisStockService).inicializarStock(1L, 10);
+        verify(redisStockService).inicializarStock(2L, 20);
+    }
+
+    @Test
+    void sincronizarStockInicial_sinProductos_noLlamaInicializar() {
+        when(productoRepository.findAll()).thenReturn(List.of());
+
+        inventarioService.sincronizarStockInicial();
+
+        verify(redisStockService, never()).inicializarStock(anyLong(), anyInt());
+    }
+
+    @Test
+    void reconciliarStock_corrigeDiscrepancia() {
+        Producto p = new Producto();
+        p.setId(1L);
+        p.setCantidad(50);
+        when(productoRepository.findAll()).thenReturn(List.of(p));
+        when(redisStockService.obtenerStockRedis(1L)).thenReturn(30);
+
+        inventarioService.reconciliarStock();
+
+        verify(redisStockService).inicializarStock(1L, 50);
+    }
+
+    @Test
+    void reconciliarStock_sinDiscrepancia_noCorrige() {
+        Producto p = new Producto();
+        p.setId(1L);
+        p.setCantidad(50);
+        when(productoRepository.findAll()).thenReturn(List.of(p));
+        when(redisStockService.obtenerStockRedis(1L)).thenReturn(50);
+
+        inventarioService.reconciliarStock();
+
+        verify(redisStockService, never()).inicializarStock(anyLong(), anyInt());
+    }
+
+    @Test
+    void reconciliarStock_stockRedisNull_inicializa() {
+        Producto p = new Producto();
+        p.setId(1L);
+        p.setCantidad(50);
+        when(productoRepository.findAll()).thenReturn(List.of(p));
+        when(redisStockService.obtenerStockRedis(1L)).thenReturn(null);
+
+        inventarioService.reconciliarStock();
+
+        verify(redisStockService).inicializarStock(1L, 50);
     }
 }

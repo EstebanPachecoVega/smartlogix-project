@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 
@@ -61,5 +63,45 @@ class PedidoAprobadoConsumerTest {
         consumer.handlePedidoAprobado(event, message);
 
         verify(envioRepository, never()).save(any());
+    }
+
+    @Test
+    void handlePedidoAprobado_setsCorrelationIdInMdc() {
+        MessageProperties props = new MessageProperties();
+        props.setHeader("X-Correlation-Id", "test-correlation-id");
+        when(message.getMessageProperties()).thenReturn(props);
+        when(envioRepository.findByPedidoId(1L)).thenReturn(Optional.empty());
+
+        var event = PedidoAprobadoEventDTO.builder()
+                .pedidoId(1L).usuarioId("user-1").destinatario("Juan")
+                .calle("Av 1").numero("123").comuna("Santiago").ciudad("Santiago")
+                .codigoPostal("8320000").metodoEnvio("ESTANDAR").pesoKg(1.0).dimensiones("10x10")
+                .build();
+
+        doAnswer(invocation -> {
+            assertEquals("test-correlation-id", MDC.get("correlationId"));
+            return null;
+        }).when(envioRepository).save(any());
+
+        consumer.handlePedidoAprobado(event, message);
+
+        assertNull(MDC.get("correlationId"));
+    }
+
+    @Test
+    void handlePedidoAprobado_rethrowsOnException() {
+        MessageProperties props = new MessageProperties();
+        when(message.getMessageProperties()).thenReturn(props);
+        when(envioRepository.findByPedidoId(1L)).thenReturn(Optional.empty());
+        when(envioRepository.save(any())).thenThrow(new RuntimeException("DB error"));
+
+        var event = PedidoAprobadoEventDTO.builder()
+                .pedidoId(1L).usuarioId("user-1").destinatario("Juan")
+                .calle("Av 1").numero("123").comuna("Santiago").ciudad("Santiago")
+                .codigoPostal("8320000").metodoEnvio("ESTANDAR").pesoKg(1.0).dimensiones("10x10")
+                .build();
+
+        assertThrows(AmqpRejectAndDontRequeueException.class,
+                () -> consumer.handlePedidoAprobado(event, message));
     }
 }

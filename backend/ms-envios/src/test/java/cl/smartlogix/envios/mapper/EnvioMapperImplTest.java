@@ -61,4 +61,31 @@ class EnvioMapperImplTest {
     void toResponseDTO_nullEnvio_returnsNull() {
         assertNull(mapper.toResponseDTO(null));
     }
+
+    @Test
+    void toResponseDTO_nullEstadoEnvio_returnsNullEstadoEnvio() {
+        Envio envio = Envio.builder()
+                .id(1L)
+                .pedidoId(100L)
+                .usuarioId("user-1")
+                .destinatario("Juan Perez")
+                .calle("Av. Siempre Viva")
+                .numero("742")
+                .comuna("Santiago")
+                .ciudad("Santiago")
+                .codigoPostal("8320000")
+                .metodoEnvio("ESTANDAR")
+                .pesoKg(2.5)
+                .dimensiones("30x20x10")
+                .empresaLogistica("LOGIX")
+                .numeroTracking("TRK-ABC123")
+                .fechaEstimadaEntrega(LocalDate.of(2026, 7, 1))
+                .fechaCreacion(LocalDateTime.of(2026, 6, 22, 10, 0))
+                .build();
+
+        EnvioResponseDTO dto = mapper.toResponseDTO(envio);
+
+        assertNotNull(dto);
+        assertNull(dto.getEstadoEnvio());
+    }
 }

@@ -60,4 +60,18 @@ class CorrelationIdFilterTest {
 
         assertNull(MDC.get("correlationId"));
     }
+
+    @Test
+    void doFilter_generatesNewCorrelationIdWhenBlank() throws Exception {
+        when(request.getHeader("X-Correlation-Id")).thenReturn("   ");
+
+        doAnswer(invocation -> {
+            assertNotNull(MDC.get("correlationId"));
+            return null;
+        }).when(chain).doFilter(request, response);
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+    }
 }

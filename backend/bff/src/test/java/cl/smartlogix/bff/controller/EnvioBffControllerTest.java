@@ -88,4 +88,11 @@ class EnvioBffControllerTest {
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
+
+    @Test
+    void listar_withoutAuth_returnsUnauthorized() {
+        webTestClient.get().uri("/bff/envios")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
 }

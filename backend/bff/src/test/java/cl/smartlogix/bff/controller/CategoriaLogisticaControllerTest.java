@@ -118,4 +118,11 @@ class CategoriaLogisticaControllerTest {
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
+
+    @Test
+    void listar_withoutAuth_returnsUnauthorized() {
+        webTestClient.get().uri("/bff/logistica/categorias")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
 }

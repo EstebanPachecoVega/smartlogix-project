@@ -20,7 +20,7 @@ public class EnvioBffController {
 
     @GetMapping
     public Mono<List<EnvioResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.listarEnvios(jwt, MDC.get("correlationId"));
@@ -28,7 +28,7 @@ public class EnvioBffController {
 
     @GetMapping("/{id}")
     public Mono<EnvioResponseDTO> obtener(@PathVariable Long id,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.obtenerEnvio(id, jwt, MDC.get("correlationId"));
@@ -36,7 +36,7 @@ public class EnvioBffController {
 
     @GetMapping("/pedido/{pedidoId}")
     public Mono<EnvioResponseDTO> obtenerPorPedidoId(@PathVariable Long pedidoId,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.obtenerEnvioPorPedidoId(pedidoId, jwt, MDC.get("correlationId"));
@@ -44,7 +44,7 @@ public class EnvioBffController {
 
     @PatchMapping("/{id}/estado")
     public Mono<EnvioResponseDTO> actualizarEstado(@PathVariable Long id, @RequestParam String nuevoEstado,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.actualizarEstadoEnvio(id, nuevoEstado, jwt, MDC.get("correlationId"));
@@ -52,7 +52,7 @@ public class EnvioBffController {
 
     @GetMapping("/tracking/{tracking}")
     public Mono<EnvioResponseDTO> obtenerPorTracking(@PathVariable String tracking,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
         return gatewayClient.obtenerEnvioPorTracking(tracking, jwt, MDC.get("correlationId"));

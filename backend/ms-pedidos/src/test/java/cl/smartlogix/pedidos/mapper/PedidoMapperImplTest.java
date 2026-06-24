@@ -101,4 +101,19 @@ class PedidoMapperImplTest {
 
         assertNull(dto.getEstado());
     }
+
+    @Test
+    void toResponseDTO_nullPedido_returnsNull() {
+        assertNull(mapper.toResponseDTO(null));
+    }
+
+    @Test
+    void detallePedidoToDetalleResponseDTO_null_returnsNull() {
+        assertNull(mapper.detallePedidoToDetalleResponseDTO(null));
+    }
+
+    @Test
+    void detallePedidoListToDetalleResponseDTOList_null_returnsNull() {
+        assertNull(mapper.detallePedidoListToDetalleResponseDTOList(null));
+    }
 }

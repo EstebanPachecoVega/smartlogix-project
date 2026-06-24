@@ -2,6 +2,7 @@ package cl.smartlogix.pedidos.client;
 
 import feign.RequestTemplate;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,6 +42,36 @@ class FeignAuthInterceptorTest {
     void apply_withoutAuth_doesNothing() {
         SecurityContext context = mock(SecurityContext.class);
         when(context.getAuthentication()).thenReturn(null);
+        SecurityContextHolder.setContext(context);
+
+        RequestTemplate template = new RequestTemplate();
+        interceptor.apply(template);
+
+        assertFalse(template.headers().containsKey("Authorization"));
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void apply_withNonJwtAuth_doesNothing() {
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken("user", "pass");
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(context);
+
+        RequestTemplate template = new RequestTemplate();
+        interceptor.apply(template);
+
+        assertFalse(template.headers().containsKey("Authorization"));
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void apply_withJwtAuthNullToken_doesNothing() {
+        Jwt jwt = mock(Jwt.class);
+        when(jwt.getTokenValue()).thenReturn(null);
+        JwtAuthenticationToken auth = new JwtAuthenticationToken(jwt);
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(context);
 
         RequestTemplate template = new RequestTemplate();

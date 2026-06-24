@@ -39,6 +39,150 @@ class ProductoMapperImplTest {
     }
 
     @Test
+    void toEntity_null_returnsNull() {
+        assertNull(mapper.toEntity(null));
+    }
+
+    @Test
+    void toEntity_conImagenes_mapsImagenes() {
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setSku("SKU-IMG");
+        dto.setNombre("Con Imágenes");
+        dto.setSlug("con-imagenes");
+        dto.setPrecio(100);
+        dto.setCantidad(5);
+        dto.setImagenes(List.of("img1.jpg", "img2.jpg"));
+
+        Producto entity = mapper.toEntity(dto);
+
+        assertNotNull(entity.getImagenes());
+        assertEquals(2, entity.getImagenes().size());
+        assertEquals("img1.jpg", entity.getImagenes().get(0));
+    }
+
+    @Test
+    void toResponseDTO_null_returnsNull() {
+        assertNull(mapper.toResponseDTO(null));
+    }
+
+    @Test
+    void toResponseDTO_conImagenes_mapsImagenes() {
+        Producto entity = Producto.builder()
+                .id(1L).sku("SKU").nombre("N").slug("n")
+                .precio(100).cantidad(10)
+                .imagenes(List.of("a.jpg", "b.jpg"))
+                .build();
+
+        ProductoResponseDTO dto = mapper.toResponseDTO(entity);
+
+        assertNotNull(dto.getImagenes());
+        assertEquals(2, dto.getImagenes().size());
+    }
+
+    @Test
+    void toResponseDTOList_null_returnsNull() {
+        assertNull(mapper.toResponseDTOList(null));
+    }
+
+    @Test
+    void updateEntity_nullDto_doesNothing() {
+        Producto entity = Producto.builder().id(1L).sku("SKU").nombre("N").slug("n").precio(100).cantidad(10).build();
+        mapper.updateEntity(entity, null);
+        assertEquals("N", entity.getNombre());
+    }
+
+    @Test
+    void updateEntity_conSku_actualizaSku() {
+        Producto entity = Producto.builder().id(1L).sku(null).nombre("N").slug("n").precio(100).cantidad(10).build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setSku("SKU-NUEVO");
+        mapper.updateEntity(entity, dto);
+        assertEquals("SKU-NUEVO", entity.getSku());
+    }
+
+    @Test
+    void updateEntity_conSlug_actualizaSlug() {
+        Producto entity = Producto.builder().id(1L).sku("SKU").nombre("N").slug(null).precio(100).cantidad(10).build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setSlug("nuevo-slug");
+        mapper.updateEntity(entity, dto);
+        assertEquals("nuevo-slug", entity.getSlug());
+    }
+
+    @Test
+    void updateEntity_conImagenPrincipal_actualiza() {
+        Producto entity = Producto.builder().id(1L).sku("SKU").nombre("N").slug("n").precio(100).cantidad(10).build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setImagenPrincipal("principal.jpg");
+        mapper.updateEntity(entity, dto);
+        assertEquals("principal.jpg", entity.getImagenPrincipal());
+    }
+
+    @Test
+    void updateEntity_conActivo_actualiza() {
+        Producto entity = Producto.builder().id(1L).sku("SKU").nombre("N").slug("n").precio(100).cantidad(10).activo(null).build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setActivo(true);
+        mapper.updateEntity(entity, dto);
+        assertTrue(entity.getActivo());
+    }
+
+    @Test
+    void updateEntity_imagenes_entityTiene_reemplaza() {
+        Producto entity = Producto.builder()
+                .id(1L).sku("SKU").nombre("N").slug("n").precio(100).cantidad(10)
+                .imagenes(new java.util.ArrayList<>(List.of("old.jpg")))
+                .build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setImagenes(List.of("new1.jpg", "new2.jpg"));
+        mapper.updateEntity(entity, dto);
+        assertEquals(2, entity.getImagenes().size());
+        assertEquals("new1.jpg", entity.getImagenes().get(0));
+    }
+
+    @Test
+    void updateEntity_imagenes_entityNull_dtoTiene_setea() {
+        Producto entity = Producto.builder()
+                .id(1L).sku("SKU").nombre("N").slug("n").precio(100).cantidad(10)
+                .imagenes(null)
+                .build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setImagenes(List.of("img.jpg"));
+        mapper.updateEntity(entity, dto);
+        assertNotNull(entity.getImagenes());
+        assertEquals(1, entity.getImagenes().size());
+    }
+
+    @Test
+    void updateEntity_imagenes_entityNull_dtoNull_doNothing() {
+        Producto entity = Producto.builder()
+                .id(1L).sku("SKU").nombre("N").slug("n").precio(100).cantidad(10)
+                .imagenes(null)
+                .build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        mapper.updateEntity(entity, dto);
+        assertNull(entity.getImagenes());
+    }
+
+    @Test
+    void updateEntity_imagenes_entityTiene_dtoNull_skip() {
+        Producto entity = Producto.builder()
+                .id(1L).sku("SKU").nombre("N").slug("n").precio(100).cantidad(10)
+                .imagenes(new java.util.ArrayList<>(List.of("keep.jpg")))
+                .build();
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        mapper.updateEntity(entity, dto);
+        assertNotNull(entity.getImagenes());
+        assertEquals(1, entity.getImagenes().size());
+        assertEquals("keep.jpg", entity.getImagenes().get(0));
+    }
+
+    @Test
+    void toStockResponseDTO_null_returnsNull() {
+        assertNull(mapper.toStockResponseDTO(null));
+    }
+
+    @Test
     void toEntity_nullCategoriaId_setsNullCategoria() {
         ProductoRequestDTO dto = new ProductoRequestDTO();
         dto.setSku("SKU-002");
@@ -83,6 +227,17 @@ class ProductoMapperImplTest {
         assertEquals(20, dto.getCantidad());
         assertTrue(dto.getDestacado());
         assertFalse(dto.getNovedad());
+    }
+
+    @Test
+    void toResponseDTO_nullImagenes_noSeteaImagenes() {
+        Producto entity = Producto.builder()
+                .id(1L).sku("SKU").nombre("N").slug("n")
+                .precio(100).cantidad(10)
+                .imagenes(null)
+                .build();
+        ProductoResponseDTO dto = mapper.toResponseDTO(entity);
+        assertNull(dto.getImagenes());
     }
 
     @Test

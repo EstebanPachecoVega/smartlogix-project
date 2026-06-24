@@ -116,6 +116,25 @@ class CategoriaMapperImplTest {
     }
 
     @Test
+    void toEntity_null_returnsNull() {
+        assertNull(mapper.toEntity(null));
+    }
+
+    @Test
+    void toResponseDTO_null_returnsNull() {
+        assertNull(mapper.toResponseDTO(null));
+    }
+
+    @Test
+    void updateEntity_nullDto_doesNothing() {
+        Categoria entity = new Categoria();
+        entity.setId(1L);
+        entity.setNombre("Original");
+        mapper.updateEntity(entity, null);
+        assertEquals("Original", entity.getNombre());
+    }
+
+    @Test
     void updateEntity_allFieldsSet() {
         Categoria entity = new Categoria();
         entity.setId(1L);

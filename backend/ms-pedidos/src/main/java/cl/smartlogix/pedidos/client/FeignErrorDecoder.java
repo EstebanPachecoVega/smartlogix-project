@@ -34,7 +34,7 @@ public class FeignErrorDecoder implements ErrorDecoder {
             var problemDetail = mapper.readValue(body, org.springframework.http.ProblemDetail.class);
             String detail = problemDetail.getDetail();
             Integer status = problemDetail.getStatus();
-            if (status == null) {
+            if (status == 0) {
                 return defaultDecoder.decode(methodKey, response);
             }
 

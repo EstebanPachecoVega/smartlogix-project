@@ -97,4 +97,36 @@ class FeignErrorDecoderTest {
 
         assertNotNull(result);
     }
+
+    @Test
+    void decode_nullStatus_usesDefaultDecoder() {
+        String body = "{\"detail\":\"Sin status\"}";
+        Response response = createMockResponse(500, body);
+
+        Exception result = decoder.decode("InventarioClient#metodo()", response);
+
+        assertNotNull(result);
+    }
+
+    @Test
+    void decode_notFoundSinDetail_returnsResourceNotFoundException() {
+        String body = "{\"status\":404}";
+        Response response = createMockResponse(404, body);
+
+        Exception result = decoder.decode("InventarioClient#metodo()", response);
+
+        assertInstanceOf(ResourceNotFoundException.class, result);
+        assertEquals("Recurso no encontrado", result.getMessage());
+    }
+
+    @Test
+    void decode_unprocessableSinDetail_returnsDomainException() {
+        String body = "{\"status\":422}";
+        Response response = createMockResponse(422, body);
+
+        Exception result = decoder.decode("InventarioClient#metodo()", response);
+
+        assertInstanceOf(DomainException.class, result);
+        assertEquals("Regla de negocio violada", result.getMessage());
+    }
 }
