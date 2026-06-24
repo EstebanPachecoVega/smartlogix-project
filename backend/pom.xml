@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>cl.smartlogix</groupId>
+	<artifactId>smartlogix-backend</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
+	<name>SmartLogix Backend</name>
+	<description>Aggregator POM — análisis multi-módulo con SonarQube</description>
+
+	<properties>
+		<java.version>21</java.version>
+
+		<!-- SonarQube local (por defecto) -->
+		<sonar.host.url>http://localhost:9000</sonar.host.url>
+		<sonar.organization>estebanpachecovega</sonar.organization>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.java.binaries>${project.basedir}/target/classes</sonar.java.binaries>
+		<sonar.junit.reportPaths>${project.basedir}/target/surefire-reports</sonar.junit.reportPaths>
+	</properties>
+
+	<modules>
+		<module>api-gateway</module>
+		<module>bff</module>
+		<module>ms-inventario</module>
+		<module>ms-pedidos</module>
+		<module>ms-envios</module>
+	</modules>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.sonarsource.scanner.maven</groupId>
+					<artifactId>sonar-maven-plugin</artifactId>
+					<version>5.0.0.4389</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>sonar-cloud</id>
+			<properties>
+				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+				<sonar.organization>${env.SONAR_ORGANIZATION}</sonar.organization>
+			</properties>
+		</profile>
+	</profiles>
+</project>
