@@ -87,6 +87,8 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8180/realms/smartlogix/protocol/openid-connect/certs}
+  zipkin:
+    base-url: http://zipkin:9411
 server:
   port: 8080
 
@@ -130,7 +132,10 @@ logging:
     console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
 
 management:
+  tracing:
+    sampling:
+      probability: 0.2
   endpoints:
     web:
       exposure:
-        include: health,info,circuitbreakers,gateway
+        include: health,info,metrics,prometheus,circuitbreakers,gateway

@@ -123,6 +123,7 @@ services:
       SERVER_PORT: 8081
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
+      SPRING_PROFILES_ACTIVE: docker
     depends_on:
       mysql-inventario:
         condition: service_healthy
@@ -155,6 +156,7 @@ services:
       SERVER_PORT: 8082
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
+      SPRING_PROFILES_ACTIVE: docker
     depends_on:
       mysql-pedidos:
         condition: service_healthy
@@ -186,6 +188,7 @@ services:
       SERVER_PORT: 8083
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
+      SPRING_PROFILES_ACTIVE: docker
     depends_on:
       mysql-envios:
         condition: service_healthy
@@ -208,6 +211,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      SPRING_PROFILES_ACTIVE: docker
     depends_on:
       redis:
         condition: service_healthy
@@ -233,6 +237,7 @@ services:
       GATEWAY_URL: http://api-gateway:8080
       SERVER_PORT: 8084
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      SPRING_PROFILES_ACTIVE: docker
     depends_on:
       api-gateway:
         condition: service_started
@@ -275,48 +280,7 @@ services:
       - smartlogix-network
 
   # ==========================================
-  # 7. SONARQUBE
-  # ==========================================
-  sonarqube:
-    image: sonarqube:lts-community
-    container_name: smartlogix-sonarqube
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-    environment:
-      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonarqube
-      SONAR_JDBC_USERNAME: sonar
-      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD}
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-    depends_on:
-      sonarqube-db:
-        condition: service_healthy
-    networks:
-      - smartlogix-network
-
-  sonarqube-db:
-    image: postgres:15-alpine
-    container_name: smartlogix-sonarqube-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: sonar
-      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD}
-      POSTGRES_DB: sonarqube
-    volumes:
-      - sonarqube_postgres:/var/lib/postgresql/data
-    networks:
-      - smartlogix-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sonar"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ==========================================
-  # 8. KEYCLOAK
+  # 7. KEYCLOAK
   # ==========================================
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
@@ -339,6 +303,65 @@ services:
     networks:
       - smartlogix-network
 
+  # ==========================================
+  # 8. OBSERVABILIDAD — Tracing + Métricas + Logs
+  # ==========================================
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: smartlogix-zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    networks:
+      - smartlogix-network
+
+  prometheus:
+    image: prom/prometheus:v3.3.1
+    container_name: smartlogix-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    networks:
+      - smartlogix-network
+
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: smartlogix-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - smartlogix-network
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: smartlogix-grafana
+    restart: unless-stopped
+    ports:
+      - "4000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - smartlogix-network
+
 # ==========================================
 # REDES Y VOLÚMENES
 # ==========================================
@@ -353,7 +376,5 @@ volumes:
   rabbitmq_data:
   redis_data:
   keycloak_data:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:
-  sonarqube_postgres:
+  prometheus_data:
+  grafana_data:

@@ -49,6 +49,8 @@ spring:
           max-attempts: 3
           multiplier: 2
         default-requeue-rejected: false
+  zipkin:
+    base-url: http://zipkin:9411
 
 server:
   port: ${SERVER_PORT:8082}
@@ -77,6 +79,15 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 5s
         permitted-number-of-calls-in-half-open-state: 3
+
+management:
+  tracing:
+    sampling:
+      probability: 0.2
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
 
 pedido:
   idempotencia:

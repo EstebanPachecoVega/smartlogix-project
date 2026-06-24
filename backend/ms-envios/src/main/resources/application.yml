@@ -43,6 +43,8 @@ spring:
           max-attempts: 3
           multiplier: 2
         default-requeue-rejected: false
+  zipkin:
+    base-url: http://zipkin:9411
 
 server:
   port: ${SERVER_PORT:8083}
@@ -59,3 +61,12 @@ logging:
     cl.smartlogix: ${LOGGING_LEVEL_SMARTLOGIX:DEBUG}
   pattern:
     console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
+
+management:
+  tracing:
+    sampling:
+      probability: 0.2
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

@@ -3,6 +3,8 @@ spring:
     name: bff
   main:
     web-application-type: reactive
+  zipkin:
+    base-url: http://zipkin:9411
 
 server:
   port: 8084
@@ -32,3 +34,12 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
         permittedNumberOfCallsInHalfOpenState: 3
+
+management:
+  tracing:
+    sampling:
+      probability: 0.2
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
