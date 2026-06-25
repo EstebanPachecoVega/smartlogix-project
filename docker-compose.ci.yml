@@ -1,0 +1,7 @@
+services:
+  zipkin:       { profiles: ["observability"] }
+  prometheus:   { profiles: ["observability"] }
+  loki:         { profiles: ["observability"] }
+  grafana:      { profiles: ["observability"] }
+  sonarqube:    { profiles: ["observability"] }
+  sonarqube-db: { profiles: ["observability"] }
