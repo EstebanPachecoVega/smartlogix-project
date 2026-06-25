@@ -6,7 +6,6 @@ const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:8084/bff';
 
 const apiClient = axios.create({
   baseURL: BFF_URL,
-  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

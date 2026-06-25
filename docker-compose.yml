@@ -212,6 +212,7 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_NETTY_MAX_HEADER_SIZE: 65536
     depends_on:
       redis:
         condition: service_healthy
@@ -238,6 +239,7 @@ services:
       SERVER_PORT: 8084
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_NETTY_MAX_HEADER_SIZE: 65536
     depends_on:
       api-gateway:
         condition: service_started

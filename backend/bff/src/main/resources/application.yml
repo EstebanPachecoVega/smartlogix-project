@@ -8,6 +8,8 @@ spring:
 
 server:
   port: 8084
+  netty:
+    max-header-size: 32KB
 
 gateway:
   url: ${GATEWAY_URL:http://api-gateway:8080}
