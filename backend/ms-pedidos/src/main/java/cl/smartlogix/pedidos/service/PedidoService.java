@@ -1,6 +1,7 @@
 package cl.smartlogix.pedidos.service;
 
 import cl.smartlogix.pedidos.dto.request.CrearPedidoRequestDTO;
+import cl.smartlogix.pedidos.entity.EstadoPedido;
 import cl.smartlogix.pedidos.entity.Pedido;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,8 @@ public interface PedidoService {
     List<Pedido> listarPedidos();
 
     Page<Pedido> listarPedidos(Pageable pageable);
+
+    Page<Pedido> listarPedidos(Pageable pageable, EstadoPedido estado);
 
     List<Pedido> listarPedidosPorUsuario(String usuarioId);
 

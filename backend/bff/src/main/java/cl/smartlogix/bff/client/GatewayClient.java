@@ -223,14 +223,18 @@ public class GatewayClient {
     @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackListarPedidos")
     public Mono<PagedResponse<PedidoResponseDTO>> listarPedidos(
-            String jwtToken, String correlationId, int page, int size) {
+            String jwtToken, String correlationId, int page, int size, String estado) {
         return gatewayWebClient
                 .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/pedidos")
-                        .queryParam("page", page)
-                        .queryParam("size", size)
-                        .build())
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/api/pedidos")
+                            .queryParam("page", page)
+                            .queryParam("size", size);
+                    if (estado != null) {
+                        uriBuilder.queryParam("estado", estado);
+                    }
+                    return uriBuilder.build();
+                })
                 .header("Authorization", "Bearer " + jwtToken)
                 .header("X-Correlation-Id", correlationId)
                 .retrieve()
@@ -255,14 +259,18 @@ public class GatewayClient {
     @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackListarEnvios")
     public Mono<PagedResponse<EnvioResponseDTO>> listarEnvios(
-            String jwtToken, String correlationId, int page, int size) {
+            String jwtToken, String correlationId, int page, int size, String estadoEnvio) {
         return gatewayWebClient
                 .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/envios")
-                        .queryParam("page", page)
-                        .queryParam("size", size)
-                        .build())
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/api/envios")
+                            .queryParam("page", page)
+                            .queryParam("size", size);
+                    if (estadoEnvio != null) {
+                        uriBuilder.queryParam("estadoEnvio", estadoEnvio);
+                    }
+                    return uriBuilder.build();
+                })
                 .header("Authorization", "Bearer " + jwtToken)
                 .header("X-Correlation-Id", correlationId)
                 .retrieve()
@@ -469,7 +477,7 @@ public class GatewayClient {
     }
 
     private Mono<PagedResponse<PedidoResponseDTO>> fallbackListarPedidos(
-            String jwt, String cid, int page, int size, Throwable t) {
+            String jwt, String cid, int page, int size, String estado, Throwable t) {
         log.error("CB abierto listarPedidos: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pedidos no disponible"));
     }
@@ -480,7 +488,7 @@ public class GatewayClient {
     }
 
     private Mono<PagedResponse<EnvioResponseDTO>> fallbackListarEnvios(
-            String jwt, String cid, int page, int size, Throwable t) {
+            String jwt, String cid, int page, int size, String estadoEnvio, Throwable t) {
         log.error("CB abierto listarEnvios: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Envíos no disponible"));
     }

@@ -6,6 +6,7 @@ import cl.smartlogix.pedidos.dto.response.PedidoResponseDTO;
 import cl.smartlogix.pedidos.dto.response.VentaPorProductoCantidadDTO;
 import cl.smartlogix.pedidos.dto.response.VentaPorProductoResponseDTO;
 import cl.smartlogix.pedidos.dto.response.VentasPlataformaResponseDTO;
+import cl.smartlogix.pedidos.entity.EstadoPedido;
 import cl.smartlogix.pedidos.entity.Pedido;
 import cl.smartlogix.pedidos.mapper.PedidoMapper;
 import cl.smartlogix.pedidos.repository.DetallePedidoRepository;
@@ -52,13 +53,16 @@ public class PedidoController {
     @GetMapping
     public Page<PedidoResponseDTO> listarPedidos(
             @AuthenticationPrincipal Jwt jwt,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @PageableDefault(size = 20) Pageable pageable,
+            @RequestParam(required = false) EstadoPedido estado) {
         String usuarioId = jwt.getClaimAsString("sub");
         boolean isGestor = esGestor(jwt);
 
         Page<Pedido> pedidos;
         if (isGestor) {
-            pedidos = pedidoService.listarPedidos(pageable);
+            pedidos = (estado != null)
+                    ? pedidoService.listarPedidos(pageable, estado)
+                    : pedidoService.listarPedidos(pageable);
         } else {
             pedidos = pedidoService.listarPedidosPorUsuario(usuarioId, pageable);
         }

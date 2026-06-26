@@ -79,6 +79,20 @@ public class EnvioServiceImpl implements EnvioService {
 
         @Override
         @Transactional(readOnly = true)
+        public Page<EnvioResponseDTO> listarTodos(Pageable pageable, EstadoEnvio estadoEnvio) {
+                return envioRepository.findByEstadoEnvio(estadoEnvio, pageable)
+                        .map(envioMapper::toResponseDTO);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public Page<EnvioResponseDTO> listarPorEstados(List<EstadoEnvio> estados, Pageable pageable) {
+                return envioRepository.findByEstadoEnvioIn(estados, pageable)
+                        .map(envioMapper::toResponseDTO);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
         public EnvioResponseDTO obtenerPorId(Long id) {
                 Envio envio = envioRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Envío no encontrado con ID: " + id));

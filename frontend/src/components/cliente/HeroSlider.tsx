@@ -47,7 +47,7 @@ const HeroSlider = memo(function HeroSlider() {
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="relative overflow-hidden -mt-4"
       style={{ width: '100dvw', marginLeft: 'calc(-50dvw + 50%)' }}
     >
       <div

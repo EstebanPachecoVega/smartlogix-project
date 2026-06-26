@@ -10,7 +10,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/envios")
@@ -21,7 +23,16 @@ public class EnvioController {
 
     @GetMapping
     public ResponseEntity<Page<EnvioResponseDTO>> listarEnvios(
-            @PageableDefault(size = 20) Pageable pageable) {
+            @PageableDefault(size = 20) Pageable pageable,
+            @RequestParam(required = false) String estadoEnvio) {
+        if (estadoEnvio != null && estadoEnvio.contains(",")) {
+            List<EstadoEnvio> estados = Arrays.stream(estadoEnvio.split(","))
+                    .map(EstadoEnvio::valueOf)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(envioService.listarPorEstados(estados, pageable));
+        } else if (estadoEnvio != null) {
+            return ResponseEntity.ok(envioService.listarTodos(pageable, EstadoEnvio.valueOf(estadoEnvio)));
+        }
         return ResponseEntity.ok(envioService.listarTodos(pageable));
     }
 

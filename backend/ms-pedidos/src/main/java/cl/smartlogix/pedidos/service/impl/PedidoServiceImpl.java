@@ -196,6 +196,12 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<Pedido> listarPedidos(Pageable pageable, EstadoPedido estado) {
+        return pedidoRepository.findByEstado(estado, pageable);
+    }
+
+    @Override
     @Transactional
     public void actualizarEstadoPorEnvio(Long pedidoId, String estadoEnvio) {
         log.info("Sincronizando Pedido ID: {} con novedad de logística: [{}]", pedidoId, estadoEnvio);

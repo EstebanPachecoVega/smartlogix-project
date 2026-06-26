@@ -27,7 +27,9 @@ export default function EnviosLogisticaPage() {
 
     useEffect(() => {
         setLoading(true);
-        enviosApi.listar({ page, size: PAGE_SIZE })
+        const params: { page: number; size: number; estadoEnvio?: string } = { page, size: PAGE_SIZE };
+        if (filtroEstado !== TODOS) params.estadoEnvio = filtroEstado;
+        enviosApi.listar(params)
             .then(data => {
                 if (Array.isArray(data)) {
                     setEnvios(data);
@@ -42,11 +44,12 @@ export default function EnviosLogisticaPage() {
             })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [page]);
+    }, [page, filtroEstado]);
 
-    const filtrados = filtroEstado === TODOS
-        ? envios
-        : envios.filter(e => e.estadoEnvio === filtroEstado);
+    const handleFilterChange = (v: string | null) => {
+        setFiltroEstado(v ?? TODOS);
+        setPage(0);
+    };
 
     if (loading) return <Spinner />;
 
@@ -59,7 +62,7 @@ export default function EnviosLogisticaPage() {
                 <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                     Filtrar por estado:
                 </label>
-                <Select value={filtroEstado} onValueChange={(v: string | null) => setFiltroEstado(v ?? TODOS)}>
+                <Select value={filtroEstado} onValueChange={handleFilterChange}>
                     <SelectTrigger className="w-48">
                         <SelectValue placeholder="Todos los estados" />
                     </SelectTrigger>
@@ -77,7 +80,7 @@ export default function EnviosLogisticaPage() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setFiltroEstado(TODOS)}
+                        onClick={() => handleFilterChange(TODOS)}
                         className="text-muted-foreground hover:text-foreground gap-1.5"
                     >
                         <X className="h-3.5 w-3.5" />
@@ -93,7 +96,7 @@ export default function EnviosLogisticaPage() {
                         Listado de envíos
                         {filtroEstado !== TODOS && (
                             <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                — {filtrados.length} resultado{filtrados.length !== 1 ? 's' : ''}
+                                — {envios.length} resultado{envios.length !== 1 ? 's' : ''} (filtrados)
                             </span>
                         )}
                     </CardTitle>
@@ -111,14 +114,14 @@ export default function EnviosLogisticaPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtrados.length === 0 ? (
+                                {envios.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-12 text-muted-foreground text-sm">
                                             No hay envíos que mostrar.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filtrados.map((envio) => (
+                                    envios.map((envio) => (
                                         <TableRow key={envio.id}>
                                             <TableCell className="font-medium text-sm">
                                                 {envio.numeroTracking}

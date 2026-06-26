@@ -59,7 +59,7 @@ class PedidoBffControllerTest {
     void listar_returnsOrders() {
         PagedResponse<PedidoResponseDTO> paged = new PagedResponse<>();
         paged.setContent(List.of(new PedidoResponseDTO()));
-        when(gatewayClient.listarPedidos(eq("mock-jwt"), any(), anyInt(), anyInt()))
+        when(gatewayClient.listarPedidos(eq("mock-jwt"), any(), anyInt(), anyInt(), any()))
                 .thenReturn(Mono.just(paged));
 
         webTestClient.get().uri("/bff/pedidos")

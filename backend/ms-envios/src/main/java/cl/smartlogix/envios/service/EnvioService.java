@@ -14,6 +14,10 @@ public interface EnvioService {
 
     Page<EnvioResponseDTO> listarTodos(Pageable pageable);
 
+    Page<EnvioResponseDTO> listarTodos(Pageable pageable, EstadoEnvio estadoEnvio);
+
+    Page<EnvioResponseDTO> listarPorEstados(List<EstadoEnvio> estados, Pageable pageable);
+
     EnvioResponseDTO obtenerPorId(Long id);
 
     EnvioResponseDTO obtenerPorPedidoId(Long pedidoId);

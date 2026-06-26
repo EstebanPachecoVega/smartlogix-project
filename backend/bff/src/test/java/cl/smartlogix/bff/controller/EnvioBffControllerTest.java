@@ -31,7 +31,7 @@ class EnvioBffControllerTest {
     void listar_returnsEnvios() {
         PagedResponse<EnvioResponseDTO> paged = new PagedResponse<>();
         paged.setContent(List.of(new EnvioResponseDTO()));
-        when(gatewayClient.listarEnvios(eq("mock-jwt"), any(), anyInt(), anyInt()))
+        when(gatewayClient.listarEnvios(eq("mock-jwt"), any(), anyInt(), anyInt(), any()))
                 .thenReturn(Mono.just(paged));
 
         webTestClient.get().uri("/bff/envios")

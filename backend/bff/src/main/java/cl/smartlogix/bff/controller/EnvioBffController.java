@@ -21,10 +21,11 @@ public class EnvioBffController {
     public Mono<PagedResponse<EnvioResponseDTO>> listar(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String estadoEnvio) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
-        return gatewayClient.listarEnvios(jwt, MDC.get("correlationId"), page, size);
+        return gatewayClient.listarEnvios(jwt, MDC.get("correlationId"), page, size, estadoEnvio);
     }
 
     @GetMapping("/{id}")

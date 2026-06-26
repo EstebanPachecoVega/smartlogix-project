@@ -33,10 +33,11 @@ public class PedidoBffController {
     public Mono<PagedResponse<PedidoResponseDTO>> listar(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String estado) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
-        return gatewayClient.listarPedidos(jwt, MDC.get("correlationId"), page, size);
+        return gatewayClient.listarPedidos(jwt, MDC.get("correlationId"), page, size, estado);
     }
 
     @GetMapping("/{id}")

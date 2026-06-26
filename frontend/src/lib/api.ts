@@ -184,7 +184,7 @@ export const pedidosApi = {
     });
     return res.data;
   },
-  listar: async (params?: { page?: number; size?: number }): Promise<PedidoResponse[] | PageResponse<PedidoResponse>> => {
+  listar: async (params?: { page?: number; size?: number; estado?: string }): Promise<PedidoResponse[] | PageResponse<PedidoResponse>> => {
     const res = await apiClient.get('/pedidos', { params });
     return res.data;
   },
@@ -196,7 +196,7 @@ export const pedidosApi = {
 
 // =================== ENVÍOS (vía BFF -> Gateway) ===================
 export const enviosApi = {
-  listar: async (params?: { page?: number; size?: number }): Promise<Envio[] | PageResponse<Envio>> => {
+  listar: async (params?: { page?: number; size?: number; estadoEnvio?: string }): Promise<Envio[] | PageResponse<Envio>> => {
     const res = await apiClient.get('/envios', { params });
     return res.data;
   },

@@ -259,7 +259,7 @@ class GatewayClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"content\":[{\"id\":1,\"numeroOrden\":\"ORD-001\"}],\"totalPages\":1,\"totalElements\":1,\"number\":0,\"size\":10}")));
 
-        PagedResponse<PedidoResponseDTO> result = client.listarPedidos("test-jwt", "cid-123", 0, 10).block();
+        PagedResponse<PedidoResponseDTO> result = client.listarPedidos("test-jwt", "cid-123", 0, 10, null).block();
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
@@ -292,7 +292,7 @@ class GatewayClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"content\":[{\"id\":1,\"numeroTracking\":\"TRK-001\"}],\"totalPages\":1,\"totalElements\":1,\"number\":0,\"size\":10}")));
 
-        PagedResponse<EnvioResponseDTO> result = client.listarEnvios("test-jwt", "cid-123", 0, 10).block();
+        PagedResponse<EnvioResponseDTO> result = client.listarEnvios("test-jwt", "cid-123", 0, 10, null).block();
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
