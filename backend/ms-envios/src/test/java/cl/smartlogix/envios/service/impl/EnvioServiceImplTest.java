@@ -207,4 +207,23 @@ class EnvioServiceImplTest {
 
         assertThat(result).hasSize(2);
     }
+
+    @Test
+    void deleteEnvio_ok_deletesById() {
+        when(envioRepository.existsById(1L)).thenReturn(true);
+
+        envioService.deleteEnvio(1L);
+
+        verify(envioRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteEnvio_noExiste_lanzaResourceNotFoundException() {
+        when(envioRepository.existsById(999L)).thenReturn(false);
+
+        assertThatThrownBy(() -> envioService.deleteEnvio(999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(envioRepository, never()).deleteById(any());
+    }
 }

@@ -238,4 +238,14 @@ public class PedidoServiceImpl implements PedidoService {
             log.info("Pedido {} cambió de {} a {}", pedido.getNumeroOrden(), estadoAnterior, pedido.getEstado());
         }
     }
+
+    @Override
+    @Transactional
+    public void deletePedido(Long id) {
+        if (!pedidoRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Pedido no encontrado con ID: " + id);
+        }
+        pedidoRepository.deleteById(id);
+        log.info("Pedido ID: {} eliminado", id);
+    }
 }

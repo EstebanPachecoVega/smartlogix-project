@@ -132,8 +132,18 @@ public class EnvioServiceImpl implements EnvioService {
                                 EstadoEnvio.INTENTO_FALLIDO,
                                 EstadoEnvio.RETRASADO,
                                 EstadoEnvio.DEVUELTO);
-                return envioRepository.findByEstadoEnvioIn(estadosProblema).stream()
+        return envioRepository.findByEstadoEnvioIn(estadosProblema).stream()
                                 .map(envioMapper::toResponseDTO)
                                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void deleteEnvio(Long id) {
+        if (!envioRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Envío no encontrado con ID: " + id);
         }
+        envioRepository.deleteById(id);
+        log.info("Envío ID: {} eliminado", id);
+    }
 }

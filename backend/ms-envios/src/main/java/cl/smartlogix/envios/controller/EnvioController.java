@@ -44,6 +44,12 @@ public class EnvioController {
         return ResponseEntity.ok(envioActualizado);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarEnvio(@PathVariable Long id) {
+        envioService.deleteEnvio(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<EnvioResponseDTO> obtenerEnvio(@PathVariable Long id) {
         return ResponseEntity.ok(envioService.obtenerPorId(id));

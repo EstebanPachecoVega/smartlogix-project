@@ -576,10 +576,10 @@ class GatewayClientTest {
 
     @Test
     void fallbackListarPedidos_returnsServiceUnavailable() throws Exception {
-        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarPedidos", String.class, String.class, int.class, int.class, Throwable.class);
+        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarPedidos", String.class, String.class, int.class, int.class, String.class, Throwable.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Mono<PagedResponse<PedidoResponseDTO>> result = (Mono<PagedResponse<PedidoResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, new RuntimeException("test"));
+        Mono<PagedResponse<PedidoResponseDTO>> result = (Mono<PagedResponse<PedidoResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, null, new RuntimeException("test"));
         assertFallbackError(result);
     }
 
@@ -594,10 +594,10 @@ class GatewayClientTest {
 
     @Test
     void fallbackListarEnvios_returnsServiceUnavailable() throws Exception {
-        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarEnvios", String.class, String.class, int.class, int.class, Throwable.class);
+        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarEnvios", String.class, String.class, int.class, int.class, String.class, Throwable.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Mono<PagedResponse<EnvioResponseDTO>> result = (Mono<PagedResponse<EnvioResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, new RuntimeException("test"));
+        Mono<PagedResponse<EnvioResponseDTO>> result = (Mono<PagedResponse<EnvioResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, null, new RuntimeException("test"));
         assertFallbackError(result);
     }
 

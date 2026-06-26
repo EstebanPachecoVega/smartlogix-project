@@ -26,4 +26,6 @@ public interface PedidoService {
     Page<Pedido> listarPedidosPorUsuario(String usuarioId, Pageable pageable);
 
     void actualizarEstadoPorEnvio(Long pedidoId, String estadoEnvio);
+
+    void deletePedido(Long id);
 }

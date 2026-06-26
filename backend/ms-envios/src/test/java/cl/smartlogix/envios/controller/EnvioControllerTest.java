@@ -118,4 +118,10 @@ class EnvioControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estadoEnvio").value("EN_TRANSITO"));
     }
+
+    @Test
+    void eliminarEnvio_204() throws Exception {
+        mockMvc.perform(delete("/api/envios/1"))
+                .andExpect(status().isNoContent());
+    }
 }

@@ -27,4 +27,6 @@ public interface EnvioService {
     List<EnvioResponseDTO> listarPorEstado(EstadoEnvio estado);
 
     List<EnvioResponseDTO> listarEnviosConProblemas();
+
+    void deleteEnvio(Long id);
 }

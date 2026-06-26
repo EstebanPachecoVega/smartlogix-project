@@ -146,7 +146,35 @@ async function main() {
   }
   console.log(`  Eliminadas: ${catDeleted}`);
 
-  console.log(`\nLimpieza completada: ${prodDeleted} productos, ${catDeleted} categorías`);
+  console.log('Listando pedidos...');
+  const pedidos = await fetchAll(token, '/api/pedidos');
+  console.log(`  Encontrados: ${pedidos.length}`);
+
+  let pedidosDeleted = 0;
+  for (const p of pedidos) {
+    const res = await fetch(`${GATEWAY_URL}/api/pedidos/${p.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) pedidosDeleted++;
+  }
+  console.log(`  Eliminados: ${pedidosDeleted}`);
+
+  console.log('Listando envíos...');
+  const envios = await fetchAll(token, '/api/envios');
+  console.log(`  Encontrados: ${envios.length}`);
+
+  let enviosDeleted = 0;
+  for (const e of envios) {
+    const res = await fetch(`${GATEWAY_URL}/api/envios/${e.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) enviosDeleted++;
+  }
+  console.log(`  Eliminados: ${enviosDeleted}`);
+
+  console.log(`\nLimpieza completada: ${prodDeleted} productos, ${catDeleted} categorías, ${pedidosDeleted} pedidos, ${enviosDeleted} envíos`);
 }
 
 main().catch(console.error);

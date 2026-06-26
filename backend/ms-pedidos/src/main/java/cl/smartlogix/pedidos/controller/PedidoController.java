@@ -69,6 +69,15 @@ public class PedidoController {
         return pedidos.map(pedidoMapper::toResponseDTO);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarPedido(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        if (!esGestor(jwt)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo gestores pueden eliminar pedidos");
+        }
+        pedidoService.deletePedido(id);
+    }
+
     @GetMapping("/{id}")
     public PedidoResponseDTO obtenerPedidoPorId(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         String usuarioId = jwt.getClaimAsString("sub");
