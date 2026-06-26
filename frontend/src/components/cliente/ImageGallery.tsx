@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
 
@@ -10,7 +10,7 @@ interface ImageGalleryProps {
   nombre: string;
 }
 
-export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: ImageGalleryProps) {
+const ImageGallery = memo(function ImageGallery({ imagenPrincipal, imagenes, nombre }: ImageGalleryProps) {
   const allImages = [
     ...(imagenPrincipal ? [imagenPrincipal] : []),
     ...(imagenes || []),
@@ -73,4 +73,5 @@ export default function ImageGallery({ imagenPrincipal, imagenes, nombre }: Imag
       </div>
     </div>
   );
-}
+});
+export default ImageGallery;

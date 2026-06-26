@@ -17,6 +17,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -197,11 +201,11 @@ class ProductoControllerTest {
         p2.setId(2L);
         p2.setNombre("Producto 2");
 
-        when(productoService.getAllProductos()).thenReturn(List.of(p1, p2));
+        when(productoService.getAllProductos(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(p1, p2)));
 
         mockMvc.perform(get("/api/productos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2));
     }
 
     @Test
@@ -246,66 +250,66 @@ class ProductoControllerTest {
     void filtrados_soloCategoriaId() throws Exception {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);
-        when(productoService.getProductosFiltrados(eq(null), eq(1L), eq(null), eq(null), eq(null), eq(null), eq(null)))
-                .thenReturn(List.of(p));
+        when(productoService.getProductosFiltrados(eq(null), eq(1L), eq(null), eq(null), eq(null), eq(null), eq(null), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
         mockMvc.perform(get("/api/productos").param("categoriaId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
     void filtrados_soloConStock() throws Exception {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);
-        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(true), eq(null), eq(null), eq(null), eq(null)))
-                .thenReturn(List.of(p));
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(true), eq(null), eq(null), eq(null), eq(null), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
         mockMvc.perform(get("/api/productos").param("conStock", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
     void filtrados_soloPrecioMin() throws Exception {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);
-        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(100), eq(null), eq(null), eq(null)))
-                .thenReturn(List.of(p));
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(100), eq(null), eq(null), eq(null), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
         mockMvc.perform(get("/api/productos").param("precioMin", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
     void filtrados_soloPrecioMax() throws Exception {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);
-        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(500), eq(null), eq(null)))
-                .thenReturn(List.of(p));
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(500), eq(null), eq(null), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
         mockMvc.perform(get("/api/productos").param("precioMax", "500"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
     void filtrados_soloDestacado() throws Exception {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);
-        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(null), eq(true), eq(null)))
-                .thenReturn(List.of(p));
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(null), eq(true), eq(null), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
         mockMvc.perform(get("/api/productos").param("destacado", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
     void filtrados_soloNovedad() throws Exception {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);
-        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(true)))
-                .thenReturn(List.of(p));
+        when(productoService.getProductosFiltrados(eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(true), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
         mockMvc.perform(get("/api/productos").param("novedad", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
@@ -313,8 +317,8 @@ class ProductoControllerTest {
         ProductoResponseDTO p = new ProductoResponseDTO();
         p.setId(1L);
 
-        when(productoService.getProductosFiltrados(eq("test"), eq(1L), eq(true), eq(1000), eq(5000), eq(true), eq(false)))
-                .thenReturn(List.of(p));
+        when(productoService.getProductosFiltrados(eq("test"), eq(1L), eq(true), eq(1000), eq(5000), eq(true), eq(false), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
 
         mockMvc.perform(get("/api/productos")
                         .param("nombre", "test")
@@ -325,7 +329,7 @@ class ProductoControllerTest {
                         .param("destacado", "true")
                         .param("novedad", "false"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test

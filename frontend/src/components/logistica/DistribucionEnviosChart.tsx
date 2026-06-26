@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import {
   estadoEnvioHexColor,
   estadoEnvioTexto,
@@ -31,7 +31,7 @@ import {
 } from '@/lib/estados';
 import { filterByDate, RANGES } from '@/lib/filtro';
 
-export default function DistribucionEnviosChart({ envios }: { envios: Envio[] }) {
+const DistribucionEnviosChart = memo(function DistribucionEnviosChart({ envios }: { envios: Envio[] }) {
   const [dias, setDias] = React.useState('all');
 
   const data = useMemo(() => {
@@ -106,4 +106,5 @@ export default function DistribucionEnviosChart({ envios }: { envios: Envio[] })
       </CardContent>
     </Card>
   );
-}
+});
+export default DistribucionEnviosChart;

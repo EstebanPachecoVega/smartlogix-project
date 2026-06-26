@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { memo } from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import {
   ChartContainer,
@@ -36,7 +37,7 @@ const chartConfig = {
   añoAnterior: { label: 'Año anterior', color: '#94a3b8' },
 };
 
-export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResponse[] }) {
+const ComparacionAnualChart = memo(function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResponse[] }) {
   const [selectedMonth, setSelectedMonth] = React.useState('');
 
   const currentYear = new Date().getFullYear();
@@ -188,4 +189,5 @@ export default function ComparacionAnualChart({ pedidos }: { pedidos: PedidoResp
       </CardContent>
     </Card>
   );
-}
+});
+export default ComparacionAnualChart;

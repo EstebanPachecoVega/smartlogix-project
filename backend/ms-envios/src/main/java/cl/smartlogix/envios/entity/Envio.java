@@ -7,7 +7,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Entity
-@Table(name = "envios")
+@Table(name = "envios", indexes = {
+    @Index(name = "idx_envio_pedido_id", columnList = "pedido_id"),
+    @Index(name = "idx_envio_estado_envio", columnList = "estado_envio"),
+    @Index(name = "idx_envio_usuario_id", columnList = "usuario_id")
+})
 @Getter
 @Setter
 @Builder

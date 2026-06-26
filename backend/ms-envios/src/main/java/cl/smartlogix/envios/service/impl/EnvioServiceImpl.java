@@ -11,6 +11,8 @@ import cl.smartlogix.envios.repository.EnvioRepository;
 import cl.smartlogix.envios.service.EnvioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +72,13 @@ public class EnvioServiceImpl implements EnvioService {
 
         @Override
         @Transactional(readOnly = true)
+        public Page<EnvioResponseDTO> listarTodos(Pageable pageable) {
+                return envioRepository.findAll(pageable)
+                        .map(envioMapper::toResponseDTO);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
         public EnvioResponseDTO obtenerPorId(Long id) {
                 Envio envio = envioRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Envío no encontrado con ID: " + id));
@@ -109,8 +118,7 @@ public class EnvioServiceImpl implements EnvioService {
                                 EstadoEnvio.INTENTO_FALLIDO,
                                 EstadoEnvio.RETRASADO,
                                 EstadoEnvio.DEVUELTO);
-                return envioRepository.findAll().stream()
-                                .filter(e -> estadosProblema.contains(e.getEstadoEnvio()))
+                return envioRepository.findByEstadoEnvioIn(estadosProblema).stream()
                                 .map(envioMapper::toResponseDTO)
                                 .collect(Collectors.toList());
         }

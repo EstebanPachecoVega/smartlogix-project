@@ -1,11 +1,23 @@
 import { test, expect } from '@playwright/test';
 import { createTestUsers, loginAs } from '../fixtures/auth';
+import { cleanupE2EData } from '../fixtures/seed';
 
 test.describe('Categorias CRUD', () => {
   let users: Awaited<ReturnType<typeof createTestUsers>>;
 
   test.beforeAll(async () => {
     try { users = await createTestUsers(); } catch { /* skip */ }
+  });
+
+  test.afterAll(async ({ browser }) => {
+    if (!users?.ok) return;
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+      await loginAs(page, users.gestor.email, users.gestor.password);
+      await cleanupE2EData(page);
+    } catch { /* cleanup is best-effort */ }
+    await context.close();
   });
 
   test.beforeEach(async ({ page }) => {

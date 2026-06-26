@@ -2,6 +2,7 @@ package cl.smartlogix.bff.controller;
 
 import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.dto.request.ProductoRequestDTO;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import cl.smartlogix.bff.dto.response.ProductoResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/bff/logistica/productos")
 @RequiredArgsConstructor
@@ -20,11 +19,13 @@ public class ProductoLogisticaController {
     private final GatewayClient gatewayClient;
 
     @GetMapping
-    public Mono<List<ProductoResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public Mono<PagedResponse<ProductoResponseDTO>> listar(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
-        return gatewayClient.getProductos(jwt, MDC.get("correlationId"));
+        return gatewayClient.getProductos(jwt, MDC.get("correlationId"), page, size);
     }
 
     @PostMapping

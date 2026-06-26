@@ -5,6 +5,7 @@ import cl.smartlogix.bff.config.TestSecurityConfig;
 import cl.smartlogix.bff.dto.request.CategoriaRequestDTO;
 import cl.smartlogix.bff.dto.request.ReordenarCategoriaDTO;
 import cl.smartlogix.bff.dto.response.CategoriaResponseDTO;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -31,8 +32,10 @@ class CategoriaLogisticaControllerTest {
 
     @Test
     void listar_returnsCategories() {
-        when(gatewayClient.listarCategorias(eq("mock-jwt"), any()))
-                .thenReturn(Mono.just(List.of(new CategoriaResponseDTO())));
+        PagedResponse<CategoriaResponseDTO> paged = new PagedResponse<>();
+        paged.setContent(List.of(new CategoriaResponseDTO()));
+        when(gatewayClient.listarCategorias(eq("mock-jwt"), any(), anyInt(), anyInt()))
+                .thenReturn(Mono.just(paged));
 
         webTestClient.get().uri("/bff/logistica/categorias")
                 .header("Authorization", "Bearer mock-jwt")

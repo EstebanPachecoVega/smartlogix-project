@@ -13,6 +13,8 @@ import cl.smartlogix.inventario.service.ProductoService;
 import cl.smartlogix.inventario.service.RedisStockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,6 +124,13 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<ProductoResponseDTO> getAllProductos(Pageable pageable) {
+        return productoRepository.findAllPaged(pageable)
+                .map(productoMapper::toResponseDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ProductoResponseDTO getProductoBySlug(String slug) {
         Producto producto = productoRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con slug: " + slug));
@@ -151,5 +160,14 @@ public class ProductoServiceImpl implements ProductoService {
                 .stream()
                 .map(productoMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ProductoResponseDTO> getProductosFiltrados(String nombre, Long categoriaId, Boolean conStock,
+            Integer precioMin, Integer precioMax, Boolean destacado, Boolean novedad, Pageable pageable) {
+        log.debug("Filtrando productos con paginación");
+        String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre : null;
+        return productoRepository.filtrarProductosPaged(nombreFiltro, categoriaId, conStock, precioMin, precioMax, destacado, novedad, pageable)
+                .map(productoMapper::toResponseDTO);
     }
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Envio } from '@/types';
 import Link from 'next/link';
 import {
@@ -13,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { estadoEnvioTexto, estadoEnvioColor, isEstadoEnvio } from '@/lib/estados';
 
-export default function TablaEnvios({ envios }: { envios: Envio[] }) {
+const TablaEnvios = memo(function TablaEnvios({ envios }: { envios: Envio[] }) {
   if (envios.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -72,4 +73,6 @@ export default function TablaEnvios({ envios }: { envios: Envio[] }) {
       </Table>
     </div>
   );
-}
+});
+
+export default TablaEnvios;

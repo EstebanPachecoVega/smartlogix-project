@@ -194,14 +194,12 @@ class EnvioServiceImplTest {
 
     @Test
     void listarEnviosConProblemas_filtraCorrectamente() {
-        Envio envioOk = new Envio();
-        envioOk.setEstadoEnvio(EstadoEnvio.EN_TRANSITO);
         Envio envioProblema = new Envio();
         envioProblema.setEstadoEnvio(EstadoEnvio.RETRASADO);
         Envio envioDevuelto = new Envio();
         envioDevuelto.setEstadoEnvio(EstadoEnvio.DEVUELTO);
 
-        when(envioRepository.findAll()).thenReturn(List.of(envioOk, envioProblema, envioDevuelto));
+        when(envioRepository.findByEstadoEnvioIn(any())).thenReturn(List.of(envioProblema, envioDevuelto));
         when(envioMapper.toResponseDTO(envioProblema)).thenReturn(new EnvioResponseDTO());
         when(envioMapper.toResponseDTO(envioDevuelto)).thenReturn(new EnvioResponseDTO());
 

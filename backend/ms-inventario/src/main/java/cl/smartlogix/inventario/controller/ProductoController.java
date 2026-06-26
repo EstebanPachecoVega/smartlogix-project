@@ -7,6 +7,9 @@ import cl.smartlogix.inventario.repository.ProductoRepository;
 import cl.smartlogix.inventario.service.ProductoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,21 +49,26 @@ public class ProductoController {
         return productoService.getProductoById(id);
     }
 
-    // Obtener todos los productos con manejo de excepciones y filtrado dinámico
+    // Obtener todos los productos con paginación y filtrado dinámico
     @GetMapping
-    public List<ProductoResponseDTO> getAllProductos(
+    public Page<ProductoResponseDTO> getAllProductos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) Boolean conStock,
             @RequestParam(required = false) Integer precioMin,
             @RequestParam(required = false) Integer precioMax,
             @RequestParam(required = false) Boolean destacado,
-            @RequestParam(required = false) Boolean novedad) {
-        
-        if (nombre != null || categoriaId != null || conStock != null || precioMin != null || precioMax != null || destacado != null || novedad != null) {
-            return productoService.getProductosFiltrados(nombre, categoriaId, conStock, precioMin, precioMax, destacado, novedad);
+            @RequestParam(required = false) Boolean novedad,
+            @PageableDefault(size = 20) Pageable pageable) {
+
+        boolean hasFilter = nombre != null || categoriaId != null || conStock != null
+                || precioMin != null || precioMax != null || destacado != null || novedad != null;
+
+        if (hasFilter) {
+            return productoService.getProductosFiltrados(nombre, categoriaId, conStock,
+                    precioMin, precioMax, destacado, novedad, pageable);
         }
-        return productoService.getAllProductos();
+        return productoService.getAllProductos(pageable);
     }
 
     // Método para buscar por slug

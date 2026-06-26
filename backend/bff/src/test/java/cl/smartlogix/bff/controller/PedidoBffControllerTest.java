@@ -3,6 +3,7 @@ package cl.smartlogix.bff.controller;
 import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.config.TestSecurityConfig;
 import cl.smartlogix.bff.dto.request.CrearPedidoRequestDTO;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import cl.smartlogix.bff.dto.response.PedidoResponseDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +57,10 @@ class PedidoBffControllerTest {
 
     @Test
     void listar_returnsOrders() {
-        when(gatewayClient.listarPedidos(eq("mock-jwt"), any()))
-                .thenReturn(Mono.just(List.of(new PedidoResponseDTO())));
+        PagedResponse<PedidoResponseDTO> paged = new PagedResponse<>();
+        paged.setContent(List.of(new PedidoResponseDTO()));
+        when(gatewayClient.listarPedidos(eq("mock-jwt"), any(), anyInt(), anyInt()))
+                .thenReturn(Mono.just(paged));
 
         webTestClient.get().uri("/bff/pedidos")
                 .header("Authorization", "Bearer mock-jwt")

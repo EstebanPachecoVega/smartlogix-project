@@ -2,6 +2,7 @@ package cl.smartlogix.bff.controller;
 
 import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.dto.response.EnvioResponseDTO;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
@@ -10,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/bff/envios")
 @RequiredArgsConstructor
@@ -19,11 +18,13 @@ public class EnvioBffController {
     private final GatewayClient gatewayClient;
 
     @GetMapping
-    public Mono<List<EnvioResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public Mono<PagedResponse<EnvioResponseDTO>> listar(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
-        return gatewayClient.listarEnvios(jwt, MDC.get("correlationId"));
+        return gatewayClient.listarEnvios(jwt, MDC.get("correlationId"), page, size);
     }
 
     @GetMapping("/{id}")

@@ -6,6 +6,9 @@ import cl.smartlogix.inventario.dto.response.CategoriaResponseDTO;
 import cl.smartlogix.inventario.service.CategoriaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,8 +49,9 @@ public class CategoriaController {
     }
 
     @GetMapping
-    public List<CategoriaResponseDTO> getAllCategorias() {
-        return categoriaService.getAllCategorias();
+    public Page<CategoriaResponseDTO> getAllCategorias(
+            @PageableDefault(size = 50) Pageable pageable) {
+        return categoriaService.getAllCategorias(pageable);
     }
 
     @GetMapping("/principales")

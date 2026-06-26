@@ -22,7 +22,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -149,13 +154,13 @@ class PedidoControllerTest {
         PedidoResponseDTO dto = new PedidoResponseDTO();
         dto.setId(1L);
 
-        when(pedidoService.listarPedidos()).thenReturn(List.of(pedido));
+        when(pedidoService.listarPedidos(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(pedido)));
         when(pedidoMapper.toResponseDTO(pedido)).thenReturn(dto);
 
         mockMvc.perform(get("/api/pedidos")
                         .with(securityContext(gestorContext())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
@@ -164,13 +169,14 @@ class PedidoControllerTest {
         PedidoResponseDTO dto = new PedidoResponseDTO();
         dto.setId(1L);
 
-        when(pedidoService.listarPedidosPorUsuario("user123")).thenReturn(List.of(pedido));
+        when(pedidoService.listarPedidosPorUsuario(eq("user123"), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(pedido)));
         when(pedidoMapper.toResponseDTO(pedido)).thenReturn(dto);
 
         mockMvc.perform(get("/api/pedidos")
                         .with(securityContext(userContext())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
@@ -232,7 +238,7 @@ class PedidoControllerTest {
         VentasPlataformaResponseDTO v1 = new VentasPlataformaResponseDTO("DESKTOP", 50000L);
         VentasPlataformaResponseDTO v2 = new VentasPlataformaResponseDTO("MOBILE", 30000L);
 
-        when(pedidoRepository.findVentasPorPlataforma()).thenReturn(List.of(v1, v2));
+        when(pedidoRepository.findVentasPorPlataforma(any(LocalDateTime.class))).thenReturn(List.of(v1, v2));
 
         mockMvc.perform(get("/api/pedidos/estadisticas/ventas-plataforma")
                         .with(securityContext(gestorContext())))
@@ -260,7 +266,7 @@ class PedidoControllerTest {
     void getVentasPorProducto_200() throws Exception {
         VentaPorProductoResponseDTO v = new VentaPorProductoResponseDTO(1L, 50000L);
 
-        when(detallePedidoRepository.findVentasPorProducto()).thenReturn(List.of(v));
+        when(detallePedidoRepository.findVentasPorProducto(any(LocalDateTime.class))).thenReturn(List.of(v));
 
         mockMvc.perform(get("/api/pedidos/estadisticas/ventas-por-producto")
                         .with(securityContext(gestorContext())))
@@ -273,7 +279,7 @@ class PedidoControllerTest {
     void getCantidadPorProducto_200() throws Exception {
         VentaPorProductoCantidadDTO v = new VentaPorProductoCantidadDTO(1L, 10L);
 
-        when(detallePedidoRepository.findCantidadPorProducto()).thenReturn(List.of(v));
+        when(detallePedidoRepository.findCantidadPorProducto(any(LocalDateTime.class))).thenReturn(List.of(v));
 
         mockMvc.perform(get("/api/pedidos/estadisticas/ventas-por-producto-cantidad")
                         .with(securityContext(gestorContext())))

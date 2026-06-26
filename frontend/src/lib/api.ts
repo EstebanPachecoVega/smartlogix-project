@@ -85,7 +85,8 @@ export interface ProductoFilterParams {
 export const productosPublicApi = {
   listar: async (params?: ProductoFilterParams): Promise<Producto[]> => {
     const res = await publicApi.get('/api/productos', { params });
-    return res.data;
+    const data = res.data;
+    return Array.isArray(data) ? data : data.content || [];
   },
   obtenerPorSlug: async (slug: string): Promise<Producto> => {
     const res = await publicApi.get(`/api/productos/slug/${slug}`);
@@ -96,7 +97,8 @@ export const productosPublicApi = {
 export const categoriasPublicApi = {
   listar: async (): Promise<Categoria[]> => {
     const res = await publicApi.get('/api/categorias');
-    return res.data;
+    const data = res.data;
+    return Array.isArray(data) ? data : data.content || [];
   },
   obtenerPorId: async (id: number): Promise<Categoria> => {
     const res = await publicApi.get(`/api/categorias/${id}`);
@@ -135,7 +137,8 @@ export const productosApi = {
 export const categoriasApi = {
   listar: async (): Promise<Categoria[]> => {
     const res = await apiClient.get('/logistica/categorias');
-    return res.data;
+    const data = res.data;
+    return Array.isArray(data) ? data : data.content || [];
   },
   obtener: async (id: number): Promise<Categoria> => {
     const res = await apiClient.get(`/logistica/categorias/${id}`);

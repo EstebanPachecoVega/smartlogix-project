@@ -1,5 +1,6 @@
 package cl.smartlogix.bff.client;
 
+import cl.smartlogix.bff.config.ReactiveCacheManager;
 import cl.smartlogix.bff.dto.request.*;
 import cl.smartlogix.bff.dto.response.*;
 import cl.smartlogix.bff.exception.DomainException;
@@ -41,23 +42,26 @@ class GatewayClientTest {
     @BeforeEach
     void setUp() {
         WebClient webClient = webClientBuilder.baseUrl("http://localhost:18080").build();
-        client = new GatewayClient(webClient);
+        client = new GatewayClient(webClient, new ReactiveCacheManager());
     }
 
     // ==================== PRODUCTOS ====================
 
     @Test
     void getProductos_returnsList() {
-        stubFor(get(urlEqualTo("/api/productos"))
+        stubFor(get(urlPathEqualTo("/api/productos"))
+                .withQueryParam("page", equalTo("0"))
+                .withQueryParam("size", equalTo("10"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("[{\"id\":1,\"nombre\":\"Producto 1\"}]")));
+                        .withBody("{\"content\":[{\"id\":1,\"nombre\":\"Producto 1\"}],\"totalPages\":1,\"totalElements\":1,\"number\":0,\"size\":10}")));
 
-        List<ProductoResponseDTO> result = client.getProductos("test-jwt", "cid-123").block();
+        PagedResponse<ProductoResponseDTO> result = client.getProductos("test-jwt", "cid-123", 0, 10).block();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getNombre()).isEqualTo("Producto 1");
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getNombre()).isEqualTo("Producto 1");
     }
 
     @Test
@@ -123,16 +127,19 @@ class GatewayClientTest {
 
     @Test
     void listarCategorias_returnsList() {
-        stubFor(get(urlEqualTo("/api/categorias"))
+        stubFor(get(urlPathEqualTo("/api/categorias"))
+                .withQueryParam("page", equalTo("0"))
+                .withQueryParam("size", equalTo("10"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("[{\"id\":1,\"nombre\":\"Categoria 1\"}]")));
+                        .withBody("{\"content\":[{\"id\":1,\"nombre\":\"Categoria 1\"}],\"totalPages\":1,\"totalElements\":1,\"number\":0,\"size\":10}")));
 
-        List<CategoriaResponseDTO> result = client.listarCategorias("test-jwt", "cid-123").block();
+        PagedResponse<CategoriaResponseDTO> result = client.listarCategorias("test-jwt", "cid-123", 0, 10).block();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getNombre()).isEqualTo("Categoria 1");
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getNombre()).isEqualTo("Categoria 1");
     }
 
     @Test
@@ -244,16 +251,19 @@ class GatewayClientTest {
 
     @Test
     void listarPedidos_returnsList() {
-        stubFor(get(urlEqualTo("/api/pedidos"))
+        stubFor(get(urlPathEqualTo("/api/pedidos"))
+                .withQueryParam("page", equalTo("0"))
+                .withQueryParam("size", equalTo("10"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("[{\"id\":1,\"numeroOrden\":\"ORD-001\"}]")));
+                        .withBody("{\"content\":[{\"id\":1,\"numeroOrden\":\"ORD-001\"}],\"totalPages\":1,\"totalElements\":1,\"number\":0,\"size\":10}")));
 
-        List<PedidoResponseDTO> result = client.listarPedidos("test-jwt", "cid-123").block();
+        PagedResponse<PedidoResponseDTO> result = client.listarPedidos("test-jwt", "cid-123", 0, 10).block();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getNumeroOrden()).isEqualTo("ORD-001");
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getNumeroOrden()).isEqualTo("ORD-001");
     }
 
     @Test
@@ -274,16 +284,19 @@ class GatewayClientTest {
 
     @Test
     void listarEnvios_returnsList() {
-        stubFor(get(urlEqualTo("/api/envios"))
+        stubFor(get(urlPathEqualTo("/api/envios"))
+                .withQueryParam("page", equalTo("0"))
+                .withQueryParam("size", equalTo("10"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("[{\"id\":1,\"numeroTracking\":\"TRK-001\"}]")));
+                        .withBody("{\"content\":[{\"id\":1,\"numeroTracking\":\"TRK-001\"}],\"totalPages\":1,\"totalElements\":1,\"number\":0,\"size\":10}")));
 
-        List<EnvioResponseDTO> result = client.listarEnvios("test-jwt", "cid-123").block();
+        PagedResponse<EnvioResponseDTO> result = client.listarEnvios("test-jwt", "cid-123", 0, 10).block();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getNumeroTracking()).isEqualTo("TRK-001");
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getNumeroTracking()).isEqualTo("TRK-001");
     }
 
     @Test
@@ -445,13 +458,15 @@ class GatewayClientTest {
 
     @Test
     void handleError_500_throwsResponseStatusException() {
-        stubFor(get(urlEqualTo("/api/productos"))
+        stubFor(get(urlPathEqualTo("/api/productos"))
+                .withQueryParam("page", equalTo("0"))
+                .withQueryParam("size", equalTo("10"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withBody("Error interno del servidor")));
 
         try {
-            client.getProductos("test-jwt", "cid-123").block();
+            client.getProductos("test-jwt", "cid-123", 0, 10).block();
         } catch (ResponseStatusException e) {
             assertThat(e.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             assertThat(e.getReason()).contains("Error interno del servidor");
@@ -462,10 +477,10 @@ class GatewayClientTest {
 
     @Test
     void fallbackGetProductos_returnsServiceUnavailable() throws Exception {
-        Method method = GatewayClient.class.getDeclaredMethod("fallbackGetProductos", String.class, String.class, Throwable.class);
+        Method method = GatewayClient.class.getDeclaredMethod("fallbackGetProductos", String.class, String.class, int.class, int.class, Throwable.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Mono<List<ProductoResponseDTO>> result = (Mono<List<ProductoResponseDTO>>) method.invoke(client, "jwt", "cid", new RuntimeException("test"));
+        Mono<PagedResponse<ProductoResponseDTO>> result = (Mono<PagedResponse<ProductoResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, new RuntimeException("test"));
         assertFallbackError(result);
     }
 
@@ -507,10 +522,10 @@ class GatewayClientTest {
 
     @Test
     void fallbackListarCategorias_returnsServiceUnavailable() throws Exception {
-        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarCategorias", String.class, String.class, Throwable.class);
+        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarCategorias", String.class, String.class, int.class, int.class, Throwable.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Mono<List<CategoriaResponseDTO>> result = (Mono<List<CategoriaResponseDTO>>) method.invoke(client, "jwt", "cid", new RuntimeException("test"));
+        Mono<PagedResponse<CategoriaResponseDTO>> result = (Mono<PagedResponse<CategoriaResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, new RuntimeException("test"));
         assertFallbackError(result);
     }
 
@@ -561,10 +576,10 @@ class GatewayClientTest {
 
     @Test
     void fallbackListarPedidos_returnsServiceUnavailable() throws Exception {
-        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarPedidos", String.class, String.class, Throwable.class);
+        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarPedidos", String.class, String.class, int.class, int.class, Throwable.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Mono<List<PedidoResponseDTO>> result = (Mono<List<PedidoResponseDTO>>) method.invoke(client, "jwt", "cid", new RuntimeException("test"));
+        Mono<PagedResponse<PedidoResponseDTO>> result = (Mono<PagedResponse<PedidoResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, new RuntimeException("test"));
         assertFallbackError(result);
     }
 
@@ -579,10 +594,10 @@ class GatewayClientTest {
 
     @Test
     void fallbackListarEnvios_returnsServiceUnavailable() throws Exception {
-        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarEnvios", String.class, String.class, Throwable.class);
+        Method method = GatewayClient.class.getDeclaredMethod("fallbackListarEnvios", String.class, String.class, int.class, int.class, Throwable.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Mono<List<EnvioResponseDTO>> result = (Mono<List<EnvioResponseDTO>>) method.invoke(client, "jwt", "cid", new RuntimeException("test"));
+        Mono<PagedResponse<EnvioResponseDTO>> result = (Mono<PagedResponse<EnvioResponseDTO>>) method.invoke(client, "jwt", "cid", 0, 10, new RuntimeException("test"));
         assertFallbackError(result);
     }
 

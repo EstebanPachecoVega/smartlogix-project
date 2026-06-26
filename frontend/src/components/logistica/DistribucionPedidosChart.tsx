@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import {
   estadoPedidoHexColor,
   estadoPedidoTexto,
@@ -31,7 +31,7 @@ import {
 } from '@/lib/estados';
 import { filterByDate, RANGES } from '@/lib/filtro';
 
-export default function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoResponse[] }) {
+const DistribucionPedidosChart = memo(function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoResponse[] }) {
   const [dias, setDias] = React.useState('all');
 
   const data = useMemo(() => {
@@ -106,4 +106,5 @@ export default function DistribucionPedidosChart({ pedidos }: { pedidos: PedidoR
       </CardContent>
     </Card>
   );
-}
+});
+export default DistribucionPedidosChart;

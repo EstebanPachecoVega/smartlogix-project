@@ -50,10 +50,12 @@ class EstadisticasControllerTest {
 
     @Test
     void getVentasPorCategoria_returnsData() {
-        when(gatewayClient.listarCategorias(eq("mock-jwt"), any()))
-                .thenReturn(Mono.just(List.of(
-                    new CategoriaResponseDTO(1L, "Electrónicos", "electronica", null, 1L, null, 1, true, null, null)
-                )));
+        PagedResponse<CategoriaResponseDTO> categoriasPage = new PagedResponse<>();
+        categoriasPage.setContent(List.of(
+            new CategoriaResponseDTO(1L, "Electrónicos", "electronica", null, 1L, null, 1, true, null, null)
+        ));
+        when(gatewayClient.listarCategorias(eq("mock-jwt"), any(), anyInt(), anyInt()))
+                .thenReturn(Mono.just(categoriasPage));
         when(gatewayClient.getCantidadPorProducto(eq("mock-jwt"), any()))
                 .thenReturn(Mono.just(List.of()));
         when(gatewayClient.getMapaCategorias(eq("mock-jwt"), any()))

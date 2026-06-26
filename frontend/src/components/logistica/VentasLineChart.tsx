@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { memo } from 'react';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import {
   Card,
@@ -32,7 +33,7 @@ const chartConfig = {
 
 type ActiveKey = 'all' | 'mobile' | 'desktop';
 
-export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[] }) {
+const VentasLineChart = memo(function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[] }) {
   const [dias, setDias] = React.useState('30');
   const [activeChart, setActiveChart] = React.useState<ActiveKey>('all');
 
@@ -203,4 +204,5 @@ export default function VentasLineChart({ pedidos }: { pedidos: PedidoResponse[]
       </CardContent>
     </Card>
   );
-}
+});
+export default VentasLineChart;

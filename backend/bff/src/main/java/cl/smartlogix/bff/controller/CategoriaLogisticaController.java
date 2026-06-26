@@ -4,6 +4,7 @@ import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.dto.request.CategoriaRequestDTO;
 import cl.smartlogix.bff.dto.request.ReordenarCategoriaDTO;
 import cl.smartlogix.bff.dto.response.CategoriaResponseDTO;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
@@ -21,11 +22,13 @@ public class CategoriaLogisticaController {
     private final GatewayClient gatewayClient;
 
     @GetMapping
-    public Mono<List<CategoriaResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public Mono<PagedResponse<CategoriaResponseDTO>> listar(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
-        return gatewayClient.listarCategorias(jwt, MDC.get("correlationId"));
+        return gatewayClient.listarCategorias(jwt, MDC.get("correlationId"), page, size);
     }
 
     @GetMapping("/{id}")

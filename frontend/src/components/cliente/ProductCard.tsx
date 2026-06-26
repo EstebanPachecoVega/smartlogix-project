@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 function generarSlug(nombre: string) {
   return nombre
@@ -18,10 +18,15 @@ function generarSlug(nombre: string) {
     .replace(/^-|-$/g, '');
 }
 
-export default function ProductCard({ producto }: { producto: Producto }) {
+const ProductCard = memo(function ProductCard({ producto }: { producto: Producto }) {
   const agregar = useCarritoStore((state) => state.agregar);
   const slug = producto.slug || generarSlug(producto.nombre);
   const [imgError, setImgError] = useState(false);
+
+  const handleAgregar = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    agregar(producto, 1);
+  }, [agregar, producto.id]);
 
   return (
     <Card className="overflow-hidden flex flex-col h-full group py-0 gap-0">
@@ -62,10 +67,7 @@ export default function ProductCard({ producto }: { producto: Producto }) {
 
       <CardFooter className="p-3 mt-auto">
         <Button
-          onClick={(e) => {
-            e.preventDefault();
-            agregar(producto, 1);
-          }}
+          onClick={handleAgregar}
           disabled={producto.cantidad <= 0}
           className="w-full text-sm"
           size="sm"
@@ -75,4 +77,6 @@ export default function ProductCard({ producto }: { producto: Producto }) {
       </CardFooter>
     </Card>
   );
-}
+});
+
+export default ProductCard;

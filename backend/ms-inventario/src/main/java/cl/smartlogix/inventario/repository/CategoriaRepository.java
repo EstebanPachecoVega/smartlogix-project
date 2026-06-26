@@ -1,6 +1,8 @@
 package cl.smartlogix.inventario.repository;
 
 import cl.smartlogix.inventario.entity.Categoria;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +25,8 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     List<Categoria> findByPadreIsNull();
 
     List<Categoria> findAllByOrderByOrdenVisualAsc();
+
+    Page<Categoria> findAllByOrderByOrdenVisualAsc(Pageable pageable);
 
     List<Categoria> findByPadreIsNullOrderByOrdenVisualAsc();
 

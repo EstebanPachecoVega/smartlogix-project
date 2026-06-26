@@ -12,6 +12,12 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_INVENTARIO_NAME}
+    command: >
+      --innodb-buffer-pool-size=128M
+      --innodb-log-file-size=64M
+      --max-connections=200
+      --innodb-flush-log-at-trx-commit=2
+      --innodb-io-capacity=200
     volumes:
       - mysql_inventario_data:/var/lib/mysql
     networks:
@@ -31,6 +37,12 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_PEDIDOS_NAME}
+    command: >
+      --innodb-buffer-pool-size=128M
+      --innodb-log-file-size=64M
+      --max-connections=200
+      --innodb-flush-log-at-trx-commit=2
+      --innodb-io-capacity=200
     volumes:
       - mysql_pedidos_data:/var/lib/mysql
     networks:
@@ -50,6 +62,12 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_ENVIOS_NAME}
+    command: >
+      --innodb-buffer-pool-size=128M
+      --innodb-log-file-size=64M
+      --max-connections=200
+      --innodb-flush-log-at-trx-commit=2
+      --innodb-io-capacity=200
     volumes:
       - mysql_envios_data:/var/lib/mysql
     networks:

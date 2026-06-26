@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { productosPublicApi } from '@/lib/api';
 import { Producto } from '@/types';
 import { Search, X, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
-export default function SearchBar() {
+const SearchBar = memo(function SearchBar() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Producto[]>([]);
   const [open, setOpen] = useState(false);
@@ -101,7 +102,7 @@ export default function SearchBar() {
                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent text-left transition-colors"
                 >
                   {p.imagenPrincipal ? (
-                    <img src={p.imagenPrincipal} alt="" className="w-10 h-10 rounded-md object-cover shrink-0" />
+                    <Image src={p.imagenPrincipal} alt="" width={40} height={40} className="w-10 h-10 rounded-md object-cover shrink-0" />
                   ) : (
                     <div className="w-10 h-10 rounded-md bg-muted shrink-0" />
                   )}
@@ -128,4 +129,6 @@ export default function SearchBar() {
       )}
     </div>
   );
-}
+});
+
+export default SearchBar;

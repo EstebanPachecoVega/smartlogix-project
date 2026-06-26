@@ -3,6 +3,7 @@ package cl.smartlogix.bff.controller;
 import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.config.TestSecurityConfig;
 import cl.smartlogix.bff.dto.response.EnvioResponseDTO;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -28,8 +29,10 @@ class EnvioBffControllerTest {
 
     @Test
     void listar_returnsEnvios() {
-        when(gatewayClient.listarEnvios(eq("mock-jwt"), any()))
-                .thenReturn(Mono.just(List.of(new EnvioResponseDTO())));
+        PagedResponse<EnvioResponseDTO> paged = new PagedResponse<>();
+        paged.setContent(List.of(new EnvioResponseDTO()));
+        when(gatewayClient.listarEnvios(eq("mock-jwt"), any(), anyInt(), anyInt()))
+                .thenReturn(Mono.just(paged));
 
         webTestClient.get().uri("/bff/envios")
                 .header("Authorization", "Bearer mock-jwt")

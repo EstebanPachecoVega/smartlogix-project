@@ -4,6 +4,9 @@ import cl.smartlogix.envios.dto.response.EnvioResponseDTO;
 import cl.smartlogix.envios.entity.EstadoEnvio;
 import cl.smartlogix.envios.service.EnvioService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +20,9 @@ public class EnvioController {
     private final EnvioService envioService;
 
     @GetMapping
-    public ResponseEntity<List<EnvioResponseDTO>> listarEnvios() {
-        return ResponseEntity.ok(envioService.listarTodos());
+    public ResponseEntity<Page<EnvioResponseDTO>> listarEnvios(
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(envioService.listarTodos(pageable));
     }
 
     @PatchMapping("/{id}/estado")

@@ -38,9 +38,9 @@ public class EstadisticasController {
         String jwt = extractJwt(authorization);
         String correlationId = MDC.get("correlationId");
 
-        // 1. Obtener todas las categorías
-        Mono<List<String>> todasLasCategoriasMono = gatewayClient.listarCategorias(jwt, correlationId)
-                .map(lista -> lista.stream()
+        // 1. Obtener todas las categorías (con paginación amplia para cubrirlas todas)
+        Mono<List<String>> todasLasCategoriasMono = gatewayClient.listarCategorias(jwt, correlationId, 0, 500)
+                .map(page -> page.getContent().stream()
                         .map(CategoriaResponseDTO::getNombre)
                         .sorted()
                         .collect(Collectors.toList()));

@@ -9,6 +9,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -40,12 +43,12 @@ class EnvioControllerTest {
         e2.setId(2L);
         e2.setPedidoId(20L);
 
-        when(envioService.listarTodos()).thenReturn(List.of(e1, e2));
+        when(envioService.listarTodos(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(e1, e2)));
 
         mockMvc.perform(get("/api/envios"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value(1));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].id").value(1));
     }
 
     @Test

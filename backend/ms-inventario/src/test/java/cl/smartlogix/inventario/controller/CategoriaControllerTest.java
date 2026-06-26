@@ -15,6 +15,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -172,11 +175,12 @@ class CategoriaControllerTest {
         CategoriaResponseDTO c2 = new CategoriaResponseDTO();
         c2.setId(2L);
 
-        when(categoriaService.getAllCategorias()).thenReturn(List.of(c1, c2));
+        Page<CategoriaResponseDTO> page = new PageImpl<>(List.of(c1, c2));
+        when(categoriaService.getAllCategorias(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/categorias"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2));
     }
 
     @Test

@@ -22,9 +22,8 @@ springdoc:
 
 logging:
   level:
-    cl.smartlogix.bff: DEBUG
-    org.springframework.web.reactive.function.client: DEBUG
-    org.springframework.web.reactive.function.client.ExchangeFunctions: DEBUG
+    root: INFO
+    cl.smartlogix.bff: ${LOGGING_LEVEL_SMARTLOGIX:INFO}
   pattern:
     console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
 
@@ -36,6 +35,20 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
         permittedNumberOfCallsInHalfOpenState: 3
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+  retry:
+    instances:
+      gateway:
+        maxAttempts: 3
+        waitDuration: 200ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+  bulkhead:
+    instances:
+      gateway:
+        maxConcurrentCalls: 100
+        maxWaitDuration: 500ms
 
 management:
   tracing:

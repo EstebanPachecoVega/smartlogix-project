@@ -13,11 +13,18 @@ spring:
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:rootpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:30}
+      minimum-idle: ${DB_POOL_MIN:5}
+      idle-timeout: 60000
+      connection-timeout: 10000
+      max-lifetime: 1800000
+      leak-detection-threshold: 15000
 
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:update}
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     open-in-view: false
     properties:
       hibernate:
@@ -32,9 +39,10 @@ spring:
       timeout: 2000ms
       lettuce:
         pool:
-          max-active: 15
-          max-idle: 10
-          min-idle: 2
+          max-active: ${REDIS_POOL_MAX:40}
+          max-idle: ${REDIS_POOL_IDLE:20}
+          min-idle: ${REDIS_POOL_MIN:5}
+          max-wait: 2000ms
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
@@ -43,6 +51,9 @@ spring:
     password: ${RABBIT_PASSWORD:guest}
     listener:
       simple:
+        concurrency: 4
+        max-concurrency: 8
+        prefetch: 10
         retry:
           enabled: true
           initial-interval: 2000ms
@@ -67,7 +78,7 @@ springdoc:
 logging:
   level:
     root: INFO
-    cl.smartlogix: DEBUG
+    cl.smartlogix: ${LOGGING_LEVEL_SMARTLOGIX:INFO}
   pattern:
     console: "{\"timestamp\":\"%d{ISO8601}\",\"level\":\"%p\",\"correlationId\":\"%X{correlationId}\",\"message\":\"%m\",\"logger\":\"%c\"}%n"
 

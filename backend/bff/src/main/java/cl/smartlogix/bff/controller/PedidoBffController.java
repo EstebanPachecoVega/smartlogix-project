@@ -2,6 +2,7 @@ package cl.smartlogix.bff.controller;
 
 import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.dto.request.CrearPedidoRequestDTO;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import cl.smartlogix.bff.dto.response.PedidoResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/bff/pedidos")
@@ -31,11 +30,13 @@ public class PedidoBffController {
     }
 
     @GetMapping
-    public Mono<List<PedidoResponseDTO>> listar(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+    public Mono<PagedResponse<PedidoResponseDTO>> listar(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         validateBearerToken(authorization);
         String jwt = extractJwt(authorization);
-        return gatewayClient.listarPedidos(jwt, MDC.get("correlationId"));
+        return gatewayClient.listarPedidos(jwt, MDC.get("correlationId"), page, size);
     }
 
     @GetMapping("/{id}")

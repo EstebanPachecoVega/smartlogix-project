@@ -3,6 +3,8 @@ package cl.smartlogix.inventario.repository;
 import cl.smartlogix.inventario.dto.response.MapaCategoriaResponseDTO;
 import cl.smartlogix.inventario.entity.Producto;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -54,11 +56,16 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             )
             FROM Producto p
             LEFT JOIN p.categoria c
+            WHERE p.activo = true
         """)
         List<MapaCategoriaResponseDTO> findMapaCategorias();
 
         @Query("SELECT p FROM Producto p LEFT JOIN FETCH p.categoria")
         List<Producto> findAll();
+
+        @Query(value = "SELECT p FROM Producto p LEFT JOIN FETCH p.categoria",
+               countQuery = "SELECT COUNT(p) FROM Producto p")
+        Page<Producto> findAllPaged(Pageable pageable);
 
         @Query("SELECT p FROM Producto p LEFT JOIN FETCH p.categoria WHERE " +
                         "(:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
@@ -78,4 +85,34 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
                         @Param("precioMax") Integer precioMax,
                         @Param("destacado") Boolean destacado,
                         @Param("novedad") Boolean novedad);
+
+        @Query(value = "SELECT p FROM Producto p LEFT JOIN FETCH p.categoria WHERE " +
+                        "(:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+                        "(:categoriaId IS NULL OR p.categoria.id = :categoriaId) AND " +
+                        "(:conStock IS NULL OR " +
+                        "  (:conStock = true AND p.cantidad > 0) OR " +
+                        "  (:conStock = false AND p.cantidad = 0)) AND " +
+                        "(:precioMin IS NULL OR p.precio >= :precioMin) AND " +
+                        "(:precioMax IS NULL OR p.precio <= :precioMax) AND " +
+                        "(:destacado IS NULL OR p.destacado = :destacado) AND " +
+                        "(:novedad IS NULL OR p.novedad = :novedad)",
+               countQuery = "SELECT COUNT(p) FROM Producto p WHERE " +
+                        "(:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+                        "(:categoriaId IS NULL OR p.categoria.id = :categoriaId) AND " +
+                        "(:conStock IS NULL OR " +
+                        "  (:conStock = true AND p.cantidad > 0) OR " +
+                        "  (:conStock = false AND p.cantidad = 0)) AND " +
+                        "(:precioMin IS NULL OR p.precio >= :precioMin) AND " +
+                        "(:precioMax IS NULL OR p.precio <= :precioMax) AND " +
+                        "(:destacado IS NULL OR p.destacado = :destacado) AND " +
+                        "(:novedad IS NULL OR p.novedad = :novedad)")
+        Page<Producto> filtrarProductosPaged(
+                        @Param("nombre") String nombre,
+                        @Param("categoriaId") Long categoriaId,
+                        @Param("conStock") Boolean conStock,
+                        @Param("precioMin") Integer precioMin,
+                        @Param("precioMax") Integer precioMax,
+                        @Param("destacado") Boolean destacado,
+                        @Param("novedad") Boolean novedad,
+                        Pageable pageable);
 }

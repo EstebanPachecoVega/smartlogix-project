@@ -18,8 +18,9 @@ spring:
                 - name: RequestRateLimiter
                   args:
                     key-resolver: "#{@userKeyResolver}"
-                    redis-rate-limiter.replenishRate: 20
-                    redis-rate-limiter.burstCapacity: 40
+                    redis-rate-limiter.replenishRate: 100
+                    redis-rate-limiter.burstCapacity: 200
+                    redis-rate-limiter.requestedTokens: 1
             - id: categorias_route
               uri: http://ms-inventario:8081
               predicates:
@@ -32,8 +33,9 @@ spring:
                 - name: RequestRateLimiter
                   args:
                     key-resolver: "#{@userKeyResolver}"
-                    redis-rate-limiter.replenishRate: 20
-                    redis-rate-limiter.burstCapacity: 40
+                    redis-rate-limiter.replenishRate: 100
+                    redis-rate-limiter.burstCapacity: 200
+                    redis-rate-limiter.requestedTokens: 1
             - id: pedidos_route
               uri: http://ms-pedidos:8082
               predicates:
@@ -80,6 +82,13 @@ spring:
     redis:
       host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX:40}
+          max-idle: ${REDIS_POOL_IDLE:20}
+          min-idle: ${REDIS_POOL_MIN:5}
+          max-wait: 2000ms
   main:
     web-application-type: reactive
   security:
@@ -99,35 +108,55 @@ resilience4j:
         slidingWindowSize: 10
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
       pedidosCB:
         slidingWindowSize: 10
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
       enviosCB:
         slidingWindowSize: 10
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
       bffCB:
         slidingWindowSize: 10
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
   timelimiter:
     instances:
       inventarioCB:
-        timeoutDuration: 3s
+        timeoutDuration: 5s
       pedidosCB:
-        timeoutDuration: 3s
+        timeoutDuration: 5s
       enviosCB:
-        timeoutDuration: 3s
+        timeoutDuration: 5s
       bffCB:
-        timeoutDuration: 3s
+        timeoutDuration: 5s
+  bulkhead:
+    instances:
+      inventarioCB:
+        maxConcurrentCalls: 50
+        maxWaitDuration: 500ms
+      pedidosCB:
+        maxConcurrentCalls: 50
+        maxWaitDuration: 500ms
+      enviosCB:
+        maxConcurrentCalls: 25
+        maxWaitDuration: 500ms
+      bffCB:
+        maxConcurrentCalls: 100
+        maxWaitDuration: 500ms
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    cl.smartlogix.gateway: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2: DEBUG
+    root: INFO
+    cl.smartlogix: ${LOGGING_LEVEL_SMARTLOGIX:INFO}
   pattern:
     console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
 

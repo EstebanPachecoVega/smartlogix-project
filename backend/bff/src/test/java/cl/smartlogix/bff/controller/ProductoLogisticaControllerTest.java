@@ -2,6 +2,7 @@ package cl.smartlogix.bff.controller;
 
 import cl.smartlogix.bff.client.GatewayClient;
 import cl.smartlogix.bff.config.TestSecurityConfig;
+import cl.smartlogix.bff.dto.response.PagedResponse;
 import cl.smartlogix.bff.dto.response.ProductoResponseDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,10 @@ class ProductoLogisticaControllerTest {
 
     @Test
     void listar_returnsProducts() {
-        when(gatewayClient.getProductos(eq("mock-jwt"), any()))
-                .thenReturn(Mono.just(List.of(new ProductoResponseDTO())));
+        PagedResponse<ProductoResponseDTO> paged = new PagedResponse<>();
+        paged.setContent(List.of(new ProductoResponseDTO()));
+        when(gatewayClient.getProductos(eq("mock-jwt"), any(), anyInt(), anyInt()))
+                .thenReturn(Mono.just(paged));
 
         webTestClient.get().uri("/bff/logistica/productos")
                 .header("Authorization", "Bearer mock-jwt")

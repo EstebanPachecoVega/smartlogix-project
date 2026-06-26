@@ -4,6 +4,8 @@ import cl.smartlogix.pedidos.entity.EstadoPedido;
 import cl.smartlogix.pedidos.entity.Pedido;
 import cl.smartlogix.pedidos.dto.response.ComparacionAnualResponseDTO;
 import cl.smartlogix.pedidos.dto.response.VentasPlataformaResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +22,13 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByUsuarioId(String usuarioId);
 
     @EntityGraph(attributePaths = { "detalles" })
+    Page<Pedido> findByUsuarioId(String usuarioId, Pageable pageable);
+
+    @EntityGraph(attributePaths = { "detalles" })
     List<Pedido> findAll();
+
+    @EntityGraph(attributePaths = { "detalles" })
+    Page<Pedido> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = { "detalles" })
     Optional<Pedido> findById(Long id);
@@ -34,9 +42,10 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
         )
         FROM Pedido p
         WHERE p.plataforma IS NOT NULL
+          AND p.fechaPedido >= :desde
         GROUP BY p.plataforma
     """)
-    List<VentasPlataformaResponseDTO> findVentasPorPlataforma();
+    List<VentasPlataformaResponseDTO> findVentasPorPlataforma(@Param("desde") java.time.LocalDateTime desde);
 
     @Query("""
         SELECT new cl.smartlogix.pedidos.dto.response.ComparacionAnualResponseDTO(

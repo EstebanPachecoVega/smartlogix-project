@@ -23,6 +23,22 @@ async function api(page: Page, method: string, path: string, data?: object) {
   return res;
 }
 
+async function apiGetAll<T>(page: Page, path: string): Promise<T[]> {
+  const all: T[] = [];
+  let pageNum = 0;
+  const pageSize = 100;
+  while (true) {
+    const res = await api(page, 'GET', `${path}?page=${pageNum}&size=${pageSize}`);
+    const data = res.body as any;
+    const content: T[] = Array.isArray(data) ? data : data.content || [];
+    if (content.length === 0) break;
+    all.push(...content);
+    if (content.length < pageSize) break;
+    pageNum++;
+  }
+  return all;
+}
+
 export async function seedCategoria(page: Page, nombre: string, padreId?: number) {
   return api(page, 'POST', '/logistica/categorias', {
     nombre,
@@ -40,12 +56,12 @@ export async function seedProducto(
   }> = {}
 ) {
   const defaults = {
-    sku: `SKU-${Date.now()}`,
-    nombre: `Producto Test ${Date.now()}`,
-    slug: `producto-test-${Date.now()}`,
+    sku: `SKU-E2E-${Date.now()}`,
+    nombre: `E2E Product ${Date.now()}`,
+    slug: `e2e-product-${Date.now()}`,
     descripcion: 'Producto de prueba E2E',
-    precio: 9990,
-    stock: 100,
+    precio: 14990,
+    stock: 50,
     categoriaId: 1,
     activo: true,
   };
@@ -71,7 +87,50 @@ export async function seedPedido(page: Page, usuarioId: string) {
       cantidad: 1,
       imagenPrincipal: '',
     }],
-  }, crypto.randomUUID());
+  });
+}
+
+export async function deleteProducto(page: Page, id: number) {
+  return api(page, 'DELETE', `/logistica/productos/${id}`);
+}
+
+export async function deleteCategoria(page: Page, id: number) {
+  return api(page, 'DELETE', `/logistica/categorias/${id}`);
+}
+
+export async function cleanupE2EData(page: Page) {
+  const results = { productos: 0, categorias: 0, errors: 0 };
+
+  // Limpiar productos E2E
+  try {
+    const productos = await apiGetAll<{ id: number; sku: string }>(page, '/logistica/productos');
+    for (const p of productos) {
+      if (p.sku && p.sku.startsWith('SKU-E2E-')) {
+        const res = await deleteProducto(page, p.id);
+        if (res.status >= 200 && res.status < 300) results.productos++;
+        else results.errors++;
+      }
+    }
+  } catch (e) {
+    console.warn('cleanupE2EData: error limpiando productos', e);
+  }
+
+  // Limpiar categorías E2E
+  try {
+    const categorias = await apiGetAll<{ id: number; nombre: string }>(page, '/logistica/categorias');
+    const e2eCats = categorias.filter(c => c.nombre && c.nombre.startsWith('Cat E2E '));
+    // Eliminar de abajo hacia arriba (subcategorías primero)
+    const sorted = [...e2eCats].sort((a, b) => b.id - a.id);
+    for (const c of sorted) {
+      const res = await deleteCategoria(page, c.id);
+      if (res.status >= 200 && res.status < 300) results.categorias++;
+      else results.errors++;
+    }
+  } catch (e) {
+    console.warn('cleanupE2EData: error limpiando categorías', e);
+  }
+
+  return results;
 }
 
 export async function listPedidos(page: Page) {

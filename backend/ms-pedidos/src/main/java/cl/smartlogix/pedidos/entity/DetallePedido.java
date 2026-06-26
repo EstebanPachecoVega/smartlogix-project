@@ -5,7 +5,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "detalles_pedido", indexes = {
-    @Index(name = "idx_detalle_pedido_id", columnList = "pedido_id")
+    @Index(name = "idx_detalle_pedido_id", columnList = "pedido_id"),
+    @Index(name = "idx_detalle_producto_id", columnList = "producto_id")
 })
 @Getter
 @Setter

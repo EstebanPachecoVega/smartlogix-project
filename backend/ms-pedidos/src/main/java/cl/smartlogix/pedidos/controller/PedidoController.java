@@ -13,6 +13,9 @@ import cl.smartlogix.pedidos.repository.PedidoRepository;
 import cl.smartlogix.pedidos.service.PedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -20,9 +23,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -47,19 +50,19 @@ public class PedidoController {
     }
 
     @GetMapping
-    public List<PedidoResponseDTO> listarPedidos(@AuthenticationPrincipal Jwt jwt) {
+    public Page<PedidoResponseDTO> listarPedidos(
+            @AuthenticationPrincipal Jwt jwt,
+            @PageableDefault(size = 20) Pageable pageable) {
         String usuarioId = jwt.getClaimAsString("sub");
         boolean isGestor = esGestor(jwt);
 
-        List<Pedido> pedidos;
+        Page<Pedido> pedidos;
         if (isGestor) {
-            pedidos = pedidoService.listarPedidos();
+            pedidos = pedidoService.listarPedidos(pageable);
         } else {
-            pedidos = pedidoService.listarPedidosPorUsuario(usuarioId);
+            pedidos = pedidoService.listarPedidosPorUsuario(usuarioId, pageable);
         }
-        return pedidos.stream()
-                .map(pedidoMapper::toResponseDTO)
-                .collect(Collectors.toList());
+        return pedidos.map(pedidoMapper::toResponseDTO);
     }
 
     @GetMapping("/{id}")
@@ -91,7 +94,8 @@ public class PedidoController {
 
     @GetMapping("/estadisticas/ventas-plataforma")
     public List<VentasPlataformaResponseDTO> getVentasPorPlataforma() {
-        return pedidoRepository.findVentasPorPlataforma();
+        LocalDateTime desde = LocalDate.now().minusMonths(12).atStartOfDay();
+        return pedidoRepository.findVentasPorPlataforma(desde);
     }
 
     @GetMapping("/estadisticas/comparacion-anual")
@@ -103,12 +107,14 @@ public class PedidoController {
 
     @GetMapping("/estadisticas/ventas-por-producto")
     public List<VentaPorProductoResponseDTO> getVentasPorProducto() {
-        return detallePedidoRepository.findVentasPorProducto();
+        LocalDateTime desde = LocalDate.now().minusMonths(12).atStartOfDay();
+        return detallePedidoRepository.findVentasPorProducto(desde);
     }
 
     @GetMapping("/estadisticas/ventas-por-producto-cantidad")
     public List<VentaPorProductoCantidadDTO> getCantidadPorProducto() {
-        return detallePedidoRepository.findCantidadPorProducto();
+        LocalDateTime desde = LocalDate.now().minusMonths(12).atStartOfDay();
+        return detallePedidoRepository.findCantidadPorProducto(desde);
     }
 
     // Método helper — agrega esto al final de la clase

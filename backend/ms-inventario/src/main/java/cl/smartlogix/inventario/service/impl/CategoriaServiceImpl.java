@@ -14,6 +14,8 @@ import cl.smartlogix.inventario.repository.ProductoRepository;
 import cl.smartlogix.inventario.service.CategoriaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -136,6 +138,13 @@ public class CategoriaServiceImpl implements CategoriaService {
         return categoriaRepository.findAllByOrderByOrdenVisualAsc().stream()
                 .map(categoriaMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CategoriaResponseDTO> getAllCategorias(Pageable pageable) {
+        return categoriaRepository.findAllByOrderByOrdenVisualAsc(pageable)
+                .map(categoriaMapper::toResponseDTO);
     }
 
     // Consulta de categorías principales (sin padre) con mapeo a DTOs para una

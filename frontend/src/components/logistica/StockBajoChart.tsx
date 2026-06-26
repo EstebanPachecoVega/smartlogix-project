@@ -7,7 +7,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 
 const chartConfig = {
   stock: { label: 'Stock', color: '#ef4444' },
@@ -20,7 +20,7 @@ function getStockColor(stock: number): string {
   return '#64748b';
 }
 
-export default function StockBajoChart({ productos }: { productos: Producto[] }) {
+const StockBajoChart = memo(function StockBajoChart({ productos }: { productos: Producto[] }) {
   const data = useMemo(() => {
     return [...productos]
       .sort((a, b) => a.cantidad - b.cantidad)
@@ -78,4 +78,5 @@ export default function StockBajoChart({ productos }: { productos: Producto[] })
       </BarChart>
     </ChartContainer>
   );
-}
+});
+export default StockBajoChart;

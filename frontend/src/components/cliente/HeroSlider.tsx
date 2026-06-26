@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, memo } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -33,7 +33,7 @@ const slides: Slide[] = [
   },
 ];
 
-export default function HeroSlider() {
+const HeroSlider = memo(function HeroSlider() {
   const [current, setCurrent] = useState(0);
 
   const goTo = useCallback((index: number) => setCurrent(index), []);
@@ -127,4 +127,5 @@ export default function HeroSlider() {
       )}
     </section>
   );
-}
+});
+export default HeroSlider;

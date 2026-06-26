@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { memo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from 'recharts';
 import {
   ChartContainer,
@@ -35,7 +36,7 @@ const chartConfig = {
   cantidad: { label: 'Unidades vendidas', color: '#3b82f6' },
 };
 
-export default function VentasPorCategoriaChart({ pedidos, productos }: { pedidos: PedidoResponse[]; productos: Producto[] }) {
+const VentasPorCategoriaChart = memo(function VentasPorCategoriaChart({ pedidos, productos }: { pedidos: PedidoResponse[]; productos: Producto[] }) {
   const [dias, setDias] = React.useState('30');
 
   const data = React.useMemo(() => {
@@ -139,4 +140,5 @@ export default function VentasPorCategoriaChart({ pedidos, productos }: { pedido
       </CardContent>
     </Card>
   );
-}
+});
+export default VentasPorCategoriaChart;

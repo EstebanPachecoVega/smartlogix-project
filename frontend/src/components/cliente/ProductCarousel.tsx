@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, memo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Producto } from '@/types';
 import ProductCard from './ProductCard';
@@ -10,7 +10,7 @@ interface ProductCarouselProps {
   title: string;
 }
 
-export default function ProductCarousel({ productos, title }: ProductCarouselProps) {
+const ProductCarousel = memo(function ProductCarousel({ productos, title }: ProductCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const hasDraggedRef = useRef(false);
@@ -123,4 +123,5 @@ export default function ProductCarousel({ productos, title }: ProductCarouselPro
       </div>
     </section>
   );
-}
+});
+export default ProductCarousel;

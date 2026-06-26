@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { productosApi, pedidosApi, enviosApi } from '@/lib/api';
 import { Producto, PedidoResponse, Envio } from '@/types';
@@ -41,35 +41,47 @@ export default function DashboardPage() {
             .finally(() => setLoading(false));
     }, []);
 
+    // Métricas — memoizadas para evitar recálculos innecesarios
+    const {
+        totalProductos, totalVentas, totalPedidos, totalEnvios,
+        pedidosEntregados, enviosEntregados, enviosProblemas,
+        enviosPorEstado, ultimosPedidos, enviosConProblemas,
+    } = useMemo(() => {
+        const totalProductos = productos.length;
+        const totalVentas = pedidos.reduce((s, p) => s + p.totalCompra, 0);
+        const totalPedidos = pedidos.length;
+        const totalEnvios = envios.length;
+        const pedidosEntregados = pedidos.filter((p) => p.estado === 'ENTREGADO').length;
+        const enviosEntregados = envios.filter((e) => e.estadoEnvio === 'ENTREGADO').length;
+        const enviosProblemas = envios.filter((e) =>
+            ['INTENTO_FALLIDO', 'RETRASADO', 'DEVUELTO'].includes(e.estadoEnvio),
+        ).length;
+
+        const enviosPorEstado = envios.reduce<Record<string, number>>((acc, e) => {
+            acc[e.estadoEnvio] = (acc[e.estadoEnvio] || 0) + 1;
+            return acc;
+        }, {});
+
+        const ultimosPedidos = [...pedidos]
+            .sort((a, b) => {
+                if (a.fechaPedido && b.fechaPedido)
+                    return new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime();
+                return b.id - a.id;
+            })
+            .slice(0, 5);
+
+        const enviosConProblemas = envios
+            .filter((e) => ['INTENTO_FALLIDO', 'RETRASADO', 'DEVUELTO'].includes(e.estadoEnvio))
+            .slice(0, 5);
+
+        return {
+            totalProductos, totalVentas, totalPedidos, totalEnvios,
+            pedidosEntregados, enviosEntregados, enviosProblemas,
+            enviosPorEstado, ultimosPedidos, enviosConProblemas,
+        };
+    }, [productos, pedidos, envios]);
+
     if (loading) return <Spinner />;
-
-    // Métricas
-    const totalProductos = productos.length;
-    const totalVentas = pedidos.reduce((s, p) => s + p.totalCompra, 0);
-    const totalPedidos = pedidos.length;
-    const totalEnvios = envios.length;
-    const pedidosEntregados = pedidos.filter((p) => p.estado === 'ENTREGADO').length;
-    const enviosEntregados = envios.filter((e) => e.estadoEnvio === 'ENTREGADO').length;
-    const enviosProblemas = envios.filter((e) =>
-        ['INTENTO_FALLIDO', 'RETRASADO', 'DEVUELTO'].includes(e.estadoEnvio),
-    ).length;
-
-    const enviosPorEstado = envios.reduce<Record<string, number>>((acc, e) => {
-        acc[e.estadoEnvio] = (acc[e.estadoEnvio] || 0) + 1;
-        return acc;
-    }, {});
-
-    const ultimosPedidos = [...pedidos]
-        .sort((a, b) => {
-            if (a.fechaPedido && b.fechaPedido)
-                return new Date(b.fechaPedido).getTime() - new Date(a.fechaPedido).getTime();
-            return b.id - a.id;
-        })
-        .slice(0, 5);
-
-    const enviosConProblemas = envios
-        .filter((e) => ['INTENTO_FALLIDO', 'RETRASADO', 'DEVUELTO'].includes(e.estadoEnvio))
-        .slice(0, 5);
 
     // Render 
     return (

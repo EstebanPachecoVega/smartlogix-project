@@ -8,7 +8,12 @@ import java.util.List;
 
 @Entity
 @Table(name = "pedidos", indexes = {
-    @Index(name = "idx_pedido_numero_orden", columnList = "numero_orden", unique = true)
+    @Index(name = "idx_pedido_numero_orden", columnList = "numero_orden", unique = true),
+    @Index(name = "idx_pedido_usuario_id", columnList = "usuario_id"),
+    @Index(name = "idx_pedido_estado", columnList = "estado"),
+    @Index(name = "idx_pedido_plataforma", columnList = "plataforma"),
+    @Index(name = "idx_pedido_fecha_pedido", columnList = "fecha_pedido"),
+    @Index(name = "idx_pedido_estado_fecha", columnList = "estado,fecha_pedido")
 })
 @Getter
 @Setter

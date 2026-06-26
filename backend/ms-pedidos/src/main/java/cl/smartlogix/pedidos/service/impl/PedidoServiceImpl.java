@@ -16,6 +16,8 @@ import cl.smartlogix.pedidos.service.IdempotencyService;
 import cl.smartlogix.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -177,8 +179,20 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<Pedido> listarPedidosPorUsuario(String usuarioId, Pageable pageable) {
+        return pedidoRepository.findByUsuarioId(usuarioId, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Pedido> listarPedidos() {
         return pedidoRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Pedido> listarPedidos(Pageable pageable) {
+        return pedidoRepository.findAll(pageable);
     }
 
     @Override

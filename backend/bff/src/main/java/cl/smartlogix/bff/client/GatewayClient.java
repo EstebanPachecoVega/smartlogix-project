@@ -6,8 +6,10 @@ import cl.smartlogix.bff.exception.DomainException;
 import cl.smartlogix.bff.exception.ResourceNotFoundException;
 import reactor.core.publisher.Flux;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -24,24 +26,35 @@ import java.util.List;
 public class GatewayClient {
 
     private final WebClient gatewayWebClient;
+    private final cl.smartlogix.bff.config.ReactiveCacheManager cacheManager;
 
     // ==================== PRODUCTOS (cliente) ====================
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackGetProductos")
-    public Mono<List<ProductoResponseDTO>> getProductos(String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .get()
-                .uri("/api/productos")
-                .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(ProductoResponseDTO.class)
-                .collectList();
+    public Mono<PagedResponse<ProductoResponseDTO>> getProductos(
+            String jwtToken, String correlationId, int page, int size) {
+        String cacheKey = "productos:page:" + page + ":size:" + size;
+        return cacheManager.getOrFetch(cacheKey, java.time.Duration.ofSeconds(30), () ->
+            gatewayWebClient
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/productos")
+                            .queryParam("page", page)
+                            .queryParam("size", size)
+                            .build())
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Correlation-Id", correlationId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleError)
+                    .bodyToMono(new ParameterizedTypeReference<PagedResponse<ProductoResponseDTO>>() {})
+        );
     }
 
     // ==================== PRODUCTOS (gestión) ====================
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackCrearProducto")
     public Mono<ProductoResponseDTO> crearProducto(ProductoRequestDTO request, String jwtToken, String correlationId) {
+        cacheManager.evictByPrefix("productos:");
         return gatewayWebClient
                 .post()
                 .uri("/api/productos")
@@ -53,6 +66,7 @@ public class GatewayClient {
                 .bodyToMono(ProductoResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerProducto")
     public Mono<ProductoResponseDTO> obtenerProducto(Long id, String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -65,9 +79,11 @@ public class GatewayClient {
                 .bodyToMono(ProductoResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackActualizarProducto")
     public Mono<ProductoResponseDTO> actualizarProducto(Long id, ProductoRequestDTO request, String jwtToken,
             String correlationId) {
+        cacheManager.evictByPrefix("productos:");
         return gatewayWebClient
                 .put()
                 .uri("/api/productos/" + id)
@@ -79,8 +95,10 @@ public class GatewayClient {
                 .bodyToMono(ProductoResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEliminarProducto")
     public Mono<Void> eliminarProducto(Long id, String jwtToken, String correlationId) {
+        cacheManager.evictByPrefix("productos:");
         return gatewayWebClient
                 .delete()
                 .uri("/api/productos/" + id)
@@ -92,19 +110,28 @@ public class GatewayClient {
     }
 
     // ==================== CATEGORÍAS (Gestión CRUD) ====================
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackListarCategorias")
-    public Mono<List<CategoriaResponseDTO>> listarCategorias(String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .get()
-                .uri("/api/categorias")
-                .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(CategoriaResponseDTO.class)
-                .collectList();
+    public Mono<PagedResponse<CategoriaResponseDTO>> listarCategorias(
+            String jwtToken, String correlationId, int page, int size) {
+        String cacheKey = "categorias:page:" + page + ":size:" + size;
+        return cacheManager.getOrFetch(cacheKey, java.time.Duration.ofSeconds(120), () ->
+            gatewayWebClient
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/categorias")
+                            .queryParam("page", page)
+                            .queryParam("size", size)
+                            .build())
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Correlation-Id", correlationId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleError)
+                    .bodyToMono(new ParameterizedTypeReference<PagedResponse<CategoriaResponseDTO>>() {})
+        );
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerCategoria")
     public Mono<CategoriaResponseDTO> obtenerCategoria(Long id, String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -117,9 +144,11 @@ public class GatewayClient {
                 .bodyToMono(CategoriaResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackCrearCategoria")
     public Mono<CategoriaResponseDTO> crearCategoria(CategoriaRequestDTO request, String jwtToken,
             String correlationId) {
+        cacheManager.evictByPrefix("categorias:");
         return gatewayWebClient
                 .post()
                 .uri("/api/categorias")
@@ -131,9 +160,11 @@ public class GatewayClient {
                 .bodyToMono(CategoriaResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackActualizarCategoria")
     public Mono<CategoriaResponseDTO> actualizarCategoria(Long id, CategoriaRequestDTO request, String jwtToken,
             String correlationId) {
+        cacheManager.evictByPrefix("categorias:");
         return gatewayWebClient
                 .put()
                 .uri("/api/categorias/" + id)
@@ -145,8 +176,10 @@ public class GatewayClient {
                 .bodyToMono(CategoriaResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEliminarCategoria")
     public Mono<Void> eliminarCategoria(Long id, String jwtToken, String correlationId) {
+        cacheManager.evictByPrefix("categorias:");
         return gatewayWebClient
                 .delete()
                 .uri("/api/categorias/" + id)
@@ -157,6 +190,7 @@ public class GatewayClient {
                 .bodyToMono(Void.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackReordenarCategorias")
     public Mono<Void> reordenarCategorias(List<ReordenarCategoriaDTO> ordenes, String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -186,19 +220,25 @@ public class GatewayClient {
                 .bodyToMono(PedidoResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackListarPedidos")
-    public Mono<List<PedidoResponseDTO>> listarPedidos(String jwtToken, String correlationId) {
+    public Mono<PagedResponse<PedidoResponseDTO>> listarPedidos(
+            String jwtToken, String correlationId, int page, int size) {
         return gatewayWebClient
                 .get()
-                .uri("/api/pedidos")
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/pedidos")
+                        .queryParam("page", page)
+                        .queryParam("size", size)
+                        .build())
                 .header("Authorization", "Bearer " + jwtToken)
                 .header("X-Correlation-Id", correlationId)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(PedidoResponseDTO.class)
-                .collectList();
+                .bodyToMono(new ParameterizedTypeReference<PagedResponse<PedidoResponseDTO>>() {});
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerPedido")
     public Mono<PedidoResponseDTO> obtenerPedido(Long id, String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -212,19 +252,25 @@ public class GatewayClient {
     }
 
     // ==================== ENVÍOS ====================
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackListarEnvios")
-    public Mono<List<EnvioResponseDTO>> listarEnvios(String jwtToken, String correlationId) {
+    public Mono<PagedResponse<EnvioResponseDTO>> listarEnvios(
+            String jwtToken, String correlationId, int page, int size) {
         return gatewayWebClient
                 .get()
-                .uri("/api/envios")
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/envios")
+                        .queryParam("page", page)
+                        .queryParam("size", size)
+                        .build())
                 .header("Authorization", "Bearer " + jwtToken)
                 .header("X-Correlation-Id", correlationId)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(EnvioResponseDTO.class)
-                .collectList();
+                .bodyToMono(new ParameterizedTypeReference<PagedResponse<EnvioResponseDTO>>() {});
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerEnvio")
     public Mono<EnvioResponseDTO> obtenerEnvio(Long id, String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -237,6 +283,7 @@ public class GatewayClient {
                 .bodyToMono(EnvioResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerEnvioPorPedidoId")
     public Mono<EnvioResponseDTO> obtenerEnvioPorPedidoId(Long pedidoId, String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -249,6 +296,7 @@ public class GatewayClient {
                 .bodyToMono(EnvioResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackActualizarEstadoEnvio")
     public Mono<EnvioResponseDTO> actualizarEstadoEnvio(Long envioId, String nuevoEstado, String jwtToken,
             String correlationId) {
@@ -262,6 +310,7 @@ public class GatewayClient {
                 .bodyToMono(EnvioResponseDTO.class);
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackObtenerEnvioPorTracking")
     public Mono<EnvioResponseDTO> obtenerEnvioPorTracking(String tracking, String jwtToken, String correlationId) {
         return gatewayWebClient
@@ -275,73 +324,89 @@ public class GatewayClient {
     }
 
     // ==================== ESTADÍSTICAS ====================
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
     public Mono<List<VentasPlataformaResponseDTO>> getVentasPlataforma(String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .get()
-                .uri("/api/pedidos/estadisticas/ventas-plataforma")
-                .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(VentasPlataformaResponseDTO.class)
-                .collectList();
+        return cacheManager.getOrFetch("estadisticas:ventas-plataforma", java.time.Duration.ofSeconds(300), () ->
+            gatewayWebClient
+                    .get()
+                    .uri("/api/pedidos/estadisticas/ventas-plataforma")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Correlation-Id", correlationId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleError)
+                    .bodyToFlux(VentasPlataformaResponseDTO.class)
+                    .collectList()
+        );
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
     public Mono<List<ComparacionAnualResponseDTO>> getComparacionAnual(String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .get()
-                .uri("/api/pedidos/estadisticas/comparacion-anual")
-                .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(ComparacionAnualResponseDTO.class)
-                .collectList();
+        return cacheManager.getOrFetch("estadisticas:comparacion-anual", java.time.Duration.ofSeconds(300), () ->
+            gatewayWebClient
+                    .get()
+                    .uri("/api/pedidos/estadisticas/comparacion-anual")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Correlation-Id", correlationId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleError)
+                    .bodyToFlux(ComparacionAnualResponseDTO.class)
+                    .collectList()
+        );
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
     public Mono<List<VentaPorProductoResponseDTO>> getVentasPorProducto(String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .get()
-                .uri("/api/pedidos/estadisticas/ventas-por-producto")
-                .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(VentaPorProductoResponseDTO.class)
-                .collectList();
+        return cacheManager.getOrFetch("estadisticas:ventas-por-producto", java.time.Duration.ofSeconds(300), () ->
+            gatewayWebClient
+                    .get()
+                    .uri("/api/pedidos/estadisticas/ventas-por-producto")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Correlation-Id", correlationId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleError)
+                    .bodyToFlux(VentaPorProductoResponseDTO.class)
+                    .collectList()
+        );
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
     public Mono<List<VentaPorProductoCantidadDTO>> getCantidadPorProducto(String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .get()
-                .uri("/api/pedidos/estadisticas/ventas-por-producto-cantidad")
-                .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(VentaPorProductoCantidadDTO.class)
-                .collectList();
+        return cacheManager.getOrFetch("estadisticas:cantidad-por-producto", java.time.Duration.ofSeconds(300), () ->
+            gatewayWebClient
+                    .get()
+                    .uri("/api/pedidos/estadisticas/ventas-por-producto-cantidad")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Correlation-Id", correlationId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleError)
+                    .bodyToFlux(VentaPorProductoCantidadDTO.class)
+                    .collectList()
+        );
     }
 
+    @Retry(name = "gateway")
     @CircuitBreaker(name = "gateway", fallbackMethod = "fallbackEstadisticas")
     public Mono<List<MapaCategoriaResponseDTO>> getMapaCategorias(String jwtToken, String correlationId) {
-        return gatewayWebClient
-                .get()
-                .uri("/api/productos/mapa-categorias")
-                .header("Authorization", "Bearer " + jwtToken)
-                .header("X-Correlation-Id", correlationId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToFlux(MapaCategoriaResponseDTO.class)
-                .collectList();
+        return cacheManager.getOrFetch("estadisticas:mapa-categorias", java.time.Duration.ofSeconds(300), () ->
+            gatewayWebClient
+                    .get()
+                    .uri("/api/productos/mapa-categorias")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Correlation-Id", correlationId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, this::handleError)
+                    .bodyToFlux(MapaCategoriaResponseDTO.class)
+                    .collectList()
+        );
     }
 
     // ==================== FALLBACKS ====================
-    private Mono<List<ProductoResponseDTO>> fallbackGetProductos(String jwt, String cid, Throwable t) {
+    private Mono<PagedResponse<ProductoResponseDTO>> fallbackGetProductos(
+            String jwt, String cid, int page, int size, Throwable t) {
         log.error("CB abierto getProductos: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Productos no disponible"));
     }
@@ -368,7 +433,8 @@ public class GatewayClient {
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Productos no disponible"));
     }
 
-    private Mono<List<CategoriaResponseDTO>> fallbackListarCategorias(String jwt, String cid, Throwable t) {
+    private Mono<PagedResponse<CategoriaResponseDTO>> fallbackListarCategorias(
+            String jwt, String cid, int page, int size, Throwable t) {
         log.error("CB abierto listarCategorias: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Categorías no disponible"));
     }
@@ -402,7 +468,8 @@ public class GatewayClient {
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pedidos no disponible"));
     }
 
-    private Mono<List<PedidoResponseDTO>> fallbackListarPedidos(String jwt, String cid, Throwable t) {
+    private Mono<PagedResponse<PedidoResponseDTO>> fallbackListarPedidos(
+            String jwt, String cid, int page, int size, Throwable t) {
         log.error("CB abierto listarPedidos: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pedidos no disponible"));
     }
@@ -412,7 +479,8 @@ public class GatewayClient {
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pedidos no disponible"));
     }
 
-    private Mono<List<EnvioResponseDTO>> fallbackListarEnvios(String jwt, String cid, Throwable t) {
+    private Mono<PagedResponse<EnvioResponseDTO>> fallbackListarEnvios(
+            String jwt, String cid, int page, int size, Throwable t) {
         log.error("CB abierto listarEnvios: {}", t.getMessage());
         return Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Envíos no disponible"));
     }
