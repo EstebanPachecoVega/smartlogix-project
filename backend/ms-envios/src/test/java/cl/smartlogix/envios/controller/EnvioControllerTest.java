@@ -7,16 +7,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -25,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(EnvioController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@WithMockUser(roles = "gestor")
 class EnvioControllerTest {
 
     @Autowired
@@ -33,6 +36,26 @@ class EnvioControllerTest {
 
     @MockitoBean
     private EnvioService envioService;
+
+    private Jwt gestorJwt() {
+        return Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .claim("realm_access", Map.of("roles", List.of("gestor")))
+                .claim("sub", "gestor-uuid")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .build();
+    }
+
+    private Jwt clienteJwt() {
+        return Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .claim("realm_access", Map.of("roles", List.of("cliente")))
+                .claim("sub", "cliente-uuid")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .build();
+    }
 
     @Test
     void listarEnvios_200() throws Exception {
@@ -121,7 +144,29 @@ class EnvioControllerTest {
 
     @Test
     void eliminarEnvio_204() throws Exception {
-        mockMvc.perform(delete("/api/envios/1"))
-                .andExpect(status().isNoContent());
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new JwtAuthenticationToken(gestorJwt(),
+                List.of(new SimpleGrantedAuthority("ROLE_gestor"))));
+        SecurityContextHolder.setContext(context);
+        try {
+            mockMvc.perform(delete("/api/envios/1"))
+                    .andExpect(status().isNoContent());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void eliminarEnvio_sinRolGestor_403() throws Exception {
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new JwtAuthenticationToken(clienteJwt(),
+                List.of(new SimpleGrantedAuthority("ROLE_cliente"))));
+        SecurityContextHolder.setContext(context);
+        try {
+            mockMvc.perform(delete("/api/envios/1"))
+                    .andExpect(status().isForbidden());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 }

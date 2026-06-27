@@ -40,6 +40,7 @@
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }

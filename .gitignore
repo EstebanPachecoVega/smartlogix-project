@@ -31,7 +31,17 @@ yarn-error.log
 .settings/
 .factorypath
 
-# 5. Sistema Operativo
+# 5. Tests E2E y reportes
+frontend/playwright-report/
+frontend/test-results/
+
+# 6. Archivos temporales de recuperación
+temp_*
+backup_*.sql
+recover_pedidos.ps1
+recovery_inserts.sql
+
+# 7. Sistema Operativo
 .DS_Store
 Thumbs.db
 

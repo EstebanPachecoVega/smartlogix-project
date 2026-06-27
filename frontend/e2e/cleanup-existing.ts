@@ -148,10 +148,14 @@ async function main() {
 
   console.log('Listando pedidos...');
   const pedidos = await fetchAll(token, '/api/pedidos');
-  console.log(`  Encontrados: ${pedidos.length}`);
+  const e2ePedidos = pedidos.filter((p: any) =>
+    p.destinatario === 'Test E2E' ||
+    (p.calle === 'Calle Test 123' && p.codigoPostal === '8320000')
+  );
+  console.log(`  Encontrados: ${pedidos.length} (E2E: ${e2ePedidos.length})`);
 
   let pedidosDeleted = 0;
-  for (const p of pedidos) {
+  for (const p of e2ePedidos) {
     const res = await fetch(`${GATEWAY_URL}/api/pedidos/${p.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
@@ -162,10 +166,12 @@ async function main() {
 
   console.log('Listando envíos...');
   const envios = await fetchAll(token, '/api/envios');
-  console.log(`  Encontrados: ${envios.length}`);
+  const e2ePedidoIds = new Set(e2ePedidos.map((p: any) => p.id));
+  const e2eEnvios = envios.filter((e: any) => e2ePedidoIds.has(e.pedidoId));
+  console.log(`  Encontrados: ${envios.length} (E2E: ${e2eEnvios.length})`);
 
   let enviosDeleted = 0;
-  for (const e of envios) {
+  for (const e of e2eEnvios) {
     const res = await fetch(`${GATEWAY_URL}/api/envios/${e.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
