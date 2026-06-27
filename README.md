@@ -120,15 +120,27 @@ Responsable de la gestión del catálogo de productos y el control de stock.
 
 | Método | Ruta                                  | Descripción                          |
 | ------ | ------------------------------------- | ------------------------------------ |
-| GET    | `/api/productos`                      | Listar productos (paginado)          |
+| GET    | `/api/productos`                      | Listar productos (paginado, filtrable) |
 | GET    | `/api/productos/{id}`                 | Obtener producto por ID              |
+| GET    | `/api/productos/slug/{slug}`          | Obtener producto por slug            |
+| GET    | `/api/productos/sku/{sku}`            | Obtener producto por SKU             |
+| GET    | `/api/productos/categoria/{catId}`    | Productos por categoría              |
+| GET    | `/api/productos/mapa-categorias`      | Mapa productoId → categoría          |
 | POST   | `/api/productos`                      | Crear producto (solo gestor)         |
 | PUT    | `/api/productos/{id}`                 | Actualizar producto (solo gestor)    |
 | DELETE | `/api/productos/{id}`                 | Eliminar producto (solo gestor)      |
 | GET    | `/api/categorias`                     | Listar categorías                    |
+| GET    | `/api/categorias/{id}`                | Obtener categoría por ID             |
+| GET    | `/api/categorias/slug/{slug}`         | Obtener categoría por slug           |
+| GET    | `/api/categorias/principales`         | Categorías principales               |
+| POST   | `/api/categorias`                     | Crear categoría (solo gestor)        |
+| PUT    | `/api/categorias/{id}`                | Actualizar categoría (solo gestor)   |
+| DELETE | `/api/categorias/{id}`                | Eliminar categoría (solo gestor)     |
+| PATCH  | `/api/categorias/reordenar`           | Reordenar categorías (solo gestor)   |
 | POST   | `/api/inventario/reservar`            | Reservar stock (consumido por Saga)  |
-| POST   | `/api/inventario/compensar`           | Liberar stock (compensación Saga)    |
-| GET    | `/api/productos/mapa-categorias`      | Mapa productoId → categoría          |
+| POST   | `/api/inventario/confirmar`           | Confirmar reserva (consumido por Saga) |
+| POST   | `/api/inventario/cancelar`            | Cancelar reserva (compensación Saga) |
+| GET    | `/api/inventario/stock/{productoId}`  | Stock disponible del producto        |
 
 **Reservas en Redis:** Las reservas de stock se gestionan en Redis con TTL para prevenir bloqueos permanentes. Si el TTL expira, se publica un evento `ReservaExpirada` para que ms-pedidos ejecute la compensación.
 
@@ -149,13 +161,15 @@ Orquestador central del sistema. Gestiona el ciclo de vida completo del pedido y
 
 | Método | Ruta                                              | Descripción                              |
 | ------ | ------------------------------------------------- | ---------------------------------------- |
-| GET    | `/api/pedidos`                                    | Listar pedidos (paginado, filtrable)     |
+| GET    | `/api/pedidos`                                    | Listar pedidos (paginado, filtrable por estado) |
 | GET    | `/api/pedidos/{id}`                               | Obtener pedido por ID                    |
+| GET    | `/api/pedidos/orden/{numeroOrden}`                | Obtener pedido por número de orden       |
 | POST   | `/api/pedidos`                                    | Crear pedido (requiere idempotencyKey)   |
-| PUT    | `/api/pedidos/{id}/estado`                        | Actualizar estado (solo gestor)          |
+| DELETE | `/api/pedidos/{id}`                               | Eliminar pedido (solo gestor)            |
 | GET    | `/api/pedidos/estadisticas/ventas-plataforma`     | Ventas agrupadas por plataforma          |
 | GET    | `/api/pedidos/estadisticas/comparacion-anual`     | Comparación mes a mes (año actual vs anterior) |
 | GET    | `/api/pedidos/estadisticas/ventas-por-producto`   | Ventas agrupadas por producto            |
+| GET    | `/api/pedidos/estadisticas/ventas-por-producto-cantidad` | Cantidad vendida por producto       |
 
 **Idempotencia:** La creación de pedidos requiere el header `Idempotency-Key`. Pedidos duplicados con la misma key retornan el pedido original sin crear uno nuevo (mecanismo `@Transactional` + Redis).
 
@@ -166,8 +180,7 @@ Orquestador central del sistema. Gestiona el ciclo de vida completo del pedido y
 | PENDIENTE    | Pedido creado, pendiente de reserva de stock     |
 | APROBADO     | Stock reservado, evento emitido a ms-envios      |
 | RECHAZADO    | Stock insuficiente o error en el flujo           |
-| EN_PROCESO   | Despacho en curso                                |
-| DESPACHADO   | Envío despachado                                 |
+| EN_CAMINO    | Despacho en curso                                |
 | ENTREGADO    | Entregado al cliente                             |
 
 **Plataforma:** Cada pedido registra la plataforma de origen (`DESKTOP` o `MOBILE`), detectada automáticamente desde el frontend mediante el user agent del navegador.
@@ -187,19 +200,29 @@ Consume eventos desde RabbitMQ y gestiona el ciclo de vida logístico de los des
 
 **Endpoints principales:**
 
-| Método | Ruta                          | Descripción                          |
-| ------ | ----------------------------- | ------------------------------------ |
-| GET    | `/api/envios`                 | Listar envíos (paginado)            |
-| GET    | `/api/envios/{id}`            | Obtener envío por ID                |
-| PUT    | `/api/envios/{id}/estado`     | Actualizar estado (solo gestor)     |
+| Método | Ruta                              | Descripción                                   |
+| ------ | --------------------------------- | --------------------------------------------- |
+| GET    | `/api/envios`                     | Listar envíos (paginado, filtrable por estado) |
+| GET    | `/api/envios/{id}`                | Obtener envío por ID                          |
+| GET    | `/api/envios/pedido/{pedidoId}`   | Obtener envío por pedido                      |
+| GET    | `/api/envios/tracking/{tracking}` | Obtener envío por número de tracking          |
+| GET    | `/api/envios/problemas`           | Listar envíos con problemas                   |
+| PATCH  | `/api/envios/{id}/estado`         | Actualizar estado (solo gestor)               |
+| DELETE | `/api/envios/{id}`                | Eliminar envío (solo gestor)                  |
 
 **Estados del envío:**
 
 | Estado           | Descripción                      |
 | ---------------- | -------------------------------- |
-| PENDIENTE        | Despacho creado, sin recolectar  |
-| EN_TRANSITO      | En ruta de entrega               |
+| PENDIENTE        | Despacho creado, sin procesar    |
+| PREPARANDO       | En preparación para envío        |
+| ENVIADO          | Despachado desde origen          |
+| EN_TRANSITO      | En ruta de transporte            |
+| EN_REPARTO       | En reparto local                 |
 | ENTREGADO        | Entregado al destinatario        |
+| INTENTO_FALLIDO  | Intento de entrega fallido       |
+| RETRASADO        | Envío con retraso                |
+| DEVUELTO         | Devuelto al remitente            |
 | CANCELADO        | Despacho cancelado               |
 
 **Consumidores RabbitMQ:**
@@ -309,10 +332,23 @@ El **BFF** (Backend-for-Frontend, puerto 8084) es una capa de agregación reacti
 | Método | Ruta                                              | Descripción                                                  |
 | ------ | ------------------------------------------------- | ------------------------------------------------------------ |
 | GET    | `/bff/pedidos`                                    | Listar pedidos (agregados desde ms-pedidos)                  |
+| GET    | `/bff/pedidos/{id}`                               | Obtener pedido por ID                                        |
 | POST   | `/bff/pedidos`                                    | Crear pedido (requiere idempotencyKey)                       |
 | GET    | `/bff/productos`                                  | Listar productos (desde ms-inventario)                       |
 | GET    | `/bff/envios`                                     | Listar envíos (desde ms-envios)                              |
-| PUT    | `/bff/envios/{id}/estado`                         | Actualizar estado de envío                                   |
+| GET    | `/bff/envios/{id}`                                | Obtener envío por ID                                         |
+| GET    | `/bff/envios/pedido/{pedidoId}`                   | Obtener envío por pedido                                     |
+| GET    | `/bff/envios/tracking/{tracking}`                 | Obtener envío por número de tracking                         |
+| PATCH  | `/bff/envios/{id}/estado`                         | Actualizar estado de envío                                   |
+| GET    | `/bff/logistica/productos`                        | CRUD productos (admin)                                       |
+| POST   | `/bff/logistica/productos`                        | Crear producto (admin)                                       |
+| GET    | `/bff/logistica/productos/{id}`                   | Obtener producto (admin)                                     |
+| PUT    | `/bff/logistica/productos/{id}`                   | Actualizar producto (admin)                                  |
+| DELETE | `/bff/logistica/productos/{id}`                   | Eliminar producto (admin)                                    |
+| GET    | `/bff/logistica/categorias`                       | CRUD categorías (admin)                                      |
+| POST   | `/bff/logistica/categorias`                       | Crear categoría (admin)                                      |
+| PUT    | `/bff/logistica/categorias/{id}`                  | Actualizar categoría (admin)                                 |
+| DELETE | `/bff/logistica/categorias/{id}`                  | Eliminar categoría (admin)                                   |
 | GET    | `/bff/estadisticas/ventas-plataforma`             | Ventas agrupadas por plataforma (passthrough)                |
 | GET    | `/bff/estadisticas/comparacion-anual`             | Comparación mes a mes (passthrough)                          |
 | GET    | `/bff/estadisticas/ventas-por-categoria`          | Ventas por categoría (orquestado: combina ms-pedidos + ms-inventario) |
@@ -817,18 +853,23 @@ El frontend está construido con **Next.js 16 App Router**, **TypeScript**, **Zu
 
 ### Dashboard administrativo (`/logistica`)
 - **Sidebar layout** fijo con navegación entre secciones.
-- **8 gráficos analíticos** (recharts):
-  - Ventas por plataforma (donut)
-  - Comparación anual (área con gradiente)
-  - Ventas por categoría (área con gradiente)
-  - Distribución de pedidos por estado (donut)
-  - Distribución de envíos por estado (donut)
-  - Stock bajo (barras horizontales, top 10)
-  - Ventas últimos 7 días (barras verticales)
-  - Ventas últimos 30 días (línea)
+- **Rutas:** pedidos (CRUD + detalle), productos (CRUD), categorías (CRUD), envíos (CRUD + tracking), buscar, perfil, problemas.
+- **6 gráficos analíticos** (recharts):
+  - Distribución de pedidos por estado (donut) — `DistribucionPedidosChart`
+  - Distribución de envíos por estado (donut) — `DistribucionEnviosChart`
+  - Stock bajo (barras horizontales, top 10) — `StockBajoChart`
+  - Comparación anual (área con gradiente) — `ComparacionAnualChart`
+  - Ventas por categoría (área con gradiente) — `VentasPorCategoriaChart`
+  - Ventas últimos 30 días (línea) — `VentasLineChart`
 - **Tarjetas de métricas** (KPIs).
-- **Tablas** de últimos pedidos y envíos con filtros por estado.
+- **Componentes:** `TablaEnvios`, `FiltrosEnvios`, `ActualizarEstadoForm`.
 - Filtros temporales: semana / mes / año.
+
+### Páginas públicas
+- **`/login`** — Inicio de sesión con Keycloak (NextAuth.js).
+- **`/registro`** — Registro de nuevos usuarios.
+- **`/productos/[slug]`** — Detalle de producto individual.
+- **Páginas informativas:** centro-de-ayuda, devoluciones, envíos, privacidad, quiénes-somos, términos.
 
 ### Panel de cliente (`/dashboard`)
 - Carrito de compras (Zustand `carritoStore`).
@@ -849,6 +890,19 @@ El frontend está construido con **Next.js 16 App Router**, **TypeScript**, **Zu
 - **Autenticación:** NextAuth.js con provider Keycloak (OIDC)
 - **Componentes UI:** shadcn/ui (basados en Radix)
 - **Package manager:** pnpm (no npm)
+
+## Configuración de Next.js
+
+- **`output: 'standalone'`** — Build optimizado para Docker (multi-stage).
+- **`images.remotePatterns`** — Permite imágenes desde Cloudinary (`res.cloudinary.com`) y dominios locales.
+- **Security headers:** `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
+
+## API Routes de NextAuth
+
+- **`/api/auth/[...nextauth]`** — Manejo de sesiones OIDC: KeycloakProvider + CredentialsProvider, refresh automático de tokens, extracción de roles.
+- **`/api/auth/register`** — Registro de nuevos usuarios vía Keycloak Admin API.
+- **`/api/auth/update-profile`** — Actualización de perfil de usuario.
+- **`/api/auth/logout`** — Cierre de sesión con invalidación de token en Keycloak.
 
 ---
 
