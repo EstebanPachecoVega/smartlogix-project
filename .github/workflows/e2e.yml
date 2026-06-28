@@ -86,6 +86,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Collect Docker logs
         if: always()
         run: docker compose logs --tail=200 > docker-logs.txt
