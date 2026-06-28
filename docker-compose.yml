@@ -324,11 +324,11 @@ services:
     networks:
       - smartlogix-network
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080; echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3; cat <&3 | head -1 | grep 200"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health/ready"]
       interval: 15s
       timeout: 10s
-      retries: 10
-      start_period: 60s
+      retries: 15
+      start_period: 90s
 
   # ==========================================
   # 8. OBSERVABILIDAD — Tracing + Métricas + Logs
