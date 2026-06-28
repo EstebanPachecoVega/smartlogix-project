@@ -55,8 +55,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Enable pnpm
+        run: corepack enable pnpm
 
       - name: Install dependencies
         run: cd frontend && pnpm install --frozen-lockfile
