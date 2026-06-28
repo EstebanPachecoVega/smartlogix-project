@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: sonar-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   analysis:
     runs-on: ubuntu-latest
@@ -27,12 +31,39 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      - name: Debug SonarCloud vars
+        run: |
+          echo "SONAR_ORGANIZATION=${SONAR_ORG_LENGTH} chars"
+        env:
+          SONAR_ORG_LENGTH: ${{ vars.SONAR_ORGANIZATION && 'set' || 'MISSING' }}
+
       - name: SonarCloud scan
         run: |
           cd backend
           mvn clean verify sonar:sonar \
+            -Psonar-cloud \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }} \
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.organization="${{ vars.SONAR_ORGANIZATION }}" \
+            -Dsonar.projectKey=smartlogix-backend \
+            -Dsonar.token="${{ secrets.SONAR_TOKEN }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+
+      - name: Upload JaCoCo reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports-sonar
+          path: |
+            backend/*/target/site/jacoco/
+          retention-days: 7
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-sonar
+          path: |
+            backend/*/target/surefire-reports/
+          retention-days: 7
