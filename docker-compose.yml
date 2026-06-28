@@ -141,7 +141,7 @@ services:
       SERVER_PORT: 8081
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: docker,docker-obs
     depends_on:
       mysql-inventario:
         condition: service_healthy
@@ -174,7 +174,7 @@ services:
       SERVER_PORT: 8082
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: docker,docker-obs
     depends_on:
       mysql-pedidos:
         condition: service_healthy
@@ -206,7 +206,7 @@ services:
       SERVER_PORT: 8083
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: docker,docker-obs
     depends_on:
       mysql-envios:
         condition: service_healthy
@@ -229,7 +229,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: docker,docker-obs
       SERVER_NETTY_MAX_HEADER_SIZE: 65536
     depends_on:
       redis:
@@ -256,7 +256,7 @@ services:
       GATEWAY_URL: http://api-gateway:8080
       SERVER_PORT: 8084
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: docker,docker-obs
       SERVER_NETTY_MAX_HEADER_SIZE: 65536
     depends_on:
       api-gateway:

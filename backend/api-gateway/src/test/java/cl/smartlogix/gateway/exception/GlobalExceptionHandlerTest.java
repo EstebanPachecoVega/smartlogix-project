@@ -1,6 +1,8 @@
 package cl.smartlogix.gateway.exception;
 
 import cl.smartlogix.gateway.config.TestSecurityConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -11,12 +13,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 @WebFluxTest
 @Import({TestSecurityConfig.class, GlobalExceptionHandler.class, GlobalExceptionHandlerTest.TestController.class})
 class GlobalExceptionHandlerTest {
 
     @Autowired
     private WebTestClient webTestClient;
+
+    @Autowired
+    private GlobalExceptionHandler handler;
 
     @Test
     void notFound_returns404() {
@@ -43,6 +52,22 @@ class GlobalExceptionHandlerTest {
                 .expectStatus().is5xxServerError()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo("Error interno");
+    }
+
+    @Test
+    void serializationError_completesResponse() throws Exception {
+        ObjectMapper original = handler.mapper;
+        try {
+            ObjectMapper brokenMapper = mock(ObjectMapper.class);
+            when(brokenMapper.writeValueAsBytes(any())).thenThrow(new JsonProcessingException("broken") {});
+            handler.mapper = brokenMapper;
+
+            webTestClient.get().uri("/test/not-found")
+                    .exchange()
+                    .expectStatus().isNotFound();
+        } finally {
+            handler.mapper = original;
+        }
     }
 
     @RestController

@@ -9,7 +9,7 @@
         </encoder>
     </appender>
 
-    <springProfile name="docker,k8s">
+    <springProfile name="docker-obs,k8s">
         <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
             <batchMaxItems>100</batchMaxItems>
             <batchTimeoutMs>5000</batchTimeoutMs>

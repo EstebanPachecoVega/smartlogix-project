@@ -124,8 +124,6 @@
 				<configuration>
 					<excludes>
 						<exclude>**/dto/**</exclude>
-						<exclude>**/config/**</exclude>
-						<exclude>**/*Application.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>

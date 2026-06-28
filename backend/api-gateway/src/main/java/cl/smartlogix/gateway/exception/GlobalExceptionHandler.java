@@ -17,7 +17,7 @@ import java.net.URI;
 @Order(-2)
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {

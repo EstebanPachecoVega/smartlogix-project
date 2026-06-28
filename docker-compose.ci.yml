@@ -5,3 +5,28 @@ services:
   grafana:      { profiles: ["observability"] }
   sonarqube:    { profiles: ["observability"] }
   sonarqube-db: { profiles: ["observability"] }
+
+  ms-inventario:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_ZIPKIN_ENABLED: "false"
+
+  ms-pedidos:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_ZIPKIN_ENABLED: "false"
+
+  ms-envios:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_ZIPKIN_ENABLED: "false"
+
+  api-gateway:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_ZIPKIN_ENABLED: "false"
+
+  bff:
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_ZIPKIN_ENABLED: "false"
