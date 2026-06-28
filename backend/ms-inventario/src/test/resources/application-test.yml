@@ -27,7 +27,7 @@ spring:
         pool:
           max-active: 5
           max-idle: 3
-          min-idle: 1
+          min-idle: 0
 
 resilience4j:
   circuitbreaker:
