@@ -11,12 +11,12 @@ test.describe('Admin Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     if (!users?.ok) return;
     await loginAs(page, users.gestor.email, users.gestor.password);
-    await page.waitForLoadState('networkidle', { timeout: 10000 });
-    await page.goto('/logistica', { waitUntil: 'networkidle' });
+    await page.waitForLoadState('domcontentloaded');
+    await page.goto('/logistica', { timeout: 20000, waitUntil: 'domcontentloaded' });
   });
 
   test('dashboard renders content', async ({ page }) => {
-    await page.waitForLoadState('networkidle', { timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('body')).toBeAttached();
   });
 

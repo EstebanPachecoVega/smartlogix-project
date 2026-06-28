@@ -57,8 +57,7 @@ test.describe('Categorias CRUD', () => {
   });
 
   test('navigates to category detail from table', async ({ page }) => {
-    await page.goto('/logistica/categorias');
-    await page.waitForLoadState('networkidle', { timeout: 10000 });
+    await page.goto('/logistica/categorias', { timeout: 20000, waitUntil: 'domcontentloaded' });
 
     const row = page.locator('table a, table button, [class*="table"] a, [class*="tree"] a').first();
     if (await row.isVisible({ timeout: 5000 }).catch(() => false)) {

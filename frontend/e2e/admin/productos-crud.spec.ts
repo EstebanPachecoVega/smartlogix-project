@@ -23,11 +23,11 @@ test.describe('Productos CRUD', () => {
   test.beforeEach(async ({ page }) => {
     if (!users?.ok) return;
     await loginAs(page, users.gestor.email, users.gestor.password);
-    await page.waitForLoadState('networkidle', { timeout: 10000 });
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('products table renders with data', async ({ page }) => {
-    await page.goto('/logistica/productos', { waitUntil: 'networkidle' });
+    await page.goto('/logistica/productos', { timeout: 20000, waitUntil: 'domcontentloaded' });
     await expect(page.locator('table, tbody, [class*="table"], [class*="Table"]').first()).toBeVisible({ timeout: 20000 });
   });
 
@@ -88,7 +88,7 @@ test.describe('Productos CRUD', () => {
 
   test('can delete a product from table', async ({ page }) => {
     try { await seedProducto(page); } catch { /* ok */ }
-    await page.goto('/logistica/productos', { waitUntil: 'networkidle' });
+    await page.goto('/logistica/productos', { timeout: 20000, waitUntil: 'domcontentloaded' });
 
     const deleteBtn = page.getByRole('button', { name: /eliminar|trash|delete/i }).first();
     if (await deleteBtn.isVisible({ timeout: 5000 }).catch(() => false)) {

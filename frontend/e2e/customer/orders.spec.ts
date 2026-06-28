@@ -18,7 +18,7 @@ test.describe('Customer Orders', () => {
     if (!users?.ok) return;
     await loginAs(page, users.cliente.email, users.cliente.password);
     await page.goto('/dashboard/pedidos', { timeout: 15000 });
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('h1, h2, table, p, body').first()).toBeAttached({ timeout: 5000 });
   });
 
@@ -26,7 +26,7 @@ test.describe('Customer Orders', () => {
     if (!users?.ok) return;
     await loginAs(page, users.cliente.email, users.cliente.password);
     await page.goto('/dashboard/pedidos', { timeout: 15000 });
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
 
     const detailLink = page.locator('a[href*="/dashboard/pedidos/"]').first();
     if (await detailLink.isVisible({ timeout: 8000 }).catch(() => false)) {
@@ -40,7 +40,7 @@ test.describe('Customer Orders', () => {
     if (!users?.ok) return;
     await loginAs(page, users.cliente.email, users.cliente.password);
     await page.goto('/dashboard/pedidos', { timeout: 15000 });
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
 
     const detailLink = page.locator('a[href*="/dashboard/pedidos/"]').first();
     if (!(await detailLink.isVisible({ timeout: 8000 }).catch(() => false))) return;

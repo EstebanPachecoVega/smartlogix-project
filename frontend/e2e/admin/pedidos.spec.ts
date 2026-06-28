@@ -11,7 +11,7 @@ test.describe('Admin Pedidos', () => {
   test.beforeEach(async ({ page }) => {
     if (!users?.ok) return;
     await loginAs(page, users.gestor.email, users.gestor.password);
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('pedidos table renders', async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe('Admin Pedidos', () => {
 
   test('pedido detail shows order info and line items', async ({ page }) => {
     await page.goto('/logistica/pedidos', { timeout: 20000, waitUntil: 'load' });
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
 
     const detailLink = page.locator('a[href*="/logistica/pedidos/"]').first();
     if (!(await detailLink.isVisible({ timeout: 8000 }).catch(() => false))) return;

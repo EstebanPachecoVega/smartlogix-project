@@ -20,7 +20,7 @@ test.describe('Tracking Search', () => {
 
   test('submitting a valid tracking number navigates to result', async ({ page }) => {
     await page.goto('/logistica/envios');
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
 
     let tracking = '';
     const trackingCell = page.locator('td, [class*="tracking"]').first();

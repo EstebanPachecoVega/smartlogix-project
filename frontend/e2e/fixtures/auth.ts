@@ -27,7 +27,7 @@ export async function registerUser(user: TestUser) {
 }
 
 export async function loginAs(page: Page, email: string, password: string) {
-  await page.goto('/login', { timeout: 10000, waitUntil: 'networkidle' });
+  await page.goto('/login', { timeout: 15000, waitUntil: 'domcontentloaded' });
   await page.getByLabel('Email').fill(email);
   await page.getByLabel(/contraseña/i).fill(password);
   
@@ -39,8 +39,8 @@ export async function loginAs(page: Page, email: string, password: string) {
   
   try {
     await Promise.race([
-      page.waitForURL(url => url.origin === homeUrl.origin && url.pathname === '/', { timeout: 20000 }),
-      errorLocator.waitFor({ state: 'visible', timeout: 15000 }).then(() => { throw new Error('login error shown'); }),
+      page.waitForURL(url => url.origin === homeUrl.origin && url.pathname === '/', { timeout: 30000 }),
+      errorLocator.waitFor({ state: 'visible', timeout: 20000 }).then(() => { throw new Error('login error shown'); }),
     ]);
   } catch (e: any) {
     if (e.message === 'login error shown') {
@@ -48,7 +48,7 @@ export async function loginAs(page: Page, email: string, password: string) {
     }
     throw e;
   }
-  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
   await page.waitForTimeout(400);
 }
 

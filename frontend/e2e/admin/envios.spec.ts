@@ -11,18 +11,18 @@ test.describe('Admin Envios', () => {
   test.beforeEach(async ({ page }) => {
     if (!users?.ok) return;
     await loginAs(page, users.gestor.email, users.gestor.password);
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('envios table renders', async ({ page }) => {
     await page.goto('/logistica/envios');
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('table, tbody, [class*="table"]').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('envio detail shows tracking info', async ({ page }) => {
     await page.goto('/logistica/envios', { timeout: 15000 });
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
 
     const detailLink = page.locator('a[href*="/logistica/envios/"]').first();
     if (!(await detailLink.isVisible({ timeout: 8000 }).catch(() => false))) return;
@@ -35,7 +35,7 @@ test.describe('Admin Envios', () => {
 
   test('envio detail has status update control', async ({ page }) => {
     await page.goto('/logistica/envios', { timeout: 20000, waitUntil: 'load' });
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded');
 
     const detailLink = page.locator('a[href*="/logistica/envios/"]').first();
     if (!(await detailLink.isVisible({ timeout: 8000 }).catch(() => false))) return;

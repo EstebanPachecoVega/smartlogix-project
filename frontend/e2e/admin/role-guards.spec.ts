@@ -17,7 +17,7 @@ test.describe('Role-Based Access Control', () => {
   test('gestor can access admin panel', async ({ page }) => {
     if (!users?.ok) return;
     await loginAs(page, users.gestor.email, users.gestor.password);
-    await page.goto('/logistica', { waitUntil: 'networkidle' });
+    await page.goto('/logistica', { timeout: 20000, waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('link', { name: /productos/i })).toBeVisible({ timeout: 15000 });
   });
 
