@@ -26,7 +26,7 @@ jobs:
           cache: maven
 
       - name: Run integration tests (Testcontainers)
-        run: cd backend && mvn clean verify -Pintegration
+        run: cd backend && mvn clean verify -Dsurefire.excludedGroups=nonexistent
 
       - name: Upload JaCoCo reports
         if: always()
@@ -35,6 +35,7 @@ jobs:
           name: jacoco-reports-integration
           path: |
             backend/*/target/site/jacoco/
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Upload Surefire reports
@@ -44,4 +45,5 @@ jobs:
           name: surefire-reports-integration
           path: |
             backend/*/target/surefire-reports/
+          if-no-files-found: warn
           retention-days: 7

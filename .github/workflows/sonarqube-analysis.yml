@@ -31,11 +31,14 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Debug SonarCloud vars
+      - name: Debug SonarCloud config
         run: |
-          echo "SONAR_ORGANIZATION=${SONAR_ORG_LENGTH} chars"
-        env:
-          SONAR_ORG_LENGTH: ${{ vars.SONAR_ORGANIZATION && 'set' || 'MISSING' }}
+          ORG="${{ vars.SONAR_ORGANIZATION || secrets.SONAR_ORGANIZATION }}"
+          if [ -z "$ORG" ]; then
+            echo "::error::SONAR_ORGANIZATION no está configurado ni en Variables ni en Secrets"
+            exit 1
+          fi
+          echo "SONAR_ORGANIZATION=$ORG"
 
       - name: SonarCloud scan
         run: |
@@ -43,12 +46,12 @@ jobs:
           mvn clean verify sonar:sonar \
             -Psonar-cloud \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization="${{ vars.SONAR_ORGANIZATION }}" \
+            -Dsonar.organization="${{ vars.SONAR_ORGANIZATION || secrets.SONAR_ORGANIZATION }}" \
             -Dsonar.projectKey=smartlogix-backend \
             -Dsonar.token="${{ secrets.SONAR_TOKEN }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION || secrets.SONAR_ORGANIZATION }}
 
       - name: Upload JaCoCo reports
         if: always()
@@ -57,6 +60,7 @@ jobs:
           name: jacoco-reports-sonar
           path: |
             backend/*/target/site/jacoco/
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Upload Surefire reports
@@ -66,4 +70,5 @@ jobs:
           name: surefire-reports-sonar
           path: |
             backend/*/target/surefire-reports/
+          if-no-files-found: warn
           retention-days: 7

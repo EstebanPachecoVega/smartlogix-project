@@ -54,11 +54,5 @@
 				<sonar.organization>${env.SONAR_ORGANIZATION}</sonar.organization>
 			</properties>
 		</profile>
-		<profile>
-			<id>integration</id>
-			<properties>
-				<surefire.excludedGroups></surefire.excludedGroups>
-			</properties>
-		</profile>
 	</profiles>
 </project>

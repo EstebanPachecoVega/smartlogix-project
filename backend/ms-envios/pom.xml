@@ -23,6 +23,7 @@
 		<lombok.version>1.18.42</lombok.version>
 		<testcontainers.version>1.19.4</testcontainers.version>
 		<springdoc.version>2.8.16</springdoc.version>
+		<surefire.excludedGroups>docker</surefire.excludedGroups>
 		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 		<sonar.java.binaries>${project.basedir}/target/classes</sonar.java.binaries>
 		<sonar.junit.reportPaths>${project.basedir}/target/surefire-reports</sonar.junit.reportPaths>

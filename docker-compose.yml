@@ -315,6 +315,7 @@ services:
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: 8180
       KC_HTTP_ENABLED: true
+      KC_HEALTH_ENABLED: true
       KC_PROXY_EDGE: true
     volumes:
       - ./infrastructure/smartlogix-realm.json:/opt/keycloak/data/import/smartlogix-realm.json
