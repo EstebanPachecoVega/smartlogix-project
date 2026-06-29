@@ -4,6 +4,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.14-brightgreen)](https://spring.io/projects/spring-boot)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 
+SmartLogix es una plataforma moderna de gestión logística diseñada bajo una arquitectura de microservicios, enfocada en la resiliencia, escalabilidad y mantenibilidad. El sistema implementa comunicación síncrona (REST + OpenFeign) y asíncrona (RabbitMQ), autenticación centralizada con Keycloak, manejo de errores bajo RFC 7807 y transacciones distribuidas mediante el patrón Saga Orquestado. Incluye un dashboard administrativo con analíticas y gráficos en tiempo real.
 
 ---
 
@@ -53,7 +54,6 @@
 SmartLogix nace de la necesidad de gestionar operaciones logísticas con alta concurrencia y requisitos estrictos de consistencia de inventario. El sistema resuelve el problema de **doble reserva de stock** mediante operaciones atómicas en Redis y un patrón de **Saga orquestada** con RabbitMQ, garantizando que solo una compra pueda reservar el stock disponible.
 
 Además, provee un **panel de gestión logística** completo para que los operadores puedan administrar productos, categorías, pedidos y envíos, actualizar estados y resolver incidencias.
->>>>>>> 235c5d908d02d9ebc8ac8fccf3e4aa7050f658fa
 
 ---
 
@@ -63,7 +63,6 @@ Además, provee un **panel de gestión logística** completo para que los operad
 SmartLogix optimiza la gestión logística mediante una arquitectura desacoplada y orientada a eventos, con separación clara entre el panel administrativo y la experiencia del cliente final.
 =======
 La solución se basa en una arquitectura de **microservicios** con bases de datos por servicio (*Database‑per‑Service*), comunicación síncrona vía **API Gateway** (Spring Cloud Gateway) y asíncrona mediante **RabbitMQ**. El **BFF** (Backend for Frontend) actúa como capa de adaptación para el frontend Next.js, implementando **Circuit Breakers** y propagación de **Correlation‑ID**.
->>>>>>> 235c5d908d02d9ebc8ac8fccf3e4aa7050f658fa
 
 **Flujo de comunicación resumido:**
 
@@ -85,7 +84,6 @@ La solución utiliza el enfoque **Database-per-Service**: cada microservicio adm
 - El API Gateway enruta las peticiones a los microservicios correspondientes (`ms-inventario`, `ms-pedidos`, `ms-envios`) y aplica rate limiting, circuit breakers y validación JWT.
 - `ms-pedidos` se comunica con `ms-inventario` mediante Feign (síncrono) y con `ms-envios` mediante eventos de RabbitMQ (asíncrono).
 - `ms-pedidos` utiliza Redis para la reserva atómica de stock (operaciones con TTL).
->>>>>>> 235c5d908d02d9ebc8ac8fccf3e4aa7050f658fa
 
 ---
 
@@ -773,7 +771,6 @@ smartlogix-project/
 │   └── ingress.yaml
 ├── scripts/
 │   └── concurrencia.js
->>>>>>> 235c5d908d02d9ebc8ac8fccf3e4aa7050f658fa
 └── README.md
 ```
 
@@ -836,7 +833,6 @@ NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=smartlogix_preset
    cd backend/ms-inventario && ./mvnw clean package
    # repetir para cada microservicio, gateway y bff
    ```
->>>>>>> 235c5d908d02d9ebc8ac8fccf3e4aa7050f658fa
 
 ---
 
@@ -853,7 +849,6 @@ NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=smartlogix_preset
 ## 1. Clonar repositorio
 =======
 ### Backend en Docker + Frontend local (para desarrollo rápido)
->>>>>>> 235c5d908d02d9ebc8ac8fccf3e4aa7050f658fa
 
 ```bash
 cd infrastructure
@@ -1250,4 +1245,3 @@ Los componentes de estado (`EstadoPedidoBadge`, `EstadoEnvioBadge`) muestran tex
 ---
 
 *Documentación generada en Mayo 2026*
->>>>>>> 235c5d908d02d9ebc8ac8fccf3e4aa7050f658fa
