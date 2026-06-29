@@ -10,7 +10,6 @@ SmartLogix es una plataforma moderna de gestión logística diseñada bajo una a
 
 ## 📋 Tabla de Contenidos
 
-<<<<<<< HEAD
 * [Descripción General](#descripción-general)
 * [Arquitectura del Sistema](#arquitectura-del-sistema)
 * [Microservicios](#microservicios)
@@ -31,7 +30,6 @@ SmartLogix es una plataforma moderna de gestión logística diseñada bajo una a
 * [Roadmap](#roadmap)
 * [Contribución](#contribución)
 * [Licencia](#licencia)
-=======
 - [Descripción General](#descripción-general)
 - [Arquitectura del Sistema](#arquitectura-del-sistema)
 - [Microservicios](#microservicios)
@@ -59,14 +57,12 @@ Además, provee un **panel de gestión logística** completo para que los operad
 
 ## Arquitectura del Sistema
 
-<<<<<<< HEAD
 SmartLogix optimiza la gestión logística mediante una arquitectura desacoplada y orientada a eventos, con separación clara entre el panel administrativo y la experiencia del cliente final.
-=======
+
 La solución se basa en una arquitectura de **microservicios** con bases de datos por servicio (*Database‑per‑Service*), comunicación síncrona vía **API Gateway** (Spring Cloud Gateway) y asíncrona mediante **RabbitMQ**. El **BFF** (Backend for Frontend) actúa como capa de adaptación para el frontend Next.js, implementando **Circuit Breakers** y propagación de **Correlation‑ID**.
 
 **Flujo de comunicación resumido:**
 
-<<<<<<< HEAD
 * Gestión completa del ciclo de vida de pedidos.
 * Administración de inventario con reservas en Redis.
 * Coordinación logística de envíos.
@@ -78,7 +74,6 @@ La solución se basa en una arquitectura de **microservicios** con bases de dato
 * Integración continua con análisis de calidad de código.
 
 La solución utiliza el enfoque **Database-per-Service**: cada microservicio administra su propia base de datos MySQL independiente.
-=======
 - El frontend Next.js se comunica con el BFF (Spring Boot WebFlux) a través de HTTP con autenticación JWT.
 - El BFF agrega el token y el Correlation‑ID y redirige las peticiones al API Gateway.
 - El API Gateway enruta las peticiones a los microservicios correspondientes (`ms-inventario`, `ms-pedidos`, `ms-envios`) y aplica rate limiting, circuit breakers y validación JWT.
@@ -89,7 +84,6 @@ La solución utiliza el enfoque **Database-per-Service**: cada microservicio adm
 
 ## Microservicios
 
-<<<<<<< HEAD
 ## Diagrama de alto nivel
 
 ```text
@@ -632,7 +626,6 @@ smartlogix-project/
 ├── docker-compose.yml              # Stack completo de desarrollo
 ├── docker-compose.ci.yml           # Override para CI (sin observabilidad)
 ├── .env                            # Variables de entorno para Docker Compose
-=======
 | Microservicio | Puerto | Descripción |
 |---------------|--------|-------------|
 | **ms-inventario** | 8081 | Gestión de productos, categorías y stock maestro (MySQL). Reserva atómica con Redis. |
@@ -778,7 +771,6 @@ smartlogix-project/
 
 ## Configuración del Entorno
 
-<<<<<<< HEAD
 ## Archivo `.env` (raíz del proyecto)
 
 Variables utilizadas por Docker Compose:
@@ -817,7 +809,6 @@ NEXTAUTH_SECRET=dGhpcy1pcy1hLXNlY3JldC1rZXktZm9yLW5leHRhdXRoLXRlc3RpbmcK
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dtkxwlj5g
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=smartlogix_preset
 ```
-=======
 1. **Clonar el repositorio**  
    ```bash
    git clone https://github.com/tu-usuario/smartlogix-project.git
@@ -838,7 +829,6 @@ NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=smartlogix_preset
 
 ## Ejecución Local
 
-<<<<<<< HEAD
 ## Requisitos previos
 
 - Docker y Docker Compose
@@ -847,7 +837,7 @@ NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=smartlogix_preset
 - pnpm
 
 ## 1. Clonar repositorio
-=======
+
 ### Backend en Docker + Frontend local (para desarrollo rápido)
 
 ```bash
@@ -856,7 +846,6 @@ docker-compose up -d mysql-inventario mysql-pedidos mysql-envios redis rabbitmq
 # luego ejecutar cada microservicio desde el IDE o con ./mvnw spring-boot:run
 ```
 
-<<<<<<< HEAD
 ## 2. Levantar todo el stack con Docker
 
 ```bash
@@ -1160,7 +1149,7 @@ main
 Proyecto académico y demostrativo.
 
 Todos los derechos reservados © SmartLogix.
-=======
+
 En otra terminal:
 ```bash
 cd frontend
@@ -1236,12 +1225,12 @@ Los componentes de estado (`EstadoPedidoBadge`, `EstadoEnvioBadge`) muestran tex
 - [x] Implementación de microservicios con saga y reserva atómica  
 - [x] API Gateway, BFF y frontend completo  
 - [x] Prueba de concurrencia y logs estructurados  
-- [ ] **Integración con Keycloak** (autenticación JWT real y roles) – *pendiente*  
-- [ ] WebSockets para notificaciones en tiempo real (estado de envíos)  
-- [ ] Gráficos en el dashboard (Chart.js o Recharts)  
-- [ ] Tests end‑to‑end con Playwright o Cypress  
+- [x] **Integración con Keycloak** (autenticación JWT real y roles) – *pendiente*  
+- [x] WebSockets para notificaciones en tiempo real (estado de envíos)  
+- [x] Gráficos en el dashboard (Chart.js o Recharts)  
+- [x] Tests end‑to‑end con Playwright o Cypress  
 - [ ] Despliegue automatizado en Kubernetes con Helm  
 
 ---
 
-*Documentación generada en Mayo 2026*
+*Documentación generada en Junio 2026*
