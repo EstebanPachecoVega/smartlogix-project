@@ -56,10 +56,10 @@ function PedidosContent() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold mb-6">Mis pedidos</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-6">Mis pedidos</h1>
 
             {exito && (
-                <div className="bg-green-100 text-green-800 p-4 rounded mb-4">
+                <div className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 p-4 rounded mb-4">
                     ¡Pedido creado exitosamente! Número de orden: {exito}
                 </div>
             )}
@@ -77,9 +77,9 @@ function PedidosContent() {
                 <div className="space-y-4">
                     {pedidos.map((pedido) => (
                         <Card key={pedido.id}>
-                            <CardHeader className="flex flex-row justify-between items-start">
+                            <CardHeader className="flex flex-row flex-wrap justify-between items-start">
                                 <div>
-                                    <CardTitle className="text-lg">
+                                    <CardTitle className="text-base sm:text-lg">
                                         Pedido #{pedido.numeroOrden}
                                     </CardTitle>
                                     <p className="text-sm text-muted-foreground mt-1">
@@ -90,7 +90,7 @@ function PedidosContent() {
                             </CardHeader>
                             <CardContent>
                                 <div className="flex justify-between items-center">
-                                    <p className="text-xl font-bold">
+                                    <p className="text-lg sm:text-xl font-bold">
                                         Total: ${pedido.totalCompra.toLocaleString()}
                                     </p>
                                     <Link href={`/dashboard/pedidos/${pedido.id}`}>

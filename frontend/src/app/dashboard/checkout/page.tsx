@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Breadcrumbs from '@/components/ui/breadcrumbs';
 import { toast } from "sonner";
 import { getUserProfile, updateUserAddress } from '@/lib/userService';
@@ -62,6 +63,12 @@ export default function CheckoutPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleMetodoEnvioChange = (value: string | null) => {
+        if (value) {
+            setForm({ ...form, metodoEnvio: value });
+        }
     };
 
     const handleGuardarDireccion = async () => {
@@ -140,17 +147,17 @@ export default function CheckoutPage() {
                 </div>
             ) : (
             <>
-            <h1 className="text-2xl font-bold mb-6">Finalizar compra</h1>
-            <div className="grid md:grid-cols-2 gap-8">
-                <form onSubmit={handleSubmit} className="space-y-4">
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Finalizar compra</h1>
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6 lg:gap-8">
+                <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
                     <div><Label>Destinatario</Label><Input name="destinatario" value={form.destinatario} onChange={handleChange} placeholder="Nombre completo del destinatario" required /></div>
-                    <div className="grid grid-cols-2 gap-4"><div><Label>Calle</Label><Input name="calle" value={form.calle} onChange={handleChange} placeholder="Ej: Av. Siempre Viva" required /></div><div><Label>Número</Label><Input name="numero" value={form.numero} onChange={handleChange} placeholder="Ej: 123" required /></div></div>
-                    <div className="grid grid-cols-2 gap-4"><div><Label>Comuna</Label><Input name="comuna" value={form.comuna} onChange={handleChange} placeholder="Ej: Ñuñoa" required /></div><div><Label>Ciudad</Label><Input name="ciudad" value={form.ciudad} onChange={handleChange} placeholder="Ej: Santiago" required /></div></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><Label>Calle</Label><Input name="calle" value={form.calle} onChange={handleChange} placeholder="Ej: Av. Siempre Viva" required /></div><div><Label>Número</Label><Input name="numero" value={form.numero} onChange={handleChange} placeholder="Ej: 123" required /></div></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><Label>Comuna</Label><Input name="comuna" value={form.comuna} onChange={handleChange} placeholder="Ej: Ñuñoa" required /></div><div><Label>Ciudad</Label><Input name="ciudad" value={form.ciudad} onChange={handleChange} placeholder="Ej: Santiago" required /></div></div>
                     <div><Label>Código postal</Label><Input name="codigoPostal" value={form.codigoPostal} onChange={handleChange} placeholder="Ej: 8320000" /></div>
-                    <div><Label>Método de envío</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-foreground text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50" name="metodoEnvio" value={form.metodoEnvio} onChange={handleChange} required><option value="standard">Estándar (3-5 días)</option><option value="express">Express (1-2 días)</option></select></div>
-                    <div className="flex gap-4"><Button type="submit" disabled={loading} className="flex-1">{loading ? 'Procesando...' : `Pagar $${totalPrecio.toLocaleString()}`}</Button><Button type="button" variant="outline" onClick={handleGuardarDireccion} disabled={saving}>{saving ? 'Guardando...' : 'Guardar dirección en mi perfil'}</Button></div>
+                    <div><Label>Método de envío</Label><Select value={form.metodoEnvio} onValueChange={handleMetodoEnvioChange}><SelectTrigger className="w-full"><SelectValue placeholder="Selecciona método de envío" /></SelectTrigger><SelectContent><SelectItem value="standard">Estándar (3-5 días)</SelectItem><SelectItem value="express">Express (1-2 días)</SelectItem></SelectContent></Select></div>
+                    <div className="flex flex-col lg:flex-row gap-4"><Button type="submit" disabled={loading} className="flex-1">{loading ? 'Procesando...' : `Pagar $${totalPrecio.toLocaleString()}`}</Button><Button type="button" variant="outline" className="flex-1" onClick={handleGuardarDireccion} disabled={saving}>{saving ? 'Guardando...' : 'Guardar dirección en mi perfil'}</Button></div>
                 </form>
-                <div><Card><CardHeader><CardTitle>Resumen del pedido</CardTitle></CardHeader><CardContent>{items.map(item => <div key={item.producto.id} className="flex items-center gap-3 text-sm mb-3"><div className="flex items-center gap-3 flex-1 min-w-0">{item.producto.imagenPrincipal && <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden border"><Image src={item.producto.imagenPrincipal} alt={item.producto.nombre} fill className="object-cover" /></div>}<span className="truncate">{item.producto.nombre} x{item.cantidad}</span></div><span className="shrink-0">${(item.producto.precio * item.cantidad).toLocaleString()}</span></div>)}<div className="border-t pt-2 mt-2 font-bold flex justify-between"><span>Total</span><span>${totalPrecio.toLocaleString()}</span></div></CardContent></Card>                </div>
+                <div className="min-w-0"><Card><CardHeader><CardTitle>Resumen del pedido</CardTitle></CardHeader><CardContent>{items.map(item => <div key={item.producto.id} className="flex items-center gap-3 text-sm mb-3"><div className="flex items-center gap-3 flex-1 min-w-0">{item.producto.imagenPrincipal && <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded overflow-hidden border"><Image src={item.producto.imagenPrincipal} alt={item.producto.nombre} fill className="object-cover" /></div>}<span className="line-clamp-2 sm:truncate">{item.producto.nombre} x{item.cantidad}</span></div><span className="shrink-0 font-medium tabular-nums">${(item.producto.precio * item.cantidad).toLocaleString()}</span></div>)}<div className="border-t pt-2 mt-2 font-bold flex justify-between"><span>Total</span><span className="tabular-nums">${totalPrecio.toLocaleString()}</span></div></CardContent></Card>                </div>
             </div>
             </>
             )}

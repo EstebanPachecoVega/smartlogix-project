@@ -115,10 +115,10 @@ export default function DetallePedidoClientePage() {
                         <TableBody>
                             {pedido.detalles?.map((det) => (
                                 <TableRow key={det.id}>
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
+                                    <TableCell className="whitespace-normal min-w-[200px]">
+                                        <div className="flex items-center gap-3 min-w-0">
                                             {det.imagenPrincipal && (
-                                                <div className="relative w-20 h-20 shrink-0 rounded-md overflow-hidden border">
+                                                <div className="relative w-12 h-12 sm:w-20 sm:h-20 shrink-0 rounded-md overflow-hidden border">
                                                     <Image
                                                         src={det.imagenPrincipal}
                                                         alt={det.nombreProducto}
@@ -127,7 +127,7 @@ export default function DetallePedidoClientePage() {
                                                     />
                                                 </div>
                                             )}
-                                            <span className="font-medium">{det.nombreProducto}</span>
+                                            <span className="font-medium break-words">{det.nombreProducto}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>{det.cantidad}</TableCell>

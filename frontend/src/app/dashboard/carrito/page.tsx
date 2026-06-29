@@ -26,12 +26,12 @@ export default function CarritoPage() {
                 </div>
             ) : (
             <>
-            <h1 className="text-2xl font-bold mb-6">Mi carrito</h1>
-            <div className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-4">
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Mi carrito</h1>
+            <div className="grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-6 lg:gap-8">
+                <div className="lg:col-span-2 space-y-4 min-w-0">
                     {items.map((item) => (
                         <Card key={item.producto.id}>
-                            <CardContent className="flex items-center gap-4 p-4">
+                            <CardContent className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 p-3 sm:p-4">
                                 {item.producto.imagenPrincipal && (
                                     <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden border">
                                         <Image
@@ -42,13 +42,13 @@ export default function CarritoPage() {
                                         />
                                     </div>
                                 )}
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 w-full sm:w-auto">
                                     <h3 className="font-semibold truncate">{item.producto.nombre}</h3>
                                     <p className="text-sm text-muted-foreground">
                                         ${item.producto.precio.toLocaleString()} c/u
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 justify-between sm:justify-end w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-border">
                                     <Input
                                         type="number"
                                         min={1}
@@ -61,7 +61,6 @@ export default function CarritoPage() {
                                     />
                                     <Button
                                         variant="destructive"
-                                        size="sm"
                                         onClick={() => eliminar(item.producto.id)}
                                     >
                                         Eliminar
@@ -71,7 +70,7 @@ export default function CarritoPage() {
                         </Card>
                     ))}
                 </div>
-                <div>
+                <div className="min-w-0">
                     <Card>
                         <CardHeader>
                             <CardTitle>Resumen</CardTitle>

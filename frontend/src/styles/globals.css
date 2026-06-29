@@ -46,6 +46,8 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --container-md: 42rem;
+  --container-lg: 56rem;
 }
 
 :root {
@@ -121,6 +123,7 @@
 .app-container {
   scrollbar-gutter: stable;
   overflow-anchor: none;
+  overflow-x: hidden;
 }
 
 body[data-scroll-locked] .app-container,
@@ -149,6 +152,5 @@ body[style*="pointer-events"] .app-container {
 
   body {
     @apply bg-background text-foreground;
-    overflow-x: hidden;
   }
 }

@@ -72,7 +72,7 @@ export default function Footer() {
                     {/* Medios de pago */}
                     <div>
                         <h3 className="text-foreground font-semibold mb-4">Medios de pago</h3>
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-2 sm:gap-4">
                             <div className="flex items-center gap-2 bg-muted/50 px-3 py-2 rounded-lg">
                                 <Banknote className="h-5 w-5 text-emerald-500" />
                                 <span className="text-sm">Efectivo</span>

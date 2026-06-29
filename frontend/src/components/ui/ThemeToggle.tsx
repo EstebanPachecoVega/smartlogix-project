@@ -24,7 +24,7 @@ export default function ThemeToggle() {
         else if (isSystem && !isDark) setTheme("dark")
         else setTheme(isDark ? "light" : "dark")
       }}
-      className="relative p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="relative size-8 inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label={isDark ? "Tema claro" : "Tema oscuro"}
       title={isSystem ? "Usando preferencia del sistema" : undefined}
     >
