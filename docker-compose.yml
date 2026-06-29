@@ -13,7 +13,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_INVENTARIO_NAME}
     command: >
-      --innodb-buffer-pool-size=128M
+      --innodb-buffer-pool-size=64M
       --innodb-log-file-size=64M
       --max-connections=200
       --innodb-flush-log-at-trx-commit=2
@@ -38,7 +38,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_PEDIDOS_NAME}
     command: >
-      --innodb-buffer-pool-size=128M
+      --innodb-buffer-pool-size=64M
       --innodb-log-file-size=64M
       --max-connections=200
       --innodb-flush-log-at-trx-commit=2
@@ -63,7 +63,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_ENVIOS_NAME}
     command: >
-      --innodb-buffer-pool-size=128M
+      --innodb-buffer-pool-size=64M
       --innodb-log-file-size=64M
       --max-connections=200
       --innodb-flush-log-at-trx-commit=2
@@ -142,6 +142,7 @@ services:
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
       SPRING_PROFILES_ACTIVE: docker,docker-obs
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     depends_on:
       mysql-inventario:
         condition: service_healthy
@@ -175,6 +176,7 @@ services:
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
       SPRING_PROFILES_ACTIVE: docker,docker-obs
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     depends_on:
       mysql-pedidos:
         condition: service_healthy
@@ -207,6 +209,7 @@ services:
       JPA_DDL_AUTO: update
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
       SPRING_PROFILES_ACTIVE: docker,docker-obs
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     depends_on:
       mysql-envios:
         condition: service_healthy
@@ -231,6 +234,7 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       SPRING_PROFILES_ACTIVE: docker,docker-obs
       SERVER_NETTY_MAX_HEADER_SIZE: 65536
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     depends_on:
       redis:
         condition: service_healthy
@@ -258,6 +262,7 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       SPRING_PROFILES_ACTIVE: docker,docker-obs
       SERVER_NETTY_MAX_HEADER_SIZE: 65536
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     depends_on:
       api-gateway:
         condition: service_started
@@ -317,6 +322,7 @@ services:
       KC_HTTP_ENABLED: true
       KC_HEALTH_ENABLED: true
       KC_PROXY_EDGE: true
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC"
     volumes:
       - ./infrastructure/smartlogix-realm.json:/opt/keycloak/data/import/smartlogix-realm.json
       - keycloak_data:/opt/keycloak/data
@@ -339,6 +345,8 @@ services:
     restart: unless-stopped
     ports:
       - "9411:9411"
+    environment:
+      JAVA_OPTS: "-Xms64m -Xmx128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     networks:
       - smartlogix-network
 
