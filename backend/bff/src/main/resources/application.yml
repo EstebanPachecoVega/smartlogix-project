@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: bff
+  main:
+    web-application-type: reactive
+  zipkin:
+    base-url: http://zipkin:9411
+
+server:
+  port: 8084
+  netty:
+    max-header-size: 32KB
+
+gateway:
+  url: ${GATEWAY_URL:http://api-gateway:8080}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    cl.smartlogix.bff: ${LOGGING_LEVEL_SMARTLOGIX:INFO}
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      gateway:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+  retry:
+    instances:
+      gateway:
+        maxAttempts: 3
+        waitDuration: 200ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+  bulkhead:
+    instances:
+      gateway:
+        maxConcurrentCalls: 100
+        maxWaitDuration: 500ms
+
+management:
+  tracing:
+    sampling:
+      probability: 0.2
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

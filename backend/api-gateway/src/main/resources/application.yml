@@ -1,0 +1,170 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: productos_route
+              uri: http://ms-inventario:8081
+              predicates:
+                - Path=/api/productos/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: inventarioCB
+                    fallbackUri: forward:/fallback
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 100
+                    redis-rate-limiter.burstCapacity: 200
+                    redis-rate-limiter.requestedTokens: 1
+            - id: categorias_route
+              uri: http://ms-inventario:8081
+              predicates:
+                - Path=/api/categorias/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: inventarioCB
+                    fallbackUri: forward:/fallback
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 100
+                    redis-rate-limiter.burstCapacity: 200
+                    redis-rate-limiter.requestedTokens: 1
+            - id: pedidos_route
+              uri: http://ms-pedidos:8082
+              predicates:
+                - Path=/api/pedidos/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: pedidosCB
+                    fallbackUri: forward:/fallback
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 30
+                    redis-rate-limiter.burstCapacity: 60
+            - id: envios_route
+              uri: http://ms-envios:8083
+              predicates:
+                - Path=/api/envios/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: enviosCB
+                    fallbackUri: forward:/fallback
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 15
+                    redis-rate-limiter.burstCapacity: 30
+            - id: bff_route
+              uri: http://bff:8084
+              predicates:
+                - Path=/bff/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: bffCB
+                    fallbackUri: forward:/fallback
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 10
+                    redis-rate-limiter.burstCapacity: 20
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX:40}
+          max-idle: ${REDIS_POOL_IDLE:20}
+          min-idle: ${REDIS_POOL_MIN:5}
+          max-wait: 2000ms
+  main:
+    web-application-type: reactive
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8180/realms/smartlogix/protocol/openid-connect/certs}
+  zipkin:
+    base-url: http://zipkin:9411
+server:
+  port: 8080
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventarioCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+      pedidosCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+      enviosCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+      bffCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+  timelimiter:
+    instances:
+      inventarioCB:
+        timeoutDuration: 5s
+      pedidosCB:
+        timeoutDuration: 5s
+      enviosCB:
+        timeoutDuration: 5s
+      bffCB:
+        timeoutDuration: 5s
+  bulkhead:
+    instances:
+      inventarioCB:
+        maxConcurrentCalls: 50
+        maxWaitDuration: 500ms
+      pedidosCB:
+        maxConcurrentCalls: 50
+        maxWaitDuration: 500ms
+      enviosCB:
+        maxConcurrentCalls: 25
+        maxWaitDuration: 500ms
+      bffCB:
+        maxConcurrentCalls: 100
+        maxWaitDuration: 500ms
+
+logging:
+  level:
+    root: INFO
+    cl.smartlogix: ${LOGGING_LEVEL_SMARTLOGIX:INFO}
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
+
+management:
+  tracing:
+    sampling:
+      probability: 0.2
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers,gateway

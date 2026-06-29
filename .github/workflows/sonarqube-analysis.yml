@@ -1,0 +1,74 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: sonar-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Debug SonarCloud config
+        run: |
+          ORG="${{ vars.SONAR_ORGANIZATION || secrets.SONAR_ORGANIZATION }}"
+          if [ -z "$ORG" ]; then
+            echo "::error::SONAR_ORGANIZATION no está configurado ni en Variables ni en Secrets"
+            exit 1
+          fi
+          echo "SONAR_ORGANIZATION=$ORG"
+
+      - name: SonarCloud scan
+        run: |
+          cd backend
+          mvn clean verify sonar:sonar \
+            -Psonar-cloud \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization="${{ vars.SONAR_ORGANIZATION || secrets.SONAR_ORGANIZATION }}" \
+            -Dsonar.projectKey=smartlogix-backend \
+            -Dsonar.token="${{ secrets.SONAR_TOKEN }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION || secrets.SONAR_ORGANIZATION }}
+
+      - name: Upload JaCoCo reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports-sonar
+          path: |
+            backend/*/target/site/jacoco/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-sonar
+          path: |
+            backend/*/target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,107 @@
+spring:
+  application:
+    name: ms-envios
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8180/realms/smartlogix/protocol/openid-connect/certs}    
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:db_envios}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:rootpassword}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:30}
+      minimum-idle: ${DB_POOL_MIN:5}
+      idle-timeout: 60000
+      connection-timeout: 10000
+      max-lifetime: 1800000
+      leak-detection-threshold: 15000
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        naming:
+          physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    listener:
+      simple:
+        concurrency: 4
+        max-concurrency: 8
+        prefetch: 10
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          max-attempts: 3
+          multiplier: 2
+        default-requeue-rejected: false
+  zipkin:
+    base-url: http://zipkin:9411
+
+server:
+  port: ${SERVER_PORT:8083}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      pedidos:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+      inventario:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
+  timelimiter:
+    instances:
+      pedidos:
+        timeoutDuration: 5s
+      inventario:
+        timeoutDuration: 5s
+  bulkhead:
+    instances:
+      pedidos:
+        maxConcurrentCalls: 25
+        maxWaitDuration: 500ms
+      inventario:
+        maxConcurrentCalls: 25
+        maxWaitDuration: 500ms
+
+logging:
+  level:
+    root: INFO
+    cl.smartlogix: ${LOGGING_LEVEL_SMARTLOGIX:DEBUG}
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","correlationId":"%X{correlationId}","message":"%m","logger":"%c"}%n'
+
+management:
+  tracing:
+    sampling:
+      probability: 0.2
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

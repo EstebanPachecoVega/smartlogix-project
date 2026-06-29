@@ -1,0 +1,299 @@
+'use client';
+
+import { use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { productosApi, categoriasApi } from '@/lib/api';
+import { Producto, Categoria } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { CategoryCombobox } from '@/components/ui/Categorycombobox';
+import ImageUploader from '@/components/ui/ImageUploader';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import Spinner from '@/components/shared/Spinner';
+
+interface EditPageProps {
+    params: Promise<{ id: string }>;
+}
+
+export default function EditarProductoPage({ params }: EditPageProps) {
+    const { id } = use(params);
+    const router = useRouter();
+    const [producto, setProducto] = useState<Producto | null>(null);
+    const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [notFound, setNotFound] = useState(false);
+    const [form, setForm] = useState({
+        sku: '',
+        nombre: '',
+        slug: '',
+        descripcion: '',
+        categoriaId: undefined as number | undefined,
+        precio: 0,
+        cantidad: 0,
+        imagenPrincipal: '',
+        imagenes: [] as string[],
+        destacado: false,
+        novedad: false,
+        activo: true,
+    });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [prodData, catData] = await Promise.all([
+                    productosApi.obtener(parseInt(id)),
+                    categoriasApi.listar(),
+                ]);
+                setProducto(prodData);
+                setCategorias(catData);
+                setForm({
+                    sku: prodData.sku || '',
+                    nombre: prodData.nombre || '',
+                    slug: prodData.slug || '',
+                    descripcion: prodData.descripcion || '',
+                    categoriaId: prodData.categoriaId,
+                    precio: prodData.precio ?? 0,
+                    cantidad: prodData.cantidad ?? 0,
+                    imagenPrincipal: prodData.imagenPrincipal || '',
+                    imagenes: prodData.imagenes || [],
+                    destacado: prodData.destacado || false,
+                    novedad: prodData.novedad || false,
+                    activo: prodData.activo !== undefined ? prodData.activo : true,
+                });
+            } catch (err: any) {
+                if (err?.response?.status === 404 || err?.response?.status === 401) {
+                    setNotFound(true);
+                } else {
+                    setError('Error al cargar el producto');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [id]);
+
+    const generarSlug = (nombre: string) => {
+        return nombre
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+
+        if (form.precio < 0 || form.cantidad < 0) {
+            setError('Precio y stock deben ser valores positivos');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const payload = {
+                ...form,
+                slug: form.slug || generarSlug(form.nombre),
+            };
+            await productosApi.actualizar(parseInt(id), payload);
+            router.push('/logistica/productos');
+        } catch (err: any) {
+            const mensaje = err?.response?.data?.detail || err?.message || 'Error al actualizar el producto';
+            setError(mensaje);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) return <Spinner />;
+
+    if (notFound) {
+        return (
+            <div className="max-w-3xl mx-auto space-y-6">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link href="/logistica/productos">
+                            <ArrowLeft className="h-4 w-4 mr-2" /> Volver
+                        </Link>
+                    </Button>
+                    <h1 className="text-2xl font-bold">Producto no encontrado</h1>
+                </div>
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md text-sm">
+                    El producto que intentas editar no existe o fue eliminado.
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-3xl mx-auto space-y-6">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" asChild>
+                    <Link href="/logistica/productos">
+                        <ArrowLeft className="h-4 w-4 mr-2" /> Volver
+                    </Link>
+                </Button>
+                <h1 className="text-2xl font-bold">Editar Producto</h1>
+                {producto && (
+                    <span className="text-sm text-muted-foreground">{producto.sku}</span>
+                )}
+            </div>
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                    {error}
+                </div>
+            )}
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Información del producto</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="sku">SKU *</Label>
+                                <Input
+                                    id="sku"
+                                    required
+                                    value={form.sku}
+                                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="nombre">Nombre *</Label>
+                                <Input
+                                    id="nombre"
+                                    required
+                                    value={form.nombre}
+                                    onChange={(e) => {
+                                        const nombre = e.target.value;
+                                        setForm({ ...form, nombre, slug: generarSlug(nombre) });
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="slug">Slug</Label>
+                            <Input
+                                id="slug"
+                                value={form.slug}
+                                disabled
+                                className="bg-muted"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label>Categoría</Label>
+                            <CategoryCombobox
+                                categorias={categorias}
+                                value={form.categoriaId}
+                                onChange={(id) => setForm({ ...form, categoriaId: id })}
+                            />
+                            {categorias.length > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                    Escribe para filtrar entre las {categorias.length} categorías.
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <Label htmlFor="descripcion">Descripción</Label>
+                            <Input
+                                id="descripcion"
+                                value={form.descripcion}
+                                onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="precio">Precio *</Label>
+                                <Input
+                                    id="precio"
+                                    type="number"
+                                    required
+                                    min="0"
+                                    value={form.precio}
+                                    onChange={(e) => setForm({ ...form, precio: parseInt(e.target.value) || 0 })}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="cantidad">Stock *</Label>
+                                <Input
+                                    id="cantidad"
+                                    type="number"
+                                    required
+                                    min="0"
+                                    value={form.cantidad}
+                                    onChange={(e) => setForm({ ...form, cantidad: parseInt(e.target.value) || 0 })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <ImageUploader
+                                mode="single"
+                                value={form.imagenPrincipal}
+                                onChange={(val) => setForm({ ...form, imagenPrincipal: val as string })}
+                                label="Imagen principal"
+                            />
+                            <ImageUploader
+                                mode="multiple"
+                                value={form.imagenes}
+                                onChange={(val) => setForm({ ...form, imagenes: val as string[] })}
+                                label="Imágenes adicionales"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 pt-2">
+                            <div className="flex items-center justify-between rounded-md border p-3">
+                                <Label htmlFor="destacado" className="text-sm">Destacado</Label>
+                                <Switch
+                                    id="destacado"
+                                    checked={form.destacado}
+                                    onCheckedChange={(checked) => setForm({ ...form, destacado: checked })}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between rounded-md border p-3">
+                                <Label htmlFor="novedad" className="text-sm">Novedad</Label>
+                                <Switch
+                                    id="novedad"
+                                    checked={form.novedad}
+                                    onCheckedChange={(checked) => setForm({ ...form, novedad: checked })}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between rounded-md border p-3">
+                                <Label htmlFor="activo" className="text-sm">Activo</Label>
+                                <Switch
+                                    id="activo"
+                                    checked={form.activo}
+                                    onCheckedChange={(checked) => setForm({ ...form, activo: checked })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                            <Button type="submit" disabled={saving} className="flex-1">
+                                {saving ? 'Guardando...' : 'Actualizar producto'}
+                            </Button>
+                            <Button type="button" variant="outline" asChild className="flex-1">
+                                <Link href="/logistica/productos">Cancelar</Link>
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}

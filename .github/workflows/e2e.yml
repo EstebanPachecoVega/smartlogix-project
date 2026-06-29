@@ -1,0 +1,109 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: e2e-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+      DB_INVENTARIO_NAME: db_inventario
+      DB_PEDIDOS_NAME: db_pedidos
+      DB_ENVIOS_NAME: db_envios
+      KEYCLOAK_ADMIN_USER: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_INTERNAL_ISSUER: http://keycloak:8080/realms/smartlogix
+      JWT_JWK_SET_URI: http://keycloak:8080/realms/smartlogix/protocol/openid-connect/certs
+      NEXTAUTH_SECRET: dGhpcy1pcy1hLXNlY3JldC1rZXktZm9yLW5leHRhdXRoLXRlc3RpbmcK
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start services
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build --wait
+          docker compose ps
+
+      - name: Wait for frontend HTTP readiness
+        timeout-minutes: 3
+        run: |
+          echo "Waiting for frontend to be ready..."
+          for i in $(seq 1 30); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000" 2>/dev/null || echo "000")
+            if [ "$status" -ge 200 ] && [ "$status" -lt 500 ]; then
+              echo "Frontend responded $status on attempt $i"
+              break
+            fi
+            echo "  Attempt $i/30: status $status, retrying..."
+            sleep 5
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable pnpm
+
+      - name: Install dependencies
+        run: cd frontend && pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: cd frontend && npx playwright install --with-deps chromium firefox
+
+      - name: Run E2E tests
+        run: cd frontend && npx playwright test
+        env:
+          BASE_URL: http://localhost:3000
+          KEYCLOAK_ISSUER: http://localhost:8180/realms/smartlogix
+          KEYCLOAK_ADMIN_USER: admin
+          KEYCLOAK_ADMIN_PASSWORD: admin
+          NEXT_PUBLIC_GATEWAY_URL: http://localhost:8080
+          NEXT_PUBLIC_BFF_URL: http://localhost:8084/bff
+          NEXTAUTH_SECRET: dGhpcy1pcy1hLXNlY3JldC1rZXktZm9yLW5leHRhdXRoLXRlc3RpbmcK
+          KEYCLOAK_CLIENT_ID: smartlogix-frontend
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Collect Docker logs
+        if: always()
+        run: docker compose logs --tail=200 > docker-logs.txt
+
+      - name: Upload Docker logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: docker-logs.txt
+          if-no-files-found: warn
+          retention-days: 3

@@ -1,0 +1,197 @@
+'use client';
+
+import { useEffect, useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { categoriasPublicApi } from '@/lib/api';
+import { buildCategoryTree, CategoriaNode } from '@/lib/categoryTree';
+import { ChevronDown } from 'lucide-react';
+
+function CategoryColumn({
+  node,
+  activeSlug,
+  router,
+}: {
+  node: CategoriaNode;
+  activeSlug: string | null;
+  router: ReturnType<typeof useRouter>;
+}) {
+  return (
+    <div>
+      <button
+        onClick={() => router.push(`/?cat=${node.slug}`)}
+        className={`block w-full text-left font-semibold text-sm mb-2 transition-colors ${
+          activeSlug === node.slug
+            ? 'text-primary'
+            : 'text-foreground hover:text-primary'
+        }`}
+      >
+        {node.nombre}
+      </button>
+      {node.children.length > 0 && (
+        <ul className="space-y-1">
+          {node.children.map((child) => (
+            <li key={child.id}>
+              <button
+                onClick={() => router.push(`/?cat=${child.slug}`)}
+                className={`block w-full text-left text-sm transition-colors ${
+                  activeSlug === child.slug
+                    ? 'text-primary font-medium'
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                {child.nombre}
+              </button>
+              {child.children.length > 0 && (
+                <ul className="pl-3 mt-0.5 space-y-0.5">
+                  {child.children.map((grandchild) => (
+                    <li key={grandchild.id}>
+                      <button
+                        onClick={() => router.push(`/?cat=${grandchild.slug}`)}
+                        className={`block w-full text-left text-xs transition-colors ${
+                          activeSlug === grandchild.slug
+                            ? 'text-primary font-medium'
+                            : 'text-muted-foreground/70 hover:text-primary'
+                        }`}
+                      >
+                        {grandchild.nombre}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function MegaMenu({
+  node,
+  activeSlug,
+  router,
+}: {
+  node: CategoriaNode;
+  activeSlug: string | null;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const children = node.children;
+
+  return (
+    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-popover border border-border rounded-lg shadow-xl z-50 p-4 sm:p-6 w-[800px] max-w-[90vw]">
+      <div
+        className="grid gap-4 sm:gap-6"
+        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}
+      >
+        {children.map((child) => (
+          <CategoryColumn
+            key={child.id}
+            node={child}
+            activeSlug={activeSlug}
+            router={router}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function CategoryNav() {
+  const [tree, setTree] = useState<CategoriaNode[]>([]);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [isTouch, setIsTouch] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined as any);
+  const navRef = useRef<HTMLElement>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeSlug = searchParams.get('cat');
+
+  useEffect(() => {
+    setIsTouch(matchMedia('(pointer: coarse)').matches);
+  }, []);
+
+  useEffect(() => {
+    categoriasPublicApi.listar().then((all) => {
+      setTree(buildCategoryTree(all));
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const scheduleClose = () => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setOpenId(null), 200);
+  };
+
+  const cancelClose = () => {
+    clearTimeout(timeoutRef.current);
+  };
+
+  if (tree.length === 0) return null;
+
+  return (
+    <nav ref={navRef} className="bg-background border-b border-border">
+      <div className="container mx-auto px-4">
+        <ul className="flex items-center justify-center gap-0.5 py-2 flex-wrap">
+          {tree.map((node) => {
+            const hasChildren = node.children.length > 0;
+            const isActive = activeSlug === node.slug;
+            const isOpen = openId === node.id;
+
+            return (
+              <li
+                key={node.id}
+                className="relative"
+                onMouseEnter={!isTouch ? () => { cancelClose(); setOpenId(node.id); } : undefined}
+                onMouseLeave={!isTouch ? scheduleClose : undefined}
+              >
+                <button
+                  onClick={() => {
+                    if (isTouch && hasChildren) {
+                      cancelClose();
+                      setOpenId(isOpen ? null : node.id);
+                    } else {
+                      router.push(`/?cat=${node.slug}`);
+                    }
+                  }}
+                  className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap transition-colors flex items-center gap-1 ${
+                    isActive
+                      ? 'text-primary bg-primary/10 font-medium'
+                      : 'text-muted-foreground hover:text-primary hover:bg-accent'
+                  }`}
+                  >
+                    {node.nombre}
+                    {hasChildren && (
+                    <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  )}
+                </button>
+
+                {hasChildren && isOpen && (
+                  <div
+                    onMouseEnter={!isTouch ? cancelClose : undefined}
+                    onMouseLeave={!isTouch ? scheduleClose : undefined}
+                  >
+                    <MegaMenu
+                      node={node}
+                      activeSlug={activeSlug}
+                      router={router}
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </nav>
+  );
+}
