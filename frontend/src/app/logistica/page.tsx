@@ -22,23 +22,33 @@ import VentasLineChart from '@/components/logistica/VentasLineChart';
 
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [productos, setProductos] = useState<Producto[]>([]);
     const [pedidos, setPedidos] = useState<PedidoResponse[]>([]);
     const [envios, setEnvios] = useState<Envio[]>([]);
 
-    useEffect(() => {
+    const cargarDatos = () => {
+        setLoading(true);
+        setError(null);
         Promise.all([
-            productosApi.listar(),
-            pedidosApi.listar(),
-            enviosApi.listar(),
+            productosApi.listar({ size: 1000 }),
+            pedidosApi.listar({ size: 1000 }),
+            enviosApi.listar({ size: 1000 }),
         ])
             .then(([prod, ped, env]) => {
                 setProductos(Array.isArray(prod) ? prod : prod.content);
                 setPedidos(Array.isArray(ped) ? ped : ped.content);
                 setEnvios(Array.isArray(env) ? env : env.content);
             })
-            .catch(console.error)
+            .catch((err) => {
+                console.error("Error al cargar datos del dashboard:", err);
+                setError("No se pudieron cargar los datos. Verifica tu conexión e intenta nuevamente.");
+            })
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        cargarDatos();
     }, []);
 
     // Métricas — memoizadas para evitar recálculos innecesarios
@@ -82,6 +92,15 @@ export default function DashboardPage() {
     }, [productos, pedidos, envios]);
 
     if (loading) return <Spinner />;
+
+    if (error) {
+        return (
+            <div className="text-center py-12">
+                <p className="text-red-500 mb-4">{error}</p>
+                <Button onClick={cargarDatos} variant="outline">Reintentar</Button>
+            </div>
+        );
+    }
 
     // Render 
     return (
